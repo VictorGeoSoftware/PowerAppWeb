@@ -39,10 +39,10 @@ Recommended: the local Docker QA stack (it also works on networks that block the
 
 ```bash
 ../BmInfra/bm-local-qa up       # see BmInfra docs; needs local-qa.env + Firebase service account (not in git)
-cp .env.example .env.local      # BM_BACKEND_URL=http://localhost:9081
+cp .env.example .env.local      # BM_BACKEND_URL=http://localhost:9081 + NEXT_PUBLIC_FIREBASE_* (Firebase console > PowerAppWeb app)
 ```
 
-Without `.env.local`, development defaults to the remote QA VPS (`http://217.154.181.175:9081`).
+`BM_BACKEND_URL` is required: without it the proxy fails with a clear error (no built-in default).
 
 ### 5. Run
 ```bash
@@ -77,4 +77,4 @@ E2E_EMAIL=<qa broker email> E2E_PASSWORD=<password> npm run test:e2e
 | `e2e/` | Playwright specs and fixtures |
 
 ## Secrets
-Not in this repo and never to be committed: `.env.local`, Firebase service-account JSON, keystores, test credentials. The Firebase **web** config in `src/lib/firebase/config.ts` is public by design.
+Not in this repo and never to be committed: `.env.local`, Firebase service-account JSON, keystores, test credentials. The Firebase **web** config comes from `NEXT_PUBLIC_FIREBASE_*` in `.env.local`; it is public by design (inlined in the bundle) and protected by API key restrictions in Google Cloud, but kept out of git.

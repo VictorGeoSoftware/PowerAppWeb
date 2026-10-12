@@ -57,7 +57,7 @@ A POST body (JSON or multipart) is forwarded byte for byte with its `content-typ
   - Forward the body as an `ArrayBuffer` for non-GET/HEAD methods.
   - Use `cache: "no-store"` and `redirect: "manual"`.
   - Return `new Response(upstream.body, { status, headers: content-type, content-disposition, x-request-id })`.
-- `src/lib/server/env.ts` exports `backendBaseUrl()`, which reads `BM_BACKEND_URL` (server-only). It throws when the value is missing in production; in development it defaults to the QA URL without `/api/v1`.
+- `src/lib/server/env.ts` exports `backendBaseUrl()`, which reads `BM_BACKEND_URL` (server-only). It throws when the value is missing (no built-in default, in any environment).
 - `src/app/api/bm/[...path]/route.ts`: GET, POST, PUT and DELETE delegate to the proxy. Set `runtime = "nodejs"` and `dynamic = "force-dynamic"`.
 - `.env.example` documents `BM_BACKEND_URL=http://217.154.181.175:9081`.
 
