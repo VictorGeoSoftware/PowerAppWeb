@@ -1,0 +1,489 @@
+[
+  {
+    "id": "bootstrap-nextjs-app",
+    "area": "platform",
+    "title": "Next.js app skeleton with lint, typecheck and test gates",
+    "user_visible_behavior": "App runs locally and shows a Spanish placeholder home page at a mobile viewport.",
+    "depends_on": [],
+    "status": "accepted",
+    "verification": [
+      "./init.sh passes (npm ci, lint, typecheck, test)",
+      "npm run dev renders home at 390x844"
+    ],
+    "evidence": [
+      "2026-10-12 ./init.sh exit 0: npm ci, eslint ., tsc --noEmit, vitest (1 file, 1 test passed)",
+      "Negative check: injected type error -> ./init.sh exit 2; reverted",
+      "npm run build OK (/ static, 106 kB first load), no ignoreBuildErrors",
+      "Dev server :9003 serves <html lang=\"es\"> and viewport 'width=device-width, initial-scale=1, viewport-fit=cover'",
+      "Playwright WebKit 'iPhone 13' screenshot: centered Spanish placeholder, no horizontal scroll",
+      "Versions: next 15.5.27, react 19.1.0, tailwindcss 4.3.3, vitest 2.1.9, shadcn style base-nova",
+      "2026-10-12 accepted by user validation"
+    ],
+    "notes": "Mirror BmWeb stack: Next.js App Router, Tailwind, shadcn, Vitest. Deviation: Tailwind 4 (not 3.4) because current shadcn targets v4; system font stack per DESIGN.md."
+  },
+  {
+    "id": "design-tokens-theme",
+    "area": "ui",
+    "title": "Theme tokens from DESIGN.md applied (light/dark)",
+    "user_visible_behavior": "Buttons, surfaces and text use BmApp yellow/slate palette in light and dark mode.",
+    "depends_on": [
+      "bootstrap-nextjs-app"
+    ],
+    "status": "accepted",
+    "verification": [
+      "Visual check of sample components at 390px in light and dark"
+    ],
+    "evidence": [
+      "2026-10-12 ./init.sh green: 2 test files, 44 tests (42 token parity checks vs BmApp Color.kt light/dark)",
+      "npm run build OK; production /dev/theme returns 404",
+      "Playwright WebKit iPhone 13 screenshots light+dark of / and /dev/theme: BmApp palette, extended table/header/section colors correct",
+      "2026-10-12 accepted by user validation"
+    ],
+    "notes": "DESIGN.md Spec: docs/specs/design-tokens-theme.md. Dark mode follows system."
+  },
+  {
+    "id": "backend-proxy",
+    "area": "platform",
+    "title": "Server-side proxy to BmBackend QA",
+    "user_visible_behavior": "Route handlers forward requests with the caller's Bearer token to BmBackend QA and return responses/errors unchanged.",
+    "depends_on": [
+      "bootstrap-nextjs-app"
+    ],
+    "status": "accepted",
+    "verification": [
+      "Unit test of proxy forwarding headers/status",
+      "Manual call to /price-table-results via proxy returns 401 without token"
+    ],
+    "evidence": [
+      "2026-10-12 ./init.sh green: 3 files, 54 tests (10 proxy tests: forwarding, error passthrough, 401, 404 allowlist/traversal, 502, multipart bytes, binary PDF)",
+      "npm run build OK: ƒ /api/bm/[...path]",
+      "Dev curl: no token -> 401 JSON; admin/x -> 404; Bearer x price-table-results forwarded upstream (corporate firewall 503 page passed through)",
+      "2026-10-12 live check vs local Docker QA backend (BM_BACKEND_URL=http://localhost:9081): Bearer x -> backend 401 'Invalid Firebase ID token' JSON with x-request-id passed through via /api/bm/price-table-results",
+      "2026-10-12 accepted by user validation"
+    ],
+    "notes": "Avoids mixed content/CORS; base URL via env var. Spec: docs/specs/backend-proxy.md."
+  },
+  {
+    "id": "login-email",
+    "area": "auth",
+    "title": "Email/password login",
+    "user_visible_behavior": "Broker signs in with email/password (Firebase brielmarnysos-1dc68) and lands on the app shell.",
+    "depends_on": [
+      "design-tokens-theme"
+    ],
+    "status": "accepted",
+    "verification": [
+      "Login with QA test account at mobile viewport",
+      "Wrong password shows Spanish error"
+    ],
+    "evidence": [
+      "2026-10-12 ./init.sh green: 5 files, 68 tests (login error mapping, LoginForm enable/trim/loading/error/iOS attrs, RequireAuth redirect/spinner/email)",
+      "npm run build OK (/login static, firebase 11.10.0)",
+      "npm run test:e2e: 6/6 passed on iphone-webkit + android-chromium — redirect to /login, Spanish wrong-credentials error, real QA account login + persistence after reload + /login redirects to /",
+      "WebKit iPhone 13 screenshots light/dark of /login; brand icon on yellow tile for dark-mode visibility",
+      "2026-10-12 accepted by user validation"
+    ],
+    "notes": " Spec: docs/specs/login-email.md. Error messages Spanish (Android shows English)."
+  },
+  {
+    "id": "login-google",
+    "area": "auth",
+    "title": "Google login",
+    "user_visible_behavior": "Broker signs in with Google on iOS Safari and Android Chrome.",
+    "depends_on": [
+      "login-email"
+    ],
+    "status": "accepted",
+    "verification": [
+      "Google sign-in on real iPhone and Android"
+    ],
+    "evidence": [
+      "2026-10-12 ./init.sh green: 6 files, 73 tests (google-sign-in popup/redirect/rethrow, Google button + cancel message)",
+      "npm run test:e2e: Google popup opens on Google auth URL and cancel shows Spanish message on iphone-webkit + android-chromium (8/8 login e2e passing)",
+      "PENDING manual: complete real Google login (Mac localhost:9003; real phone needs authorized domain)",
+      "2026-10-12 accepted by user validation"
+    ],
+    "notes": "Use redirect flow if popup blocked on iOS. Spec: docs/specs/login-google.md."
+  },
+  {
+    "id": "access-gate",
+    "area": "auth",
+    "title": "Granted-user check with access-denied handling",
+    "user_visible_behavior": "Every session is checked via /user-data; non-granted Broker is signed out and sees the backend's Spanish message on login; network errors show a retry screen; granted Broker proceeds.",
+    "depends_on": [
+      "login-email",
+      "backend-proxy"
+    ],
+    "status": "accepted",
+    "verification": [
+      "Test with granted and non-granted QA accounts"
+    ],
+    "evidence": [
+      "2026-10-12 ./init.sh green: 8 files, 85 tests (bmFetch, AuthProvider granted/403/401/5xx, guard states)",
+      "npm run build OK",
+      "npm run test:e2e 14/14 on iphone-webkit + android-chromium vs local Docker QA backend: real /user-data 200 -> home; mocked 403 -> signed out + message, / redirects to /login; mocked 502 -> retry screen recovers",
+      "Local QA DB user_data shows web login recorded (last_login_at 2026-10-12, phone_uuid null)",
+      "2026-10-12 accepted by user validation"
+    ],
+    "notes": " Spec: docs/specs/access-gate.md. Parity decision: sign out + message on login instead of a signed-in pending screen."
+  },
+  {
+    "id": "device-binding-basic",
+    "area": "auth",
+    "title": "Browser registered as Bound Device",
+    "user_visible_behavior": "Browser sends a persisted device id; login from a device-bound account on another device is rejected with a clear message.",
+    "depends_on": [
+      "access-gate"
+    ],
+    "status": "passing",
+    "verification": [
+      "Bound to Android QA account -> web rejected",
+      "Admin reset in BmWeb -> web accepted"
+    ],
+    "evidence": [
+      "2026-10-12 ./init.sh green: 10 files, 90 tests (device id format/stability, payload always has phoneUuid)",
+      "npm run test:e2e 16/16 vs local Docker QA: /user-data carries web-e2e-playwright; second browser (other id) gets real backend 403 'vinculada a otro dispositivo' (2 audit log lines)",
+      "Admin-reset path: phone_uuid cleared in local QA DB -> login with new id 'web-after-admin-reset' accepted and bound",
+      "Local QA binding for test account left cleared after verification"
+    ],
+    "notes": "Basic version for QA; hardening is device-binding-hardening. Backend changes on qa branch. Spec: docs/specs/device-binding-basic.md. No backend change needed."
+  },
+  {
+    "id": "logout-force-logout",
+    "area": "auth",
+    "title": "Logout and forced logout",
+    "user_visible_behavior": "Broker can log out (calls /auth/logout); revoked grant or 403 mid-session signs out with message.",
+    "depends_on": [
+      "access-gate"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Logout clears session",
+      "Revoke grant in BmWeb -> next call signs out"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "app-shell-navigation",
+    "area": "ui",
+    "title": "App shell with top bar and menu",
+    "user_visible_behavior": "Sticky top bar and hamburger menu mirror Android drawer entries; safe areas respected.",
+    "depends_on": [
+      "access-gate"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Navigate all menu entries at 390px; iPhone notch check"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "fee-first-gate",
+    "area": "flow",
+    "title": "Fee-First Gate routing",
+    "user_visible_behavior": "Blocked routes redirect to current step (consumption -> conditions -> proposals).",
+    "depends_on": [
+      "app-shell-navigation"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Unit tests of stage->route mapping",
+      "Direct URL to proposals redirects when consumption missing"
+    ],
+    "evidence": [],
+    "notes": "Port FeeFirstStage logic."
+  },
+  {
+    "id": "consumption-by-cups-manual",
+    "area": "consumption",
+    "title": "Request consumption by typed CUPS",
+    "user_visible_behavior": "Broker types a valid CUPS, job is submitted and polled, report summary shown.",
+    "depends_on": [
+      "fee-first-gate",
+      "backend-proxy"
+    ],
+    "status": "not_started",
+    "verification": [
+      "CUPS validation unit tests",
+      "QA CUPS returns report"
+    ],
+    "evidence": [],
+    "notes": "Port CupsCodeParser validation; resume polling by jobId after tab background."
+  },
+  {
+    "id": "consumption-by-pdf",
+    "area": "consumption",
+    "title": "Request consumption by bill PDF upload",
+    "user_visible_behavior": "Broker uploads a PDF bill and gets the report via async job.",
+    "depends_on": [
+      "consumption-by-cups-manual"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Upload sample bill from ../Example bills on mobile"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "consumption-job-refresh-errors",
+    "area": "consumption",
+    "title": "Job failure and refresh handling",
+    "user_visible_behavior": "Failed jobs show Spanish error with retry; refresh endpoint re-runs a job.",
+    "depends_on": [
+      "consumption-by-cups-manual"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Simulated failed job shows retry"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "cups-camera-ocr",
+    "area": "consumption",
+    "title": "Live in-browser CUPS camera OCR",
+    "user_visible_behavior": "Broker scans CUPS with camera, confirms detected code; denial/failure falls back to manual entry.",
+    "depends_on": [
+      "consumption-by-cups-manual"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Spike accuracy on real bills with iPhone Safari and Android Chrome",
+      "Permission denied -> fallback"
+    ],
+    "evidence": [],
+    "notes": "Research spike first; risk documented."
+  },
+  {
+    "id": "backend-bill-photo-extraction",
+    "area": "backend",
+    "title": "Backend accepts bill photo for consumption",
+    "user_visible_behavior": "Uploading a JPEG/PNG bill photo returns a consumption job like PDF upload.",
+    "depends_on": [
+      "consumption-by-pdf"
+    ],
+    "status": "not_started",
+    "verification": [
+      "QA endpoint test with sample photo"
+    ],
+    "evidence": [],
+    "notes": "BmBackend qa branch only."
+  },
+  {
+    "id": "consumption-by-photo",
+    "area": "consumption",
+    "title": "Request consumption by bill photo",
+    "user_visible_behavior": "Broker takes/selects a bill photo and gets the report.",
+    "depends_on": [
+      "backend-bill-photo-extraction"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Photo from iPhone camera produces report"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "current-conditions-form",
+    "area": "conditions",
+    "title": "Current Conditions form",
+    "user_visible_behavior": "Broker enters holder, address, supplier, power, energy, extra services, taxes with Android validation rules; valid save unlocks proposals.",
+    "depends_on": [
+      "consumption-by-cups-manual"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Validation unit tests matching Android",
+      "Numeric keyboard on iOS"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "collected-prices-submit",
+    "area": "conditions",
+    "title": "Submit collected prices",
+    "user_visible_behavior": "Saving Current Conditions posts collected prices to backend.",
+    "depends_on": [
+      "current-conditions-form"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Proxy log/QA DB shows entry"
+    ],
+    "evidence": [],
+    "notes": "Port CollectedPricesMapper."
+  },
+  {
+    "id": "comparator-calculation",
+    "area": "comparator",
+    "title": "Comparator calculation parity",
+    "user_visible_behavior": "Comparison numbers identical to Android ProposalCalculationHelper.",
+    "depends_on": [
+      "bootstrap-nextjs-app"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Golden-case unit tests generated from Android"
+    ],
+    "evidence": [],
+    "notes": "Decide port vs backend (open question)."
+  },
+  {
+    "id": "proposals-table",
+    "area": "comparator",
+    "title": "Proposals comparison table",
+    "user_visible_behavior": "Broker sees proposals vs current conditions; horizontal scroll with sticky first column on phones.",
+    "depends_on": [
+      "current-conditions-form",
+      "comparator-calculation"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Same CUPS shows same values as Android app"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "proposals-configuration",
+    "area": "comparator",
+    "title": "Configure visible Proposals",
+    "user_visible_behavior": "Broker toggles which proposals appear; persisted like Android.",
+    "depends_on": [
+      "proposals-table"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Toggle hides proposal in table after reload"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "comparator-pdf-share",
+    "area": "pdf",
+    "title": "Generate and share Comparator PDF",
+    "user_visible_behavior": "Broker generates PDF and shares via native share sheet; download fallback.",
+    "depends_on": [
+      "proposals-table"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Share on iPhone and Android; download on desktop"
+    ],
+    "evidence": [],
+    "notes": "Port ComparatorReportPdfMapper."
+  },
+  {
+    "id": "premium-comprehensive-pdf",
+    "area": "pdf",
+    "title": "PREMIUM comprehensive PDF",
+    "user_visible_behavior": "PREMIUM Brokers can generate comprehensive PDF; BASIC do not see it.",
+    "depends_on": [
+      "comparator-pdf-share"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Test with BASIC and PREMIUM QA accounts"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "user-activity-sync",
+    "area": "platform",
+    "title": "User data and activity reporting",
+    "user_visible_behavior": "Web reports user-data sync and online/offline/proposals-response activity like Android.",
+    "depends_on": [
+      "access-gate"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Activity visible in BmWeb users page"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "analytics-screen-tracking",
+    "area": "platform",
+    "title": "Firebase Analytics screen tracking",
+    "user_visible_behavior": "Screen views tracked with Android-equivalent names; disabled outside production.",
+    "depends_on": [
+      "app-shell-navigation"
+    ],
+    "status": "not_started",
+    "verification": [
+      "DebugView shows events"
+    ],
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "id": "pwa-installable",
+    "area": "pwa",
+    "title": "Installable PWA with iOS install hint",
+    "user_visible_behavior": "App installable on Android; iOS shows Add to Home Screen hint; runs standalone.",
+    "depends_on": [
+      "app-shell-navigation"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Lighthouse installability",
+      "Install on iPhone and Android"
+    ],
+    "evidence": [],
+    "notes": "Final stage."
+  },
+  {
+    "id": "web-push-registration",
+    "area": "pwa",
+    "title": "Web Push token registration",
+    "user_visible_behavior": "Broker grants permission; token stored in backend.",
+    "depends_on": [
+      "pwa-installable"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Token visible in QA DB"
+    ],
+    "evidence": [],
+    "notes": "Final stage. iOS requires installed PWA. Backend on qa branch."
+  },
+  {
+    "id": "web-push-price-updates",
+    "area": "pwa",
+    "title": "Price Update Notifications delivered",
+    "user_visible_behavior": "Price update push received and tapping opens proposals.",
+    "depends_on": [
+      "web-push-registration"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Trigger from BmWeb; receive on installed iPhone and Android Chrome"
+    ],
+    "evidence": [],
+    "notes": "Final stage."
+  },
+  {
+    "id": "device-binding-hardening",
+    "area": "auth",
+    "title": "Bound Device hardening against account sharing",
+    "user_visible_behavior": "Accounts cannot be shared between colleagues on app or web without false lockouts from iOS storage eviction.",
+    "depends_on": [
+      "device-binding-basic"
+    ],
+    "status": "not_started",
+    "verification": [
+      "Strategy documented and tested before PROD"
+    ],
+    "evidence": [],
+    "notes": "Pre-PROD. Strategy to be decided."
+  }
+]
