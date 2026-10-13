@@ -28,5 +28,5 @@ Mirrors BmApp (`../BmApp/domain`). PowerAppWeb adds no new domain concepts.
 ## Edge Cases
 - Camera permission denied or OCR fails → fall back to manual entry / photo upload.
 - Account already bound to Android → web login rejected with clear message (admin reset required).
-- Grant revoked mid-session → 403 → signed out.
+- Grant revoked mid-session → 403, or revoked Firebase refresh token (BmWeb grant deletion) → signed out with a notice.
 - Polling interrupted (tab backgrounded on iOS) → resume by jobId.

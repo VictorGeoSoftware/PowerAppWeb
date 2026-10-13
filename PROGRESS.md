@@ -7,7 +7,7 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `logout-force-logout` (spec in progress)
+- Current next ready feature: `app-shell-navigation`; `logout-force-logout` passing, awaiting validation
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
@@ -95,3 +95,12 @@
 - Verification run: lint, typecheck, 90 unit tests, `npm run build`; `npm run test:e2e` with QA account 16/16 passed (android-chromium, iphone-webkit).
 - Known risk or unresolved issue: Firebase web API key from GitHub alert stays in history of dcf1e71; restricting it (HTTP referrers + API list) in Google Cloud is the mitigation, then close the alert as a false positive. New machines/hosts need `.env.local` with all vars.
 - Next best step: implement `logout-force-logout` from `docs/specs/logout-force-logout.md`.
+
+### Session 010
+
+- Date: 2026-10-13
+- Goal: implement `logout-force-logout`.
+- Completed: manual logout (best-effort `/auth/logout`, device id kept), forced logout on 401/403/revoked Firebase session with Spanish notices, tab-visibility access re-check (60 s), `useBmFetch()` hook, logout button on home placeholder, `e2e/logout.spec.ts`.
+- Verification run: `./init.sh` (119 unit tests), `npm run build`, `npm run test:e2e` 22/22; manual revocation via BmWeb (local Docker QA) shows "Tu acceso ha sido revocado…".
+- Known risk or unresolved issue: no instant force logout on web until web push; Firebase web API key is now referrer-restricted and shared with BmWeb, so every BmWeb/PowerAppWeb origin must be in its allowed list (localhost:9002 was missing and broke BmWeb login until added). One non-E2E account grant was deleted by mistake during testing (data wiped; grant to be restored by the user if needed).
+- Next best step: run `feature-validator` on `logout-force-logout`, then `app-shell-navigation`.

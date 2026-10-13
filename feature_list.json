@@ -158,13 +158,19 @@
     "depends_on": [
       "access-gate"
     ],
-    "status": "not_started",
+    "status": "passing",
     "verification": [
       "Logout clears session",
       "Revoke grant in BmWeb -> next call signs out"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "2026-10-13 ./init.sh exit 0: lint, typecheck, vitest 119 passed; npm run build OK",
+      "npm run test:e2e with QA account: 22 passed (android-chromium + iphone-webkit), incl. e2e/logout.spec.ts: manual logout POST /auth/logout with Bearer 200 + device id kept; backend 500 still signs out; mocked 403 on tab re-check signs out with message, no /auth/logout",
+      "Manual Scenario 7 vs local Docker QA + BmWeb :9002: grant deleted 07:38:01 -> on tab return /login with 'Tu acceso ha sido revocado. Contacta con el equipo de administración.' (Firebase token revocation path); grant restored and E2E re-run green",
+      "Bug found by Scenario 7 and fixed with unit tests: Firebase SDK self-signs-out on auth/user-token-expired, stale-user guard had dropped the notice",
+      "390px: logout button full width h-12 on home (Pixel 7 / iPhone 13 E2E screens)"
+    ],
+    "notes": "Web has no push yet: tab-visibility re-check (60 s throttle). Features must use useBmFetch()."
   },
   {
     "id": "app-shell-navigation",

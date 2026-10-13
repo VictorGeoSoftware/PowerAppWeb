@@ -134,6 +134,11 @@ Then the web signs out with a message. Restore the grant and the device binding 
    - Scenario 3: mock `/user-data` to return 403, then fire `visibilitychange` (e.g. `page.evaluate` overriding `document.visibilityState` and dispatching the event). Check the alert message, and check that `/auth/logout` was not requested.
    - Allow the test to bypass the 60 s throttle with an injectable interval prop on `AuthProvider` (`recheckIntervalMs`). For E2E, set it to 0 via `NEXT_PUBLIC_ACCESS_RECHECK_MS` only when that variable is set; otherwise the default is 60000. Document the variable in `.env.example` as dev/test only.
 
+## Implementation Notes
+- E2E bypasses the 60 s throttle with Playwright `page.clock.fastForward` instead of a `NEXT_PUBLIC_ACCESS_RECHECK_MS` override, so no test-only setting reaches the app; `.env.example` is unchanged. `recheckIntervalMs` remains an `AuthProvider` prop for unit tests.
+- `useBmFetch` passes every error to `reportApiError`, which decides (transient errors are a no-op returning false).
+- Found in the manual revocation test: the Firebase SDK signs the user out on its own when it gets `auth/user-token-expired`, before rejecting. The stale-user guard therefore treats a `null` current user as current for forced errors, so the notice is kept. Transient errors after sign-out are ignored.
+
 ## Expected File Changes
 - `src/lib/auth/session-errors.ts`, `session-errors.test.ts`: create
 - `src/lib/auth/logout.ts`, `logout.test.ts`: create

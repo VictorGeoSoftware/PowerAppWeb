@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 const replace = vi.fn();
 const retry = vi.fn();
+const signOutUser = vi.fn();
 let authState: { user: { email: string } | null; status: string };
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("@/components/auth/auth-provider", () => ({
-  useAuth: () => ({ ...authState, retry, signOutUser: vi.fn() }),
+  useAuth: () => ({ ...authState, retry, signOutUser }),
   FullScreenSpinner: () => <div role="status" />,
   ACCESS_CHECK_FAILED_MESSAGE: "No se pudo verificar tu acceso. Revisa tu conexión.",
 }));
@@ -40,5 +41,12 @@ describe("Home (protected placeholder)", () => {
     authState = { user: { email: "broker@bm.es" }, status: "granted" };
     render(<Home />);
     expect(screen.getByText("broker@bm.es")).toBeInTheDocument();
+  });
+
+  it("logout button signs the broker out", () => {
+    authState = { user: { email: "broker@bm.es" }, status: "granted" };
+    render(<Home />);
+    screen.getByRole("button", { name: "Cerrar sesión" }).click();
+    expect(signOutUser).toHaveBeenCalled();
   });
 });

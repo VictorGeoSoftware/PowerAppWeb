@@ -19,13 +19,19 @@ No own database. All data via BmBackend. Client keeps only session and current-f
 
 ## Integrations
 - BmBackend `/api/v1` endpoints used by BmApp (price-table-results, consumption report jobs, comparator-pdf, collected-prices, user-data, user-activity, auth/logout).
-- Firebase Auth (project `brielmarnysos-1dc68`, shared with Android). Web app registered; public config in `src/lib/firebase/config.ts`. Firebase JS SDK pinned to v11 (v12 requires Node ≥24).
+- Firebase Auth (project `brielmarnysos-1dc68`, shared with Android). Web app registered; public config from `NEXT_PUBLIC_FIREBASE_*` env vars (`src/lib/firebase/config.ts`); the web API key is restricted by HTTP referrer in Google Cloud and shared with BmWeb, so every BmWeb/PowerAppWeb origin (incl. localhost:9002/9003) must be listed. Firebase JS SDK pinned to v11 (v12 requires Node ≥24).
 - Web Push via FCM for web (service worker) — backend must store web tokens.
 - In-browser OCR for CUPS (e.g. Tesseract.js over `getUserMedia`); photo upload as fallback.
 - New backend capability: accept bill photos (image) for consumption/CUPS extraction.
 
 ## Authentication and Authorization
 Firebase ID token → `Authorization: Bearer`. Backend enforces `granted_users`, Tier, and Bound Device (one device total; browser counts as a device, needs a stable browser device id).
+
+Session end (`logout-force-logout`):
+- Manual logout: best-effort `POST /auth/logout` (marks offline), then Firebase sign-out. The Bound Device id is kept.
+- Forced logout (local sign-out + notice on `/login`, no `/auth/logout`): 403 → backend message; 401 → "Tu sesión ha caducado…"; revoked Firebase session (`auth/user-token-expired`, `user-disabled`, `user-not-found`, `invalid-user-token`; BmWeb grant deletion revokes refresh tokens) → "Tu acceso ha sido revocado…". Network/5xx never sign out.
+- No push channel on web yet: access is re-checked via `/user-data` when the tab becomes visible (throttled to 60 s). Instant force logout arrives with web push.
+- Signed-in features MUST call the backend through `useBmFetch()` (`src/lib/api/use-bm-fetch.ts`) so 401/403 from any call ends the session; per-session local data must be cleared in `clearLocalSessionData()` (`src/lib/auth/logout.ts`).
 
 ## Deployment and Operations
 Development targets BmBackend QA (`qa` branch, port 9081).
