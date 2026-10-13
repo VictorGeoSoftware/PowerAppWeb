@@ -71,6 +71,8 @@ export function AuthProvider({
   const currentUid = useRef<string | null>(null);
 
   const lastCheckAt = useRef(0);
+  /** True from a manual logout until the next sign-in. */
+  const manualLogout = useRef(false);
 
   /** Forced logout: local sign-out only (no `/auth/logout`, BmApp parity) plus notice. */
   const forceSignOut = useCallback(async (message: string) => {
@@ -94,6 +96,8 @@ export function AuthProvider({
         // Ignore results for a user who is no longer current. `null` still counts as
         // current: Firebase signs out by itself on a revoked token before rejecting.
         if (currentUid.current !== candidate.uid && currentUid.current !== null) return;
+        // The Broker logged out by hand while this check was running: no notice.
+        if (manualLogout.current) return;
         const result = classifySessionError(error);
         if (result.kind === "forced") {
           // Signing out means the next visit can't skip this check (BmApp parity).
@@ -111,6 +115,7 @@ export function AuthProvider({
       onAuthStateChanged(getFirebaseAuth(), (next) => {
         currentUid.current = next?.uid ?? null;
         setUser(next);
+        if (next) manualLogout.current = false;
         if (next) void verify(next);
         else setStatus("signed-out");
       }),
@@ -132,12 +137,22 @@ export function AuthProvider({
 
   const signOutUser = useCallback(async () => {
     const current = user;
+    const previousStatus = status;
+    manualLogout.current = true;
     setStatus("loading");
     if (current) await logoutFromBackend(current);
     clearLocalSessionData();
-    await signOut(getFirebaseAuth()).catch(() => {});
-  }, [user]);
+    try {
+      await signOut(getFirebaseAuth());
+    } catch {
+      // onAuthStateChanged won't fire: restore the screen instead of spinning forever.
+      manualLogout.current = false;
+      setStatus(previousStatus);
+    }
+  }, [user, status]);
 
+  // TODO(first useBmFetch consumer): ignore errors for a user who is no longer
+  // current, like `verify` does, before any feature relies on this.
   const reportApiError = useCallback(
     (error: unknown) => {
       const result = classifySessionError(error);

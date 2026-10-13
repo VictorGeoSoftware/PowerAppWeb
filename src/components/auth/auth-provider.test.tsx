@@ -107,6 +107,30 @@ describe("AuthProvider logout and forced logout", () => {
     expect(screen.getByText("signed-out|")).toBeInTheDocument();
   });
 
+  it("restores the previous status when Firebase signOut fails", async () => {
+    renderWith(vi.fn().mockResolvedValue(undefined));
+    await emit(user);
+    signOut.mockRejectedValueOnce(new Error("network"));
+    await act(async () => ctx.signOutUser());
+    expect(screen.getByText("granted|")).toBeInTheDocument();
+  });
+
+  it("no notice when a background 403 lands after a manual logout", async () => {
+    let reject: (e: unknown) => void = () => {};
+    const verify = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockImplementationOnce(() => new Promise<void>((_, r) => (reject = r)));
+    renderWith(verify, 0);
+    await emit(user);
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await act(async () => ctx.signOutUser());
+    await act(async () => reject(new BmApiError(403, "Revocada")));
+    expect(screen.getByText("signed-out|")).toBeInTheDocument();
+  });
+
   it("forced 403 does not call /auth/logout", async () => {
     renderWith(vi.fn().mockRejectedValue(new BmApiError(403, "Revocada")));
     await emit(user);
