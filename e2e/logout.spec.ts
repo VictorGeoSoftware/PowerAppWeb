@@ -11,7 +11,12 @@ async function login(page: Page) {
   await page.getByPlaceholder("Correo electrónico").fill(email!);
   await page.getByPlaceholder("Contraseña").fill(password!);
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
-  await expect(page.getByText(email!)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
+}
+
+async function logoutFromMenu(page: Page) {
+  await page.getByRole("button", { name: "Abrir menú" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cerrar sesión" }).click();
 }
 
 /** Simulates the Broker returning to the tab (visibility re-check). */
@@ -23,7 +28,7 @@ test("manual logout calls /auth/logout and keeps the device id", async ({ page }
   await login(page);
   const logout = page.waitForRequest((r) => r.url().endsWith("/api/bm/auth/logout"));
   const logoutResponse = page.waitForResponse((r) => r.url().endsWith("/api/bm/auth/logout"));
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await logoutFromMenu(page);
 
   const request = await logout;
   expect(request.method()).toBe("POST");
@@ -44,7 +49,7 @@ test("logout still signs out when the backend fails", async ({ page }) => {
     route.fulfill({ status: 500, contentType: "application/json", body: '{"message":"boom"}' }),
   );
   await login(page);
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await logoutFromMenu(page);
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);
@@ -68,7 +73,7 @@ test("grant revoked mid-session: returning to the tab signs out with the backend
 
   // Within the throttle window nothing happens.
   await returnToTab(page);
-  await expect(page.getByText(email!)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 
   await page.clock.fastForward("01:05");
   await returnToTab(page);

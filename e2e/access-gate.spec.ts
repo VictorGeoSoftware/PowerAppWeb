@@ -17,8 +17,8 @@ test("granted broker passes the real backend access check", async ({ page }) => 
   const sync = page.waitForResponse((r) => r.url().endsWith("/api/bm/user-data"));
   await login(page);
   expect((await sync).status()).toBe(200);
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText(email!)).toBeVisible();
+  await expect(page).toHaveURL(/\/fetch-consumption$/);
+  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 });
 
 test("backend 403 signs out and shows the backend message on login", async ({ page }) => {
@@ -50,7 +50,7 @@ test("backend unavailable shows retry screen, retry recovers", async ({ page }) 
   await expect(page.getByRole("alert").filter({ hasText: "verificar" })).toBeVisible();
   fail = false;
   await page.getByRole("button", { name: "Reintentar" }).click();
-  await expect(page.getByText(email!)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 });
 
 test("browser sends its device id and a second browser is rejected by the real backend", async ({
@@ -61,7 +61,7 @@ test("browser sends its device id and a second browser is rejected by the real b
   const sync = page.waitForRequest((r) => r.url().endsWith("/api/bm/user-data"));
   await login(page);
   expect((await sync).postDataJSON().phoneUuid).toBe(E2E_DEVICE_ID);
-  await expect(page.getByText(email!)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 
   // Browser B with another device id: same account must be rejected.
   const other = await browser.newContext();

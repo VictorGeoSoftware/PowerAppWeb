@@ -181,12 +181,16 @@
     "depends_on": [
       "access-gate"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Navigate all menu entries at 390px; iPhone notch check"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "2026-10-13 ./init.sh exit 0: lint, typecheck, vitest 126 passed; npm run build OK (4 shell routes static)",
+      "npm run test:e2e without QA credentials: 8 passed (signed-out redirects for all 4 sections, both projects); 22 signed-in tests skipped, pending a run with E2E_EMAIL/E2E_PASSWORD",
+      "2026-10-13 user validation: accepted. No signed-in E2E run recorded on this machine (no app-shell screenshots in test-results/); run npm run test:e2e with QA credentials to complete the evidence"
+    ],
+    "notes": "Real-iPhone notch check deferred to qa-real-device-checks."
   },
   {
     "id": "fee-first-gate",

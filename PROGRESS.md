@@ -7,7 +7,7 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `app-shell-navigation`; `logout-force-logout` passing, awaiting validation
+- Current next ready feature: `fee-first-gate` (`app-shell-navigation` accepted; signed-in E2E run still to be recorded)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
@@ -105,3 +105,13 @@
 - Known risk or unresolved issue: no instant force logout on web until web push; Firebase web API key is now referrer-restricted and shared with BmWeb, so every BmWeb/PowerAppWeb origin must be in its allowed list (localhost:9002 was missing and broke BmWeb login until added). One non-E2E account grant was deleted by mistake during testing (data wiped; grant to be restored by the user if needed).
 - Next best step: run `feature-validator` on `logout-force-logout`, then `app-shell-navigation`.
 - Update (review fixes): failed Firebase `signOut` now restores the previous status (no endless spinner); a manual-logout flag suppresses notices from background checks finishing after a manual logout. `reportApiError` has no stale-user guard yet (TODO, add with the first `useBmFetch` consumer). `./init.sh` 121 tests green.
+
+### Session 011
+
+- Date: 2026-10-13
+- Goal: implement `app-shell-navigation`.
+- Completed: `(app)` route group (RequireAuth + AppShell); sticky top bar with "Abrir menú"; left Sheet menu "Menú" with BmApp drawer entries in order, `aria-current` highlight (`bg-section-highlight`), logout entry, version label (`NEXT_PUBLIC_APP_VERSION` or `vddMM_HHmm`); `locked` entry prop for `fee-first-gate`; `useTopBarAction` slot; placeholder pages for `/current-conditions`, `/proposals`, `/configuration`, `/fetch-consumption`; `/` redirects to `/fetch-consumption`; safe-area paddings; E2E updated (signed-in marker is now the menu button, logout via menu) + `e2e/app-shell.spec.ts`.
+- Verification run: `./init.sh` (126 unit tests), `npm run build`; E2E 8/8 signed-out tests passed, signed-in tests pending credentials.
+- Known risk or unresolved issue: real-iPhone notch check deferred to `qa-real-device-checks`.
+- Next best step: run `npm run test:e2e` with `E2E_EMAIL`/`E2E_PASSWORD`, review screenshots, then validate.
+- Update: accepted by user validation. Signed-in E2E run not recorded here yet.

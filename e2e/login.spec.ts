@@ -24,14 +24,14 @@ test("valid credentials sign in and persist across reload", async ({ page }) => 
   await page.getByPlaceholder("Correo electrónico").fill(email!);
   await page.getByPlaceholder("Contraseña").fill(password!);
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText(email!)).toBeVisible();
+  await expect(page).toHaveURL(/\/fetch-consumption$/);
+  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 
   await page.reload();
-  await expect(page.getByText(email!)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 
   await page.goto("/login");
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/fetch-consumption$/);
 });
 
 test("Google button opens the Google sign-in popup", async ({ page }) => {
