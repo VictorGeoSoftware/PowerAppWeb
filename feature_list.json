@@ -135,7 +135,7 @@
     "depends_on": [
       "access-gate"
     ],
-    "status": "passing",
+    "status": "accepted",
     "verification": [
       "Bound to Android QA account -> web rejected",
       "Admin reset in BmWeb -> web accepted"
@@ -144,7 +144,9 @@
       "2026-10-12 ./init.sh green: 10 files, 90 tests (device id format/stability, payload always has phoneUuid)",
       "npm run test:e2e 16/16 vs local Docker QA: /user-data carries web-e2e-playwright; second browser (other id) gets real backend 403 'vinculada a otro dispositivo' (2 audit log lines)",
       "Admin-reset path: phone_uuid cleared in local QA DB -> login with new id 'web-after-admin-reset' accepted and bound",
-      "Local QA binding for test account left cleared after verification"
+      "Local QA binding for test account left cleared after verification",
+      "2026-10-13 validator: accept (finding: e2e/access-gate.spec.ts hard-coded device id -> now uses E2E_DEVICE_ID)",
+      "2026-10-13 npm run test:e2e with QA account: 16 passed (android-chromium + iphone-webkit), incl. real-backend second-browser rejection"
     ],
     "notes": "Basic version for QA; hardening is device-binding-hardening. Backend changes on qa branch. Spec: docs/specs/device-binding-basic.md. No backend change needed."
   },

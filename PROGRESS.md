@@ -7,11 +7,11 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `logout-force-logout` (access-gate accepted); `device-binding-basic` passing, awaiting validation
+- Current next ready feature: `logout-force-logout` (spec in progress)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-12
+- Last verified at: 2026-10-13
 
 ## Session Log
 
@@ -86,3 +86,12 @@
 - Completed: `README.md` (workspace layout, Node 22, local Docker backend, env, E2E, repo map); AGENTS/PROGRESS updated; initial commit pushed to GitHub `main`.
 - State at push: accepted = bootstrap-nextjs-app, design-tokens-theme, backend-proxy, login-email, login-google, access-gate; passing (awaiting validation) = device-binding-basic.
 - Next best step: validate `device-binding-basic`; then `logout-force-logout`.
+
+### Session 009
+
+- Date: 2026-10-13
+- Goal: secret-scanner follow-up and validate `device-binding-basic`.
+- Completed: Firebase web config moved to `NEXT_PUBLIC_FIREBASE_*` and `BM_BACKEND_URL` made required (no built-in QA default), `.env.example` un-ignored (cdc6fd0); E2E device-id assertion uses `E2E_DEVICE_ID`; `device-binding-basic` accepted.
+- Verification run: lint, typecheck, 90 unit tests, `npm run build`; `npm run test:e2e` with QA account 16/16 passed (android-chromium, iphone-webkit).
+- Known risk or unresolved issue: Firebase web API key from GitHub alert stays in history of dcf1e71; restricting it (HTTP referrers + API list) in Google Cloud is the mitigation, then close the alert as a false positive. New machines/hosts need `.env.local` with all vars.
+- Next best step: implement `logout-force-logout` from `docs/specs/logout-force-logout.md`.

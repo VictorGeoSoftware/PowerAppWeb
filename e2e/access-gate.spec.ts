@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, test, setDeviceId } from "./fixtures";
+import { E2E_DEVICE_ID, expect, test, setDeviceId } from "./fixtures";
 
 const email = process.env.E2E_EMAIL;
 const password = process.env.E2E_PASSWORD;
@@ -60,7 +60,7 @@ test("browser sends its device id and a second browser is rejected by the real b
   // Browser A (fixed E2E device id) binds / matches the binding.
   const sync = page.waitForRequest((r) => r.url().endsWith("/api/bm/user-data"));
   await login(page);
-  expect((await sync).postDataJSON().phoneUuid).toBe("web-e2e-playwright");
+  expect((await sync).postDataJSON().phoneUuid).toBe(E2E_DEVICE_ID);
   await expect(page.getByText(email!)).toBeVisible();
 
   // Browser B with another device id: same account must be rejected.
