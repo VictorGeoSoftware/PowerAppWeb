@@ -56,6 +56,9 @@ E2E_EMAIL=<qa broker email> E2E_PASSWORD=<password> npm run test:e2e
 ```
 - Projects: `iphone-webkit` (iPhone 13) and `android-chromium` (Pixel 7). The dev server starts automatically or is reused.
 - Without the env vars, signed-in tests are skipped. **Never commit credentials.**
+- Sign-in once per browser: the `setup-*` projects (`e2e/auth.setup.ts`) sign in with the QA account and save the session (incl. IndexedDB, where Firebase keeps it) to `playwright/.auth/` (gitignored). Signed-in specs call `useSignedInSession()` + `openSignedIn(page)` from `e2e/fixtures.ts` instead of typing credentials. Only `login.spec.ts` exercises the real login form. This keeps a full run at ~4 Firebase password sign-ins (repeated runs hit `QUOTA_EXCEEDED` otherwise).
+- Runs serially (`workers: 1`): all signed-in tests share one account and one bound device.
+- macOS keychain shortcut: `E2E_EMAIL="$(security find-generic-password -s bm-e2e-email -w)" E2E_PASSWORD="$(security find-generic-password -s bm-e2e-password -w)" npm run test:e2e`
 - Tests pin the browser device id to `web-e2e-playwright` (override with `E2E_DEVICE_ID`). A run binds the test account to that id, so reset the binding (BmWeb, or the local DB command in `docs/specs/device-binding-basic.md`) before logging in from your own browser.
 
 ## Repository map
