@@ -4,11 +4,12 @@ import type { CurrentConditions } from "./fee-first";
 export const CONDITIONS_KEY = "bm.currentConditions";
 /** `{jobId, savedAt}` of the last completed study; restored if < 1 h old (BmApp parity). */
 export const LAST_JOB_ID_KEY = "bm.lastCompletedJobId";
-/** sessionStorage `{jobId, cups, attempts}` of the job being polled; resumed on reload. */
+/** sessionStorage `{jobId, source, cups?, attempts}` of the job being polled; resumed on reload. */
 export const ACTIVE_JOB_KEY = "bm.activeJob";
 export const LAST_JOB_ID_EXPIRY_MS = 60 * 60 * 1000;
 
-export type ActiveJob = { jobId: string; cups: string; attempts: number };
+export type JobSource = "cups" | "pdf";
+export type ActiveJob = { jobId: string; source: JobSource; cups?: string; attempts: number };
 
 export function saveActiveJob(job: ActiveJob | null) {
   try {
@@ -23,7 +24,11 @@ export function loadActiveJob(): ActiveJob | null {
   try {
     const v = JSON.parse(sessionStorage.getItem(ACTIVE_JOB_KEY) ?? "null");
     if (!v || typeof v.jobId !== "string" || !v.jobId) return null;
-    return { jobId: v.jobId, cups: typeof v.cups === "string" ? v.cups : "", attempts: Number(v.attempts) || 0 };
+    // Entries written before the PDF source existed have no `source`: they are CUPS jobs.
+    const source: JobSource = v.source === "pdf" ? "pdf" : "cups";
+    const job: ActiveJob = { jobId: v.jobId, source, attempts: Number(v.attempts) || 0 };
+    if (source === "cups") job.cups = typeof v.cups === "string" ? v.cups : "";
+    return job;
   } catch {
     return null;
   }

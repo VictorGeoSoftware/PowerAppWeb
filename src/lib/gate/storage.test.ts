@@ -35,7 +35,7 @@ describe("gate storage", () => {
 
   it("clearStudyStorage removes conditions, job id and active job only", () => {
     saveConditions(c);
-    saveActiveJob({ jobId: "a", cups: "C", attempts: 2 });
+    saveActiveJob({ jobId: "a", source: "cups", cups: "C", attempts: 2 });
     localStorage.setItem(LAST_JOB_ID_KEY, "j");
     localStorage.setItem("bm.deviceId", "web-1");
     clearStudyStorage();
@@ -46,8 +46,13 @@ describe("gate storage", () => {
   });
 
   it("round-trips the active job; corrupt or missing is null", () => {
-    saveActiveJob({ jobId: "a", cups: "C", attempts: 3 });
-    expect(loadActiveJob()).toEqual({ jobId: "a", cups: "C", attempts: 3 });
+    saveActiveJob({ jobId: "a", source: "cups", cups: "C", attempts: 3 });
+    expect(loadActiveJob()).toEqual({ jobId: "a", source: "cups", cups: "C", attempts: 3 });
+    saveActiveJob({ jobId: "p", source: "pdf", attempts: 1 });
+    expect(loadActiveJob()).toEqual({ jobId: "p", source: "pdf", attempts: 1 });
+    // Pre-PDF entries have no source: read as CUPS.
+    sessionStorage.setItem(ACTIVE_JOB_KEY, JSON.stringify({ jobId: "old", cups: "C", attempts: 4 }));
+    expect(loadActiveJob()).toEqual({ jobId: "old", source: "cups", cups: "C", attempts: 4 });
     saveActiveJob(null);
     expect(loadActiveJob()).toBeNull();
     sessionStorage.setItem(ACTIVE_JOB_KEY, "{oops");

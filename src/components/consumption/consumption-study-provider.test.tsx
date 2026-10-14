@@ -52,7 +52,7 @@ function stubBackend({ statuses = ["PROCESSING", "COMPLETED"], submitStatus = 20
   const calls: string[] = [];
   const fetch = vi.fn(async (url: string, init?: RequestInit) => {
     calls.push(`${init?.method ?? "GET"} ${url}`);
-    if (url.includes("fetch-user-consumption-report-by-cups"))
+    if (url.includes("fetch-user-consumption-report"))
       return json(submitStatus === 202 ? { jobId: "job-1" } : { message: "x" }, submitStatus);
     if (url.includes("consumption-report-status")) return json({ status: statuses[Math.min(i++, statuses.length - 1)] });
     return json(resultStatus === 200 ? report : { message: "Job not found" }, resultStatus);
@@ -131,7 +131,7 @@ describe("ConsumptionStudyProvider + /fetch-consumption", () => {
   });
 
   it("resumes a persisted job on mount without submitting", async () => {
-    saveActiveJob({ jobId: "job-1", cups: "ES0031607515707001RC", attempts: 5 });
+    saveActiveJob({ jobId: "job-1", source: "cups", cups: "ES0031607515707001RC", attempts: 5 });
     const calls = stubBackend({ statuses: ["COMPLETED"] });
     renderPage();
     await waitFor(() => expect(screen.getByText("stage:CURRENT_CONDITIONS_REQUIRED")).toBeInTheDocument());
@@ -154,13 +154,72 @@ describe("ConsumptionStudyProvider + /fetch-consumption", () => {
     expect(screen.getByRole("button", { name: "Confirmar" })).toBeInTheDocument();
   });
 
+  const pdf = (name = "factura.pdf", type = "application/pdf", size?: number) => {
+    const f = new File(["%PDF-1.4"], name, { type });
+    if (size) Object.defineProperty(f, "size", { value: size });
+    return f;
+  };
+  const pdfInput = () => screen.getByLabelText("Subir factura PDF") as HTMLInputElement;
+
+  it("uploads a picked PDF as multipart and publishes the session", async () => {
+    const calls = stubBackend();
+    let release: () => void = () => {};
+    renderPage(() => new Promise((r) => (release = r)));
+    expect(pdfInput()).toHaveAttribute("accept", expect.stringContaining("application/pdf"));
+    await userEvent.upload(pdfInput(), pdf());
+    await waitFor(() => expect(loadActiveJob()).toEqual({ jobId: "job-1", source: "pdf", attempts: 0 }));
+    expect(screen.getByRole("status")).toHaveTextContent("Subiendo factura...");
+    for (let i = 0; i < 3; i++) await act(async () => release());
+    await waitFor(() => expect(screen.getByText("stage:CURRENT_CONDITIONS_REQUIRED")).toBeInTheDocument());
+    expect(calls[0]).toBe("POST /api/bm/fetch-user-consumption-report");
+    const init = vi.mocked(fetch).mock.calls[0][1]!;
+    expect(((init.body as FormData).get("file") as File).name).toBe("factura.pdf");
+    expect(gate.session).toMatchObject({ jobId: "job-1", cups: "ES0031607515707001RC" });
+  });
+
+  it("shows Subiendo factura... first", async () => {
+    stubBackend({ statuses: ["PENDING"] });
+    renderPage(() => new Promise(() => {}));
+    await userEvent.upload(pdfInput(), pdf());
+    expect(await screen.findByText("Subiendo factura...")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["not a PDF", () => pdf("foto.png", "image/png"), "Selecciona un archivo PDF."],
+    ["too large", () => pdf("a.pdf", "application/pdf", 50 * 1024 * 1024 + 1), "El archivo supera el tamaño máximo de 50 MB."],
+  ])("%s → local alert, no request", async (_, file, message) => {
+    stubBackend();
+    renderPage();
+    await userEvent.upload(pdfInput(), file(), { applyAccept: false });
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Introducir código CUPS")).toBeEnabled();
+  });
+
+  it("PDF failure shows the error with an empty CUPS field", async () => {
+    stubBackend({ submitStatus: 400 });
+    renderPage();
+    await userEvent.upload(pdfInput(), pdf());
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo iniciar el estudio. Inténtalo de nuevo.");
+    expect(screen.getByLabelText("Introducir código CUPS")).toHaveValue("");
+    expect(sessionStorage.getItem(ACTIVE_JOB_KEY)).toBeNull();
+  });
+
+  it("resumes a PDF job without re-uploading", async () => {
+    saveActiveJob({ jobId: "job-1", source: "pdf", attempts: 2 });
+    const calls = stubBackend({ statuses: ["COMPLETED"] });
+    renderPage();
+    await waitFor(() => expect(screen.getByText("stage:CURRENT_CONDITIONS_REQUIRED")).toBeInTheDocument());
+    expect(calls.some((c) => c.startsWith("POST"))).toBe(false);
+  });
+
   it("Nuevo estudio aborts polling and clears the active job", async () => {
     const calls = stubBackend({ statuses: ["PENDING"] });
     let release: () => void = () => {};
     renderPage(() => new Promise((r) => (release = r)));
     await userEvent.type(screen.getByLabelText("Introducir código CUPS"), "ES0031607515707001RC");
     await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
-    await waitFor(() => expect(loadActiveJob()).toEqual({ jobId: "job-1", cups: "ES0031607515707001RC", attempts: 0 }));
+    await waitFor(() => expect(loadActiveJob()).toEqual({ jobId: "job-1", source: "cups", cups: "ES0031607515707001RC", attempts: 0 }));
     expect(screen.getByText("Obtener consumo")).toBeInTheDocument();
     expect(screen.getByText("Consultando CUPS...")).toBeInTheDocument();
     act(() => gate.startNewStudy());

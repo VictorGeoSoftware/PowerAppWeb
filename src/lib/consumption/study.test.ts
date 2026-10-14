@@ -37,7 +37,7 @@ describe("runStudy", () => {
     const progress: number[] = [];
     const r = await runStudy({
       fetch,
-      cups: "ES0031607515707001RC",
+      submission: { kind: "cups", cups: "ES0031607515707001RC" },
       onStep: (s) => steps.push(s),
       onProgress: (_, a) => progress.push(a),
       sleep,
@@ -57,7 +57,7 @@ describe("runStudy", () => {
 
   it("sends the CUPS as JSON", async () => {
     const submit = vi.fn<Route>(() => json({ jobId: "j" }, 202));
-    await runStudy({ fetch: fakeFetch({ submit }).fetch, cups: "ES0031607515707001RC", onStep: () => {}, sleep });
+    await runStudy({ fetch: fakeFetch({ submit }).fetch, submission: { kind: "cups", cups: "ES0031607515707001RC" }, onStep: () => {}, sleep });
     expect(JSON.parse(submit.mock.calls[0][1]!.body as string)).toEqual({ cupsCode: "ES0031607515707001RC" });
   });
 
@@ -70,7 +70,7 @@ describe("runStudy", () => {
     ["result error", { result: () => Promise.reject(new BmApiError(500, "x")) }, "RESULT_FETCH_FAILED"],
     ["result 202", { result: () => json({}, 202) }, "RESULT_FETCH_FAILED"],
   ] as const)("%s → %s", async (_, cfg, failure) => {
-    const r = await runStudy({ fetch: fakeFetch(cfg as never).fetch, cups: "C", onStep: () => {}, sleep });
+    const r = await runStudy({ fetch: fakeFetch(cfg as never).fetch, submission: { kind: "cups", cups: "C" }, onStep: () => {}, sleep });
     expect(r).toEqual({ ok: false, failure });
   });
 
@@ -80,8 +80,34 @@ describe("runStudy", () => {
     expect(r).toEqual({ ok: false, failure: "TIMEOUT" });
     expect(calls).toHaveLength(3);
     const full = fakeFetch({ statuses: ["PENDING"] });
-    await runStudy({ fetch: full.fetch, cups: "C", onStep: () => {}, sleep });
+    await runStudy({ fetch: full.fetch, submission: { kind: "cups", cups: "C" }, onStep: () => {}, sleep });
     expect(full.calls.filter((c) => c.includes("status"))).toHaveLength(60);
+  });
+
+  it("uploads a PDF as multipart part `file` with a .pdf name", async () => {
+    const submit = vi.fn<Route>(() => json({ jobId: "job-1" }, 202));
+    const { fetch, calls } = fakeFetch({ submit });
+    const steps: string[] = [];
+    const file = new File(["%PDF-1.4"], "factura", { type: "application/pdf" });
+    const r = await runStudy({ fetch, submission: { kind: "pdf", file }, onStep: (s) => steps.push(s), sleep });
+    expect(r.ok).toBe(true);
+    expect(calls[0]).toBe("POST fetch-user-consumption-report");
+    expect(steps[0]).toBe("UPLOADING_BILL");
+    const init = submit.mock.calls[0][1]!;
+    expect(init.headers).toBeUndefined();
+    const part = (init.body as FormData).get("file") as File;
+    expect(part.name).toBe("factura.pdf");
+    expect(await part.text()).toBe("%PDF-1.4");
+  });
+
+  it.each([
+    ["non-202", () => json({}, 200)],
+    ["400", () => Promise.reject(new BmApiError(400, "Only PDF files are allowed"))],
+    ["network", () => Promise.reject(new TypeError("Failed to fetch"))],
+  ] as const)("PDF submit %s → SUBMIT_FAILED", async (_, submit) => {
+    const file = new File(["x"], "a.pdf", { type: "application/pdf" });
+    const r = await runStudy({ fetch: fakeFetch({ submit }).fetch, submission: { kind: "pdf", file }, onStep: () => {}, sleep });
+    expect(r).toEqual({ ok: false, failure: "SUBMIT_FAILED" });
   });
 
   it("resumes without submitting", async () => {
@@ -98,7 +124,7 @@ describe("runStudy", () => {
     const { fetch, calls } = fakeFetch({ statuses: ["PENDING"] });
     const r = await runStudy({
       fetch,
-      cups: "C",
+      submission: { kind: "cups", cups: "C" },
       onStep: () => {},
       signal: ctrl.signal,
       sleep: async () => ctrl.abort(),

@@ -1,5 +1,5 @@
 /** BmApp `ConsumptionStudyStep` / `ConsumptionStudyFailure` and their Spanish strings. */
-export type StudyStep = "SUBMITTING_CUPS" | "QUEUED" | "PROCESSING" | "FETCHING_RESULTS";
+export type StudyStep = "SUBMITTING_CUPS" | "UPLOADING_BILL" | "QUEUED" | "PROCESSING" | "FETCHING_RESULTS";
 
 export type StudyFailure =
   | "SUBMIT_FAILED"
@@ -12,6 +12,7 @@ export const STUDY_TITLE = "Obtener consumo";
 
 export const STEP_MESSAGES: Record<StudyStep, string> = {
   SUBMITTING_CUPS: "Consultando CUPS...",
+  UPLOADING_BILL: "Subiendo factura...",
   QUEUED: "Esperando en la cola...",
   PROCESSING: "Analizando tu factura...",
   FETCHING_RESULTS: "Obteniendo resultados...",
@@ -24,3 +25,7 @@ export const FAILURE_MESSAGES: Record<StudyFailure, string> = {
   RESULT_FETCH_FAILED: "No se pudieron obtener los resultados del estudio.",
   TIMEOUT: "El estudio ha tardado demasiado. Inténtalo de nuevo.",
 };
+
+/** Client-side bill file checks (web-only). */
+export const PDF_NOT_PDF = "Selecciona un archivo PDF.";
+export const PDF_TOO_LARGE = "El archivo supera el tamaño máximo de 50 MB.";

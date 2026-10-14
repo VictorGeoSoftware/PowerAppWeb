@@ -1,4 +1,5 @@
 import type { ConsumptionReportResponse, JobStatus } from "./report";
+import { billUploadName } from "./bill-file";
 import type { StudyFailure, StudyStep } from "./messages";
 
 /** Backend call through the proxy; throws on non-2xx (see `useBmFetch`). */
@@ -8,6 +9,7 @@ export const MAX_POLL_ATTEMPTS = 60;
 export const POLL_INTERVAL_MS = 3_000;
 
 export const SUBMIT_PATH = "fetch-user-consumption-report-by-cups";
+export const PDF_SUBMIT_PATH = "fetch-user-consumption-report";
 export const statusPath = (jobId: string) => `consumption-report-status/${encodeURIComponent(jobId)}`;
 export const resultPath = (jobId: string) => `consumption-report-result/${encodeURIComponent(jobId)}`;
 
@@ -16,10 +18,12 @@ export type StudyResult =
   | { ok: false; failure: StudyFailure }
   | { ok: false; aborted: true };
 
+export type StudySubmission = { kind: "cups"; cups: string } | { kind: "pdf"; file: File };
+
 export type RunStudyOptions = {
   fetch: StudyFetch;
-  /** Submittable CUPS (already corrected) for a new job, or */
-  cups?: string;
+  /** A new job: submittable CUPS (already corrected) or a PDF bill, or */
+  submission?: StudySubmission;
   /** an existing job to keep polling (no submit). */
   resumeJobId?: string;
   /** Status attempts already used by the resumed job. */
@@ -69,15 +73,24 @@ export async function runStudy(opts: RunStudyOptions): Promise<StudyResult> {
   let attempts = opts.startAttempts ?? 0;
 
   if (!jobId) {
-    if (!opts.cups) throw new Error("runStudy needs cups or resumeJobId");
-    onStep("SUBMITTING_CUPS");
+    const sub = opts.submission;
+    if (!sub) throw new Error("runStudy needs submission or resumeJobId");
+    onStep(sub.kind === "cups" ? "SUBMITTING_CUPS" : "UPLOADING_BILL");
     try {
-      const res = await fetch(SUBMIT_PATH, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cupsCode: opts.cups }),
-        signal,
-      });
+      let res: Response;
+      if (sub.kind === "cups") {
+        res = await fetch(SUBMIT_PATH, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cupsCode: sub.cups }),
+          signal,
+        });
+      } else {
+        // No Content-Type: the browser sets multipart with its boundary.
+        const form = new FormData();
+        form.append("file", sub.file, billUploadName(sub.file));
+        res = await fetch(PDF_SUBMIT_PATH, { method: "POST", body: form, signal });
+      }
       if (res.status !== 202) return fail("SUBMIT_FAILED");
       const body = (await res.json()) as { jobId?: string };
       if (!body.jobId) return fail("SUBMIT_FAILED");

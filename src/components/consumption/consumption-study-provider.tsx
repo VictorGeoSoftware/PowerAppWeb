@@ -7,8 +7,9 @@ import { BmApiError } from "@/lib/api/bm-fetch";
 import { useBmFetch } from "@/lib/api/use-bm-fetch";
 import { FAILURE_MESSAGES, type StudyStep } from "@/lib/consumption/messages";
 import { toConsumptionSession } from "@/lib/consumption/report";
-import { fetchResult, runStudy, type StudyFetch } from "@/lib/consumption/study";
+import { fetchResult, runStudy, type StudyFetch, type StudySubmission } from "@/lib/consumption/study";
 import {
+  type JobSource,
   clearLastCompletedJobId,
   loadActiveJob,
   loadLastCompletedJobId,
@@ -19,13 +20,20 @@ import {
 export type StudyState =
   | { kind: "idle" }
   | { kind: "running"; step: StudyStep }
-  | { kind: "failed"; message: string; cups: string };
+  /** `cups` is the typed CUPS to refill the form; "" for PDF studies. */
+  | { kind: "failed"; message: string; source: JobSource; cups: string };
 
 type StudyContextValue = {
   state: StudyState;
   /** Starts a study for an already corrected CUPS (`toSubmittableCups`). */
-  start: (cups: string) => void;
+  startCups: (cups: string) => void;
+  /** Starts a study from a PDF bill already checked with `checkBillFile`. */
+  startPdf: (file: File) => void;
 };
+
+type RunInput =
+  | { submission: StudySubmission }
+  | { resume: { jobId: string; source: JobSource; cups?: string; attempts: number } };
 
 const StudyContext = createContext<StudyContextValue | null>(null);
 
@@ -90,26 +98,33 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
   }, []);
 
   const run = useCallback(
-    async (input: { cups: string; resumeJobId?: string; startAttempts?: number }) => {
+    async (input: RunInput) => {
       abort();
       const ctrl = new AbortController();
       controller.current = ctrl;
       const uid = uidRef.current;
       const stale = () => ctrl.signal.aborted || uidRef.current !== uid;
-      setState({ kind: "running", step: input.resumeJobId ? "QUEUED" : "SUBMITTING_CUPS" });
+      const sub = "submission" in input ? input.submission : null;
+      const resume = "resume" in input ? input.resume : null;
+      const source: JobSource = sub ? sub.kind : resume!.source;
+      const cups = sub?.kind === "cups" ? sub.cups : source === "cups" ? (resume?.cups ?? "") : undefined;
+      setState({
+        kind: "running",
+        step: resume ? "QUEUED" : source === "cups" ? "SUBMITTING_CUPS" : "UPLOADING_BILL",
+      });
 
       const result = await runStudy({
         fetch: (path, init) => fetchRef.current(path, init),
-        cups: input.cups,
-        resumeJobId: input.resumeJobId,
-        startAttempts: input.startAttempts,
+        submission: sub ?? undefined,
+        resumeJobId: resume?.jobId,
+        startAttempts: resume?.attempts,
         signal: ctrl.signal,
         sleep,
         onStep: (step) => {
           if (!stale()) setState({ kind: "running", step });
         },
         onProgress: (jobId, attempts) => {
-          if (!stale()) saveActiveJob({ jobId, cups: input.cups, attempts });
+          if (!stale()) saveActiveJob(source === "cups" ? { jobId, source, cups, attempts } : { jobId, source, attempts });
         },
       });
       if (stale() || ("aborted" in result && result.aborted)) return;
@@ -120,7 +135,7 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
         setSession(toConsumptionSession(result.report, result.jobId));
         setState({ kind: "idle" });
       } else if ("failure" in result) {
-        setState({ kind: "failed", message: FAILURE_MESSAGES[result.failure], cups: input.cups });
+        setState({ kind: "failed", message: FAILURE_MESSAGES[result.failure], source, cups: cups ?? "" });
       }
     },
     [abort, sleep, setSession],
@@ -153,7 +168,7 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
     if (controller.current || hasSession.current) return;
     const active = loadActiveJob();
     if (active) {
-      void run({ cups: active.cups, resumeJobId: active.jobId, startAttempts: active.attempts });
+      void run({ resume: active });
       return;
     }
     const lastId = loadLastCompletedJobId();
@@ -184,7 +199,8 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
     setState({ kind: "idle" });
   }, [resetCount, abort, setSession]);
 
-  const start = useCallback((cups: string) => void run({ cups }), [run]);
-  const value = useMemo(() => ({ state, start }), [state, start]);
+  const startCups = useCallback((cups: string) => void run({ submission: { kind: "cups", cups } }), [run]);
+  const startPdf = useCallback((file: File) => void run({ submission: { kind: "pdf", file } }), [run]);
+  const value = useMemo(() => ({ state, startCups, startPdf }), [state, startCups, startPdf]);
   return <StudyContext.Provider value={value}>{children}</StudyContext.Provider>;
 }

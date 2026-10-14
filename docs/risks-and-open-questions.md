@@ -29,6 +29,8 @@
 - iOS PWA limitations (push only when installed, storage eviction, background tab throttling during polling).
 - Calculation drift between Android and web if logic is duplicated.
 - Local Docker QA can't complete a CUPS Consumption Job: no n8n/Datadis, and `docker-compose.yml` sets `N8N_WEBHOOK_URL` while BmBackend reads `N8N_FETCH_USER_CONSUMPTION_WEBHOOK_URL` (fix belongs to BmInfra/BmBackend). E2E mocks the job endpoints; the real end-to-end CUPS check needs a working n8n.
+- PDF bills: Docling extraction must finish inside the 60 × 3 s (~3 min) poll budget, or the study times out (BmApp parity). Local QA, 2026-10-14: 2.0TD Iberdrola 54 s, 3.0TD Repsol 37 s. Watch real-world timings on the QA VPS.
+- PDF bills on iOS: some Files providers report an empty MIME type; the client accepts any `.pdf` name. Pending a real check of the Files picker in iPhone Simulator Safari.
 - BmBackend keeps jobs in memory: a backend restart loses in-flight jobs and the 1 h restore (status/result 404 → error or cleared id).
 
 ## Research Tasks

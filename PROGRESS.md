@@ -7,11 +7,11 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `consumption-by-cups-manual` (spec not written yet); `fee-first-gate` accepted
+- Current next ready feature: `consumption-by-pdf` is `passing` (needs `feature-validator`); next after it: `consumption-job-refresh-errors`
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-14 (consumption-by-cups-manual: E2E 29/29 on android-chromium and iphone-webkit; Scenario 8 real CUPS passed)
+- Last verified at: 2026-10-14 (consumption-by-pdf: vitest 224, E2E 80/80 on android-chromium and iphone-webkit; Scenario 8 real 2.0TD and 3.0TD bills passed)
 
 ## Session Log
 
@@ -148,3 +148,13 @@
 - Next best step: run `feature-validator` on `consumption-by-cups-manual`.
 - Validation (independent): accept. Re-ran `./init.sh` (206 tests) and `npm run build`; BmApp parity confirmed. `consumption-by-cups-manual` accepted. Follow-ups: iphone-webkit E2E + iOS autocorrect check on a macOS >= 13 machine; Scenario 8 when n8n works; low: clear `bm.lastCompletedJobId` on new submit (BmApp `resetActiveStudy`).
 - Update (iOS follow-ups): this Mac is now macOS 26.6.2, so Playwright WebKit works. With Keychain creds (`bm-e2e-email`/`bm-e2e-password`, README §6), `npm run test:e2e --project=iphone-webkit`: 29/29 passed. Scenario 8 passed: real CUPS `ES0031102615113014GF0F` against local QA + n8n (:6678) on iphone-webkit, no mocks, reached Current Conditions in ~40 s (2.0TD; P1 375 / P2 302 / P3 499 kWh; P1/P2 9,86 kW). The app also loads in real Safari on the iPhone 17 Simulator (iOS 26.3). Tip: Xcode CLI tools need `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` because `xcode-select` points at CommandLineTools. Still open (low): type into the CUPS field with the Simulator keyboard to confirm there's no autocorrect (the attributes are already set); clear `bm.lastCompletedJobId` on new submit.
+
+### Session 015
+
+- Date: 2026-10-14
+- Goal: implement `consumption-by-pdf` (spec `docs/specs/consumption-by-pdf.md`).
+- Completed: `bill-file.ts` (checks, upload name); `runStudy` now takes a `submission` (`cups` JSON or `pdf` multipart to `fetch-user-consumption-report`, step `UPLOADING_BILL`); `bm.activeJob.source` (legacy entries read as CUPS); provider `startCups`/`startPdf`, failed state carries `source`; `PdfUploadOption` method row under the CUPS form, with one shared alert for file and study errors; `e2e/consumption-pdf.spec.ts`; CUPS E2E method assertion updated; domain-model and risks docs.
+- Verification run: `./init.sh` (224 tests), `npm run build`, `npm run test:e2e` 80/80 (both projects). Scenario 8 real bills against local QA + Docling + n8n: 2.0TD Iberdrola 54 s, 3.0TD Repsol 37 s, both reached Current Conditions with plausible summaries. Screenshots reviewed in light and dark.
+- Note: the E2E setup first failed because the local QA test account was bound to another browser id; reset `phone_uuid` in the local DB (device-binding-basic spec) before the run. Your own browser will need the same reset to sign in again.
+- Known risk or unresolved issue: Files picker in iPhone Simulator Safari not checked yet. Docling time vs the ~3 min poll budget on the real QA VPS.
+- Next best step: run `feature-validator` on `consumption-by-pdf`.
