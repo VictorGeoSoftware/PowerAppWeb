@@ -196,6 +196,26 @@ describe("AuthProvider logout and forced logout", () => {
     expect(screen.getByText(`signed-out|${SESSION_EXPIRED_MESSAGE}`)).toBeInTheDocument();
   });
 
+  it("reportApiError ignores errors from a previous user and after manual logout", async () => {
+    renderWith(vi.fn().mockResolvedValue(undefined));
+    await emit(user);
+    await emit({ uid: "u2", email: "c@bm.es" });
+    let handled = true;
+    await act(async () => {
+      handled = ctx.reportApiError(new BmApiError(401, "Invalid token"), "u1");
+    });
+    expect(handled).toBe(false);
+    expect(signOut).not.toHaveBeenCalled();
+    signOut.mockImplementation(async () => {}); // logout still in flight
+    await act(async () => {
+      void ctx.signOutUser();
+    });
+    await act(async () => {
+      handled = ctx.reportApiError(new BmApiError(401, "Invalid token"), "u2");
+    });
+    expect(handled).toBe(false);
+  });
+
   it("re-checks access when the tab becomes visible and signs out on 403", async () => {
     const verify = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new BmApiError(403, "Revocada"));
     renderWith(verify, 0);

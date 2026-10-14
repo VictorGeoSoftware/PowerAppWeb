@@ -4,7 +4,7 @@ import { BmApiError } from "./bm-fetch";
 
 const reportApiError = vi.fn();
 vi.mock("@/components/auth/auth-provider", () => ({
-  useAuth: () => ({ user: { getIdToken: async () => "tok" }, reportApiError }),
+  useAuth: () => ({ user: { uid: "u1", getIdToken: async () => "tok" }, reportApiError }),
 }));
 
 import { useBmFetch } from "./use-bm-fetch";
@@ -23,6 +23,6 @@ describe("useBmFetch", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response('{"message":"No"}', { status: 403 })));
     const { result } = renderHook(() => useBmFetch());
     await expect(result.current("price-table-results")).rejects.toBeInstanceOf(BmApiError);
-    expect(reportApiError).toHaveBeenCalledWith(expect.objectContaining({ status: 403, message: "No" }));
+    expect(reportApiError).toHaveBeenCalledWith(expect.objectContaining({ status: 403, message: "No" }), "u1");
   });
 });

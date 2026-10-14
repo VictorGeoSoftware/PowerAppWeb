@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, openSignedIn, test, useSignedInSession } from "./fixtures";
+import { expect, openSignedIn, test, useSignedInSession, FETCH_HEADING } from "./fixtures";
 
 const ENTRIES = [
   { label: "Condiciones actuales", path: "/current-conditions" },
@@ -42,7 +42,7 @@ test.describe("signed in", () => {
     await menu.getByRole("button", { name: "Nuevo estudio de propuestas" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page).toHaveURL(/\/fetch-consumption$/);
-    await expect(page.getByRole("heading", { name: "Nuevo estudio de propuestas" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: FETCH_HEADING })).toBeVisible();
   });
 
   test("Escape closes the menu without navigating and returns focus", async ({ page }) => {

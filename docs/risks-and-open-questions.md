@@ -28,6 +28,8 @@
 - Live in-browser CUPS OCR accuracy is lower than ML Kit; mitigated by photo-upload and manual-entry fallbacks.
 - iOS PWA limitations (push only when installed, storage eviction, background tab throttling during polling).
 - Calculation drift between Android and web if logic is duplicated.
+- Local Docker QA can't complete a CUPS Consumption Job: no n8n/Datadis, and `docker-compose.yml` sets `N8N_WEBHOOK_URL` while BmBackend reads `N8N_FETCH_USER_CONSUMPTION_WEBHOOK_URL` (fix belongs to BmInfra/BmBackend). E2E mocks the job endpoints; the real end-to-end CUPS check needs a working n8n.
+- BmBackend keeps jobs in memory: a backend restart loses in-flight jobs and the 1 h restore (status/result 404 → error or cleared id).
 
 ## Research Tasks
 - Spike: Tesseract.js CUPS OCR on iPhone Safari with real bills.

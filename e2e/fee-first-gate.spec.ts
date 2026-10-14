@@ -1,4 +1,4 @@
-import { E2E_DEVICE_ID, expect, openSignedIn, test, useSignedInSession } from "./fixtures";
+import { E2E_DEVICE_ID, expect, openSignedIn, test, useSignedInSession, FETCH_HEADING } from "./fixtures";
 
 useSignedInSession();
 
@@ -14,7 +14,7 @@ test("without a Consumption Report, direct URLs go back to the fetch step withou
   ] as const) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/fetch-consumption$/);
-    await expect(page.getByRole("heading", { name: "Nuevo estudio de propuestas" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: FETCH_HEADING })).toBeVisible();
     if (title) await expect(page.getByRole("heading", { name: title, exact: true })).toHaveCount(0);
   }
 });

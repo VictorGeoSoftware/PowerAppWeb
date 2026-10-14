@@ -38,8 +38,10 @@ type AuthContextValue = {
   /**
    * Report a backend/token error from any call (see `useBmFetch`). Signs out with a
    * notice and returns true when it ends the session (401, 403, revoked token).
+   * `uid` is the user who made the call: errors for a user who is no longer current,
+   * or arriving after a manual logout, are ignored.
    */
-  reportApiError: (error: unknown) => boolean;
+  reportApiError: (error: unknown, uid?: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextValue>({
@@ -151,10 +153,11 @@ export function AuthProvider({
     }
   }, [user, status]);
 
-  // TODO(first useBmFetch consumer): ignore errors for a user who is no longer
-  // current, like `verify` does, before any feature relies on this.
   const reportApiError = useCallback(
-    (error: unknown) => {
+    (error: unknown, uid?: string) => {
+      // Same rule as `verify`: a call made by a previous user can't end this session.
+      if (uid !== undefined && currentUid.current !== uid && currentUid.current !== null) return false;
+      if (manualLogout.current) return false;
       const result = classifySessionError(error);
       if (result.kind !== "forced") return false;
       void forceSignOut(result.message);

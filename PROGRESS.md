@@ -11,7 +11,7 @@
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-14
+- Last verified at: 2026-10-14 (consumption-by-cups-manual passing on android-chromium; iphone-webkit pending)
 
 ## Session Log
 
@@ -134,3 +134,16 @@
 - Known risk or unresolved issue: Firebase `getProjectConfig` 403 "referer firebaseapp.com blocked" in traces (API key referrer restrictions; not blocking); `QUOTA_EXCEEDED` shows the generic "Error inesperado" message.
 - Next best step: validate `fee-first-gate`.
 - Validation (independent subagent): revise — menu order ("Nuevo estudio" first) deviated from BmApp/specs without a recorded decision; iPhone menu screenshot taken mid-animation. User confirmed keeping "Nuevo estudio" first: recorded under Decisions in `docs/specs/fee-first-gate.md`, superseding notes in `app-shell-navigation.md`; screenshot now waits for animations. Re-check: `./init.sh`, `npm run build`, E2E 36/36 (validator) + `app-shell.spec.ts` 10/10. `fee-first-gate` accepted.
+
+### Session 014
+
+- Date: 2026-10-14
+- Goal: implement `consumption-by-cups-manual` (spec `docs/specs/consumption-by-cups-manual.md`).
+- Completed: `src/lib/consumption/` (`cups.ts` CupsCodeParser port, `report.ts` mapper, `study.ts` submit→poll 3 s×60→result runner, `messages.ts` BmApp strings); `ConsumptionStudyProvider` in `(app)/layout.tsx` (persists `bm.activeJob` in sessionStorage, resumes on mount/visible, pauses polling in hidden tabs, restores `bm.lastCompletedJobId` < 1 h, aborts on "Nuevo estudio"/logout); `/fetch-consumption` CUPS form with live validation + progress; `/current-conditions` shows `ConsumptionSummary`; gate `resetCount`; storage helpers; `reportApiError` stale-user/manual-logout guard (TODO removed); `e2e/consumption-cups.spec.ts`; E2E heading assertions now use `FETCH_HEADING`; domain-model and risks docs.
+- Verification run: lint, typecheck, vitest 206 passed, `npm run build` OK.
+- Not run: `npm run test:e2e` and mobile screenshots — this machine has no `.env.local`, Docker (local QA backend) is down and no E2E credentials. Scenario 8 (real CUPS) PENDING: local QA has no working n8n.
+- Known risk or unresolved issue: a status poll landing between logout's storage clear and the provider unmount could re-save `bm.activeJob` in that tab (narrow window; a later resume would show the status-check error).
+- Update (same day): with `.env.local` and the BmInfra stack up (started from IntelliJ, compose project `bminfra`), `npm run test:e2e` on android-chromium: 29/29 passed. First runs failed only on dev-server first-compile latency in `auth.setup.ts` (warm the server with `npm run dev` before running). Fixed one test bug (Next.js route announcer is also `role="alert"`). Screenshots reviewed in light and dark. Status `passing`.
+- Pending: iphone-webkit E2E — this Mac runs macOS 12.7.6, where Playwright WebKit is frozen and fails (`Emulation.setOrientationOverride`); run on macOS >= 13. Scenario 8 (real CUPS) still pending.
+- Next best step: run `feature-validator` on `consumption-by-cups-manual`.
+- Validation (independent): accept. Re-ran `./init.sh` (206 tests) and `npm run build`; BmApp parity confirmed. `consumption-by-cups-manual` accepted. Follow-ups: iphone-webkit E2E + iOS autocorrect check on a macOS >= 13 machine; Scenario 8 when n8n works; low: clear `bm.lastCompletedJobId` on new submit (BmApp `resetActiveStudy`).

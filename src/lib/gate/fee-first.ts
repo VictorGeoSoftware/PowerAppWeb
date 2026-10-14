@@ -4,10 +4,29 @@
  */
 export type FeeFirstStage = "CONSUMPTION_REQUIRED" | "CURRENT_CONDITIONS_REQUIRED" | "UNLOCKED";
 
-/** Minimal Consumption Report session; consumption features extend it. */
+/** One P1..P6 value of a Consumption Report (zeros are dropped, BmApp parity). */
+export type PeriodValue = { period: string; value: number };
+
+/**
+ * Consumption Report session (BmApp `ConsumptionSession`). The gate only needs the
+ * period labels; the report fields are filled by `toConsumptionSession`.
+ */
 export type ConsumptionSession = {
   powerPeriods: string[];
   energyPeriods: string[];
+  jobId?: string;
+  cups?: string;
+  feeType?: string;
+  iva?: number;
+  electricTaxPercent?: number;
+  holderName?: string;
+  address?: string;
+  /** Contracted power per period, kW. */
+  powerRows?: PeriodValue[];
+  /** Annual consumption per period, kWh. */
+  energyRows?: PeriodValue[];
+  /** Stored for the comparator; not rendered yet. */
+  proposals?: unknown[];
 };
 
 /** Broker's Current Conditions as typed (strings, like BmApp's local data source). */
