@@ -200,13 +200,19 @@
     "depends_on": [
       "app-shell-navigation"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Unit tests of stage->route mapping",
       "Direct URL to proposals redirects when consumption missing"
     ],
-    "evidence": [],
-    "notes": "Port FeeFirstStage logic."
+    "evidence": [
+      "2026-10-13 ./init.sh exit 0: lint, typecheck, vitest 175 passed (stage rules mirror EvaluateFeeFirstGateUseCaseTest, routes mirror BmAppRouteTest, 15-case stage x route redirect table, guard never renders blocked screen, menu locks/hints per stage, new study clears storage); npm run build OK",
+      "npm run test:e2e without QA credentials: 8 signed-out passed; signed-in incl. e2e/fee-first-gate.spec.ts pending a run with E2E_EMAIL/E2E_PASSWORD",
+      "2026-10-14 npm run test:e2e with QA account vs local Docker QA backend: 36/36 passed (iphone-webkit + android-chromium) incl. e2e/fee-first-gate.spec.ts (direct URLs redirect to /fetch-consumption without rendering the blocked screen; logout clears conditions/job id, keeps device id)",
+      "2026-10-14 independent validation: revise (menu order deviation unrecorded; iPhone menu screenshot mid-animation) -> fixed (deviation recorded in fee-first-gate + app-shell-navigation specs; screenshot waits for animations); re-check: ./init.sh 175 passed, build OK, E2E 36/36 + app-shell 10/10 rerun, iPhone/Android menu screenshots verified -> accepted",
+      "Stages CURRENT_CONDITIONS_REQUIRED/UNLOCKED are component-tested only: no feature publishes a Consumption Report yet; E2E possible from consumption-by-cups-manual"
+    ],
+    "notes": "Port FeeFirstStage logic. Session cleared on logout (deliberate fix of a BmApp gap)."
   },
   {
     "id": "consumption-by-cups-manual",

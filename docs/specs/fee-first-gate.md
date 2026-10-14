@@ -45,7 +45,7 @@ Paths under `../BmApp/<module>/src/main/java/com/briel/marnisos/brielapp/`:
 
 **Menu:**
 - Entries are locked with `!isGated || canReach` semantics. "Nuevo estudio de propuestas" is never locked; every other entry is locked when its route can't be reached.
-- When at least one entry is locked, a note appears after "Nuevo estudio…", using the destructive-tinted tokens (existing tokens only):
+- When at least one entry is locked, a note appears after the last section entry (Configuración), before "Cerrar sesión", using the destructive-tinted tokens (existing tokens only):
   - `CONSUMPTION_REQUIRED`: "Carga una factura o escanea un CUPS para empezar el estudio."
   - Otherwise: "Completa los precios actuales para desbloquear."
 
@@ -59,6 +59,7 @@ Paths under `../BmApp/<module>/src/main/java/com/briel/marnisos/brielapp/`:
 - **Current conditions persistence:** `localStorage` key `bm.currentConditions`, holding JSON `{ powerTermPriceByPeriod, energyPriceByPeriod, extraServices, companyName }` with string values, mirroring the BmApp fields. They survive a reload.
 - **Last job id:** only a reserved key and clear function (`bm.lastCompletedJobId`) so that `startNewStudy` and logout clear it. Saving and restoring it (1 h expiry) belongs to `consumption-by-cups-manual`.
 - **Logout and forced logout:** register the conditions + job id cleanup in `clearLocalSessionData()` (`src/lib/auth/logout.ts`), and drop the in-memory session when the user changes or signs out. This is a deliberate fix of a BmApp gap: the Android session outlives logout. Record it in the spec.
+- **Menu order (deliberate deviation from BmApp, user decision 2026-10-14):** "Nuevo estudio de propuestas" is the first entry, then Condiciones actuales, Propuestas, Configuración, Cerrar sesión. BmApp lists it fourth (`DrawerContent.kt:65-70`). It is the only step always reachable, so it leads the menu. Supersedes the order in `app-shell-navigation.md`.
 - **Pure core:** `src/lib/gate/fee-first.ts` with `evaluateStage`, `canReach`, `fallbackRoute`, `isLockedEntry`, ported 1:1 with unit tests that mirror both BmApp test files.
 
 ## Non-Goals

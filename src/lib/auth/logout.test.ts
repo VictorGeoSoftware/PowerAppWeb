@@ -38,4 +38,12 @@ describe("clearLocalSessionData", () => {
     clearLocalSessionData();
     expect(localStorage.getItem("bm.deviceId")).toBe("web-abc");
   });
+
+  it("clears current conditions and the last job id", () => {
+    localStorage.setItem("bm.currentConditions", "{}");
+    localStorage.setItem("bm.lastCompletedJobId", "job-1");
+    clearLocalSessionData();
+    expect(localStorage.getItem("bm.currentConditions")).toBeNull();
+    expect(localStorage.getItem("bm.lastCompletedJobId")).toBeNull();
+  });
 });

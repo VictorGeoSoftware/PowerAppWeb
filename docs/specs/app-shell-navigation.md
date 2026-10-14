@@ -14,7 +14,7 @@ Signed-in Brokers get the BmApp shell: a sticky top bar with a hamburger button 
 - `views/common/TopActionBar.kt` (L27–62), `navigation/BmAppRoute.kt`, `navigation/BmAppNavHost.kt`
 - Strings: `res/values-es/strings.xml`
 
-Drawer, in order, no icons:
+Drawer, in order, no icons (BmApp order; **superseded by `fee-first-gate.md` Decisions: "Nuevo estudio de propuestas" is now first**):
 1. Condiciones actuales → `CurrentConditions`
 2. Propuestas → `Proposals`
 3. Configuración → `Configuration`
@@ -57,7 +57,7 @@ Then they land on `/fetch-consumption` with the sticky top bar and a hamburger l
 
 ### 2. Menu contents
 When they tap the hamburger
-Then a left panel titled "Menú" shows, in order: Condiciones actuales, Propuestas, Configuración, Nuevo estudio de propuestas, Cerrar sesión, plus the version label at the bottom right.
+Then a left panel titled "Menú" shows, in order: Condiciones actuales, Propuestas, Configuración, Nuevo estudio de propuestas, Cerrar sesión (superseded: "Nuevo estudio de propuestas" first, see `fee-first-gate.md`), plus the version label at the bottom right.
 
 ### 3. Navigate every entry
 For each of the first four entries: tapping it closes the menu, changes the URL to its route, shows its screen and, on reopening, highlights that entry with `aria-current="page"`.

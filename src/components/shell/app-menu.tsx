@@ -1,10 +1,12 @@
 "use client";
 
-import { LockIcon } from "lucide-react";
+import { InfoIcon, LockIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { canReach, lockedHint } from "@/lib/gate/fee-first";
 import { cn } from "@/lib/utils";
 import { LOGOUT_LABEL, MENU_ENTRIES } from "./menu-entries";
 
@@ -17,15 +19,25 @@ type EntryProps = {
   /** Set by `fee-first-gate`: entry stays visible but disabled, with a padlock. */
   locked?: boolean;
   onNavigate: () => void;
+  /** Replaces navigation (BmApp "Nuevo estudio": reset, then the gate redirects). */
+  onAction?: () => void;
 };
 
-export function MenuEntryItem({ label, href, selected, locked = false, onNavigate }: EntryProps) {
+export function MenuEntryItem({ label, href, selected, locked = false, onNavigate, onAction }: EntryProps) {
   if (locked) {
     return (
       <span aria-disabled="true" className={cn(entryClass, "text-muted-foreground")}>
         <span className="flex-1">{label}</span>
         <LockIcon className="size-4" aria-label="Bloqueado" />
       </span>
+    );
+  }
+  const className = cn(entryClass, selected ? "bg-section-highlight" : "hover:bg-muted");
+  if (onAction) {
+    return (
+      <button type="button" aria-current={selected ? "page" : undefined} className={className} onClick={onAction}>
+        {label}
+      </button>
     );
   }
   return (
@@ -35,7 +47,7 @@ export function MenuEntryItem({ label, href, selected, locked = false, onNavigat
       replace
       aria-current={selected ? "page" : undefined}
       onClick={onNavigate}
-      className={cn(entryClass, selected ? "bg-section-highlight" : "hover:bg-muted")}
+      className={className}
     >
       {label}
     </Link>
@@ -47,7 +59,10 @@ type Props = { open: boolean; onOpenChange: (open: boolean) => void };
 export function AppMenu({ open, onOpenChange }: Props) {
   const pathname = usePathname();
   const { signOutUser } = useAuth();
+  const { stage, startNewStudy } = useFeeFirstGate();
   const close = () => onOpenChange(false);
+  const entries = MENU_ENTRIES.map((e) => ({ ...e, locked: e.gated && !canReach(stage, e.href) }));
+  const anyLocked = entries.some((e) => e.locked);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -57,9 +72,30 @@ export function AppMenu({ open, onOpenChange }: Props) {
       >
         <SheetTitle className="px-4 pb-3 text-base font-semibold">Menú</SheetTitle>
         <nav aria-label="Menú principal" className="flex flex-col gap-1">
-          {MENU_ENTRIES.map((entry) => (
-            <MenuEntryItem key={entry.href} {...entry} selected={pathname === entry.href} onNavigate={close} />
+          {entries.map(({ label, href, locked, newStudy }) => (
+            <MenuEntryItem
+              key={href}
+              label={label}
+              href={href}
+              locked={locked}
+              selected={pathname === href}
+              onNavigate={close}
+              onAction={
+                newStudy
+                  ? () => {
+                      close();
+                      startNewStudy();
+                    }
+                  : undefined
+              }
+            />
           ))}
+          {anyLocked && (
+            <p className="my-2 flex items-start gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-foreground">
+              <InfoIcon className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+              {lockedHint(stage)}
+            </p>
+          )}
           <button
             type="button"
             className={cn(entryClass, "hover:bg-muted")}

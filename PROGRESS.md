@@ -7,11 +7,11 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `fee-first-gate` (`app-shell-navigation` accepted; signed-in E2E run still to be recorded)
-- E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests)
+- Current next ready feature: see `feature_list.json` (first dependency-ready, not accepted); `fee-first-gate` accepted
+- E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-13
+- Last verified at: 2026-10-14
 
 ## Session Log
 
@@ -115,3 +115,22 @@
 - Known risk or unresolved issue: real-iPhone notch check deferred to `qa-real-device-checks`.
 - Next best step: run `npm run test:e2e` with `E2E_EMAIL`/`E2E_PASSWORD`, review screenshots, then validate.
 - Update: accepted by user validation. Signed-in E2E run not recorded here yet.
+
+### Session 012
+
+- Date: 2026-10-13
+- Goal: implement `fee-first-gate`.
+- Completed: `src/lib/gate/fee-first.ts` (stage, route table, fallback, redirect, hints — 1:1 port of BmApp), `src/lib/gate/storage.ts` (`bm.currentConditions`, reserved `bm.lastCompletedJobId`), `FeeFirstGateProvider` + `FeeFirstGateGuard` in `(app)/layout.tsx` (blocked routes and `/` redirect to the current step, spinner instead of blocked content), menu padlocks + hint + "Nuevo estudio" resets the study, logout clears gate storage, `docs/domain-model.md` rules.
+- Verification run: `./init.sh` (175 unit tests), `npm run build`; E2E 8/8 signed-out, signed-in pending credentials.
+- Known risk or unresolved issue: only `CONSUMPTION_REQUIRED` reachable end to end until consumption features land; hint text uses `text-foreground` on `bg-destructive/10` with a red icon: `text-destructive` there was ~4.1:1 (fails AA); BmApp's dark red #991B1B isn't a token.
+- Next best step: run `npm run test:e2e` with QA credentials, review screenshots, then validate.
+
+### Session 013
+
+- Date: 2026-10-14
+- Goal: full signed-in E2E run for `fee-first-gate`; fix E2E sign-in strategy.
+- Completed: repeated runs hit Firebase `QUOTA_EXCEEDED` (~26 password sign-ins per run) and parallel workers on one account interfered. New setup: `e2e/auth.setup.ts` signs in once per browser project and saves `storageState` with IndexedDB to `playwright/.auth/` (gitignored); signed-in specs use `useSignedInSession()`/`openSignedIn()`; second-device test reuses the saved session with another device id (no extra sign-in); `workers: 1`. Fixed two pre-existing test bugs: fee-first heading check now `exact: true` ("Propuestas" matched "Nuevo estudio de propuestas"); Escape focus-return test opens the menu by keyboard (WebKit doesn't focus buttons on tap). No app code changed.
+- Verification run: `./init.sh` (175 unit tests); `npm run test:e2e` with QA account against local Docker QA backend: 36/36 passed (2 setup + 34, iphone-webkit + android-chromium), ~2 min.
+- Known risk or unresolved issue: Firebase `getProjectConfig` 403 "referer firebaseapp.com blocked" in traces (API key referrer restrictions; not blocking); `QUOTA_EXCEEDED` shows the generic "Error inesperado" message.
+- Next best step: validate `fee-first-gate`.
+- Validation (independent subagent): revise — menu order ("Nuevo estudio" first) deviated from BmApp/specs without a recorded decision; iPhone menu screenshot taken mid-animation. User confirmed keeping "Nuevo estudio" first: recorded under Decisions in `docs/specs/fee-first-gate.md`, superseding notes in `app-shell-navigation.md`; screenshot now waits for animations. Re-check: `./init.sh`, `npm run build`, E2E 36/36 (validator) + `app-shell.spec.ts` 10/10. `fee-first-gate` accepted.

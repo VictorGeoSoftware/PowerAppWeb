@@ -17,6 +17,9 @@ Mirrors BmApp (`../BmApp/domain`). PowerAppWeb adds no new domain concepts.
 
 ## States and Lifecycles
 - Fee-First Gate: `CONSUMPTION_REQUIRED` → (Consumption Report ready) → `CURRENT_CONDITIONS_REQUIRED` → (conditions valid) → `UNLOCKED`. Blocked routes redirect to the current step.
+  - Conditions valid = supplier name not blank + a price > 0 for every power and energy period of the Consumption Report (comma or dot decimals; extra services optional; prices for other periods ignored). Code: `src/lib/gate/fee-first.ts` (port of BmApp `EvaluateFeeFirstGateUseCase`).
+  - Routes: `/fetch-consumption` only at `CONSUMPTION_REQUIRED`; `/current-conditions` from `CURRENT_CONDITIONS_REQUIRED`; `/proposals`, `/configuration` only `UNLOCKED`. Fallback: fetch step, else Current Conditions.
+  - Storage: Consumption Report session in memory (lost on reload/logout); Current Conditions in `localStorage["bm.currentConditions"]`; last job id `bm.lastCompletedJobId`. New study and logout (manual or forced) clear both keys and keep `bm.deviceId`. Unlike BmApp, the in-memory session never outlives logout.
 - Consumption Job: submitted (202 + jobId) → processing → completed | failed; refresh allowed on existing job.
 - Session: signed out → signed in & granted → (revoked / device reset / force logout) → signed out.
 
