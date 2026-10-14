@@ -77,6 +77,10 @@ E2E_EMAIL=<qa broker email> E2E_PASSWORD=<password> npm run test:e2e
 | `src/lib/server/backend-proxy.ts` | Proxy and Broker endpoint allowlist |
 | `src/lib/api/bm-fetch.ts` | Client helper: calls the proxy with the Firebase token |
 | `src/components/auth/` | AuthProvider (access gate), guards, login form |
+| `src/app/(app)/` | Signed-in screens: sign-in check, Fee-First Gate guard, app shell |
+| `src/components/shell/` | Top bar and menu |
+| `src/components/gate/` | Fee-First Gate state (study, conditions) and redirects |
+| `src/lib/gate/` | Fee-First Gate rules and browser storage |
 | `e2e/` | Playwright specs and fixtures |
 
 ## Secrets
