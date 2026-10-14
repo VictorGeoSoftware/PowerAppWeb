@@ -7,11 +7,11 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `consumption-by-pdf` is `passing` (needs `feature-validator`); next after it: `consumption-job-refresh-errors`
+- Current next ready feature: `consumption-job-refresh-errors` (needs `feature-spec`)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-14 (consumption-by-pdf: vitest 224, E2E 80/80 on android-chromium and iphone-webkit; Scenario 8 real 2.0TD and 3.0TD bills passed)
+- Last verified at: 2026-10-14 (consumption-by-pdf accepted: vitest 224, E2E PDF+CUPS 46/46, real bills on local QA, iPhone Simulator Files picker OK)
 
 ## Session Log
 
@@ -158,3 +158,12 @@
 - Note: the E2E setup first failed because the local QA test account was bound to another browser id; reset `phone_uuid` in the local DB (device-binding-basic spec) before the run. Your own browser will need the same reset to sign in again.
 - Known risk or unresolved issue: Files picker in iPhone Simulator Safari not checked yet. Docling time vs the ~3 min poll budget on the real QA VPS.
 - Next best step: run `feature-validator` on `consumption-by-pdf`.
+
+### Session 016
+
+- Date: 2026-10-14
+- Goal: validate `consumption-by-pdf`.
+- Completed: feature-validator verdict accept; status set to `accepted`.
+- Verification run: `./init.sh` (224 tests), `npm run build`, Playwright consumption-pdf + consumption-cups 46/46 (both projects); user ran iPhone 17 Simulator Safari: Files picker opened, real 2.0TD bill uploaded and reached Current Conditions.
+- Known risk or unresolved issue: Docling time vs ~3 min poll budget on the real QA VPS.
+- Next best step: run `feature-spec` for `consumption-job-refresh-errors`.

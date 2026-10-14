@@ -246,7 +246,7 @@
     "depends_on": [
       "consumption-by-cups-manual"
     ],
-    "status": "passing",
+    "status": "accepted",
     "verification": [
       "Upload sample bill from ../Example bills on mobile"
     ],
@@ -255,7 +255,8 @@
       "2026-10-14 npm run test:e2e (Keychain creds, local Docker QA, job endpoints mocked): 80/80 passed on android-chromium + iphone-webkit, incl. new e2e/consumption-pdf.spec.ts (option visible/44px/accept/keyboard, multipart content-type + filename=\"factura.pdf\", steps, not-PDF + >50 MB with no request, 4 failure messages with empty CUPS, reload resume without re-upload, Nuevo estudio and logout stop polling + clear keys) and the updated CUPS method assertion. Note: Playwright WebKit does not expose multipart file bytes and its default Tab order skips non-text controls, so those two checks are Chromium-only.",
       "Scenario 8 (no mocks, iPhone 13 WebKit viewport, local QA with Docling + n8n): '2.0TD.- IBERDROLA FACTURA.pdf' → /current-conditions in 54 s (Subiendo factura → Analizando → Obteniendo resultados), CUPS ES0031104740917002MS, 2.0TD, P1 562 / P2 432 / P3 667 kWh, 5,196 kW. '3.0TD.- REPSOL FACTURA.pdf' → 37 s, CUPS ES0021000013154191MM1F, 3.0TD, P1-P6 7.452/5.886/3.235/4.177/1.302/4.376 kWh, 15,1 kW. No bill copied into the repo.",
       "Screenshots reviewed: test-results/consumption-pdf-{methods,uploading,file-error,error}-{android-chromium,iphone-webkit}.png (light); dark methods + file error via an ad-hoc script (not committed).",
-      "PENDING: tap 'Subir factura PDF' in iPhone Simulator Safari to confirm the Files picker opens and a picked PDF uploads."
+      "2026-10-14 iPhone 17 Simulator (iOS 26.3.1) Safari, manual by user: 'Subir factura PDF' opened the Files picker; the 2.0TD Iberdrola bill (saved to Files via a temporary localhost file server, not in the repo) uploaded and reached /current-conditions.",
+      "2026-10-14 feature-validator: accept. Reran ./init.sh (224 tests), npm run build, Playwright consumption-pdf + consumption-cups 46/46 on both projects; no PDFs tracked in git."
     ],
     "notes": "Spec: docs/specs/consumption-by-pdf.md."
   },
