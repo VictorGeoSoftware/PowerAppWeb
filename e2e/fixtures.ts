@@ -36,6 +36,9 @@ export function useSignedInSession() {
   });
 }
 
+/** `/fetch-consumption` page heading (BmApp `fetch_consumption_headline`). */
+export const FETCH_HEADING = "Selecciona primero una factura de luz para proceder al estudio";
+
 /** Opens the app with the restored session; the access check runs on load. */
 export async function openSignedIn(page: Page) {
   await page.goto("/");

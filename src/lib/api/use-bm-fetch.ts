@@ -17,7 +17,7 @@ export function useBmFetch() {
       try {
         return await bmFetch(user, path, init);
       } catch (error) {
-        reportApiError(error);
+        reportApiError(error, user.uid);
         throw error;
       }
     },

@@ -25,6 +25,8 @@ type GateContextValue = {
   setConditions: (conditions: CurrentConditions | null) => void;
   /** BmApp `startNewStudy` / R6: drop the study; the guard routes to the fetch step. */
   startNewStudy: () => void;
+  /** Incremented by `startNewStudy` so running studies can cancel themselves. */
+  resetCount: number;
 };
 
 const GateContext = createContext<GateContextValue | null>(null);
@@ -52,16 +54,19 @@ export function FeeFirstGateProvider({ children, initialSession = null }: Props)
     setConditionsState(next);
   }, []);
 
+  const [resetCount, setResetCount] = useState(0);
+
   const startNewStudy = useCallback(() => {
     clearStudyStorage();
+    setResetCount((n) => n + 1);
     setSession(null);
     setConditionsState(null);
   }, []);
 
   const value = useMemo(() => {
     const gate = evaluateGate(session, conditions);
-    return { ...gate, session, conditions, setSession, setConditions, startNewStudy };
-  }, [session, conditions, setConditions, startNewStudy]);
+    return { ...gate, session, conditions, setSession, setConditions, startNewStudy, resetCount };
+  }, [session, conditions, setConditions, startNewStudy, resetCount]);
 
   return <GateContext.Provider value={value}>{children}</GateContext.Provider>;
 }
