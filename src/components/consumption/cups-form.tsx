@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircleIcon } from "lucide-react";
+import { AlertCircleIcon, RotateCcwIcon } from "lucide-react";
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +16,12 @@ type Props = {
   error?: string | null;
   /** Receives the corrected CUPS (`toSubmittableCups`). */
   onSubmit: (cups: string) => void;
+  /** Shows "Reintentar" inside the error alert. */
+  onRetry?: () => void;
 };
 
 /** Manual CUPS entry with BmApp scanner's live validation. */
-export function CupsForm({ initialValue = "", error, onSubmit }: Props) {
+export function CupsForm({ initialValue = "", error, onSubmit, onRetry }: Props) {
   const [value, setValue] = useState(initialValue);
   const helpId = useId();
   const valid = isValidCups(value);
@@ -36,13 +38,21 @@ export function CupsForm({ initialValue = "", error, onSubmit }: Props) {
       }}
     >
       {error && (
-        <p
+        <div
           role="alert"
-          className="flex items-start gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-foreground"
+          className="flex flex-col gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-foreground"
         >
-          <AlertCircleIcon className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
-          {error}
-        </p>
+          <p className="flex items-start gap-2">
+            <AlertCircleIcon className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+            {error}
+          </p>
+          {onRetry && (
+            <Button type="button" variant="outline" className="h-11 self-start bg-card" onClick={onRetry}>
+              <RotateCcwIcon aria-hidden />
+              Reintentar
+            </Button>
+          )}
+        </div>
       )}
       <Label htmlFor="cups" className="text-base font-semibold">
         Introducir código CUPS

@@ -12,6 +12,7 @@ export const SUBMIT_PATH = "fetch-user-consumption-report-by-cups";
 export const PDF_SUBMIT_PATH = "fetch-user-consumption-report";
 export const statusPath = (jobId: string) => `consumption-report-status/${encodeURIComponent(jobId)}`;
 export const resultPath = (jobId: string) => `consumption-report-result/${encodeURIComponent(jobId)}`;
+export const refreshPath = (jobId: string) => `consumption-report-refresh/${encodeURIComponent(jobId)}`;
 
 export type StudyResult =
   | { ok: true; jobId: string; report: ConsumptionReportResponse }
@@ -51,6 +52,16 @@ export const defaultSleep = (ms: number, signal?: AbortSignal) =>
 export async function fetchResult(fetch: StudyFetch, jobId: string): Promise<ConsumptionReportResponse> {
   const res = await fetch(resultPath(jobId));
   if (res.status !== 200) throw new Error(`Unexpected result status ${res.status}`);
+  return (await res.json()) as ConsumptionReportResponse;
+}
+
+/**
+ * POST refresh of a COMPLETED job: the backend recalculates proposals and taxes from the
+ * stored consumption (it never re-runs the job). 200 only; 404 = job gone, 409 = not completed.
+ */
+export async function refreshReport(fetch: StudyFetch, jobId: string, signal?: AbortSignal): Promise<ConsumptionReportResponse> {
+  const res = await fetch(refreshPath(jobId), { method: "POST", signal });
+  if (res.status !== 200) throw new Error(`Unexpected refresh status ${res.status}`);
   return (await res.json()) as ConsumptionReportResponse;
 }
 

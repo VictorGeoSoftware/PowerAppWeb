@@ -7,11 +7,11 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `consumption-job-refresh-errors` (needs `feature-spec`)
+- Current next ready feature: `cups-camera-ocr` (run `feature-spec`)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-14 (consumption-by-pdf accepted: vitest 224, E2E PDF+CUPS 46/46, real bills on local QA, iPhone Simulator Files picker OK)
+- Last verified at: 2026-10-16 (consumption-job-refresh-errors accepted: vitest 239, E2E 90/90 both projects)
 
 ## Session Log
 
@@ -167,3 +167,22 @@
 - Verification run: `./init.sh` (224 tests), `npm run build`, Playwright consumption-pdf + consumption-cups 46/46 (both projects); user ran iPhone 17 Simulator Safari: Files picker opened, real 2.0TD bill uploaded and reached Current Conditions.
 - Known risk or unresolved issue: Docling time vs ~3 min poll budget on the real QA VPS.
 - Next best step: run `feature-spec` for `consumption-job-refresh-errors`.
+
+### Session 017
+
+- Date: 2026-10-16
+- Goal: implement `consumption-job-refresh-errors` (spec `docs/specs/consumption-job-refresh-errors.md`, decisions agreed 2026-10-16).
+- Completed: `refreshPath`/`refreshReport` in `study.ts`; provider: `canRetry` on failed state, `lastPdf` ref, `retry()`, silent `refreshStudy()` (60 s throttle, injectable `refreshThrottleMs`), refresh chained after restore and on tab return when a session exists, stale guards (uid, abort, session jobId); "Reintentar" outline button (h-11) inside the `CupsForm` alert, wired from `/fetch-consumption`; `e2e/consumption-errors.spec.ts`; domain-model and CONTEXT updated; feature wording corrected (refresh never re-runs a job).
+- Verification run: `./init.sh` (239 tests), `npm run build`, `npm run test:e2e` 90/90 (both projects), light + dark screenshots of the retry alert.
+- Note: E2E setup failed first on the device binding again (local QA account bound to a personal browser id `web-85b58f8e…`); reset `phone_uuid` in the local DB. The account row's email in local QA differs from the Keychain E2E email, so match by `phone_uuid`/uid, not email. `bm-local-qa up` failed to rebuild (`eclipse-temurin:17-jre-alpine` has no manifest for this platform) but the existing images started fine.
+- Known risk or unresolved issue: refresh 200 not yet checked against a real completed job (only mocked); 60 s tab-return not checked in a real browser.
+- Next best step: run `feature-validator` on `consumption-job-refresh-errors`.
+
+### Session 018
+
+- Date: 2026-10-16
+- Goal: validate `consumption-job-refresh-errors`.
+- Completed: independent validation → accept; status set to `accepted`.
+- Verification run: `./init.sh` (239 tests), `npm run test:e2e` 90/90 (both projects); backend refresh route reviewed (404 missing/foreign, 409 not completed); retry screenshot reviewed.
+- Known risk or unresolved issue: manual local-QA checks still pending (real refresh 200 after reload, 60 s tab return in a real browser, retry after backend restart).
+- Next best step: run `feature-spec` for `cups-camera-ocr`.

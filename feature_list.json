@@ -264,16 +264,21 @@
     "id": "consumption-job-refresh-errors",
     "area": "consumption",
     "title": "Job failure and refresh handling",
-    "user_visible_behavior": "Failed jobs show Spanish error with retry; refresh endpoint re-runs a job.",
+    "user_visible_behavior": "A failed study shows its Spanish error with \"Reintentar\", which submits a new job with the same CUPS or in-memory PDF; a completed study is silently refreshed (proposals and taxes at current prices) via consumption-report-refresh on restore and on throttled tab return.",
     "depends_on": [
       "consumption-by-cups-manual"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Simulated failed job shows retry"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "2026-10-16 ./init.sh: lint, typecheck, vitest 239 passed (23 files). New: refreshReport (POST path, 200 only, 404/409/500 throw); provider: CUPS retry → new job same cupsCode, PDF retry re-uploads the same File, no retry for a resumed PDF failure or a local file error, restore → one refresh with same jobId (iva updated), refresh 404 clears id / 409 / 500 silent with id kept, tab-return throttle, refresh response ignored after Nuevo estudio. npm run build OK",
+      "2026-10-16 npm run test:e2e (Keychain creds, local Docker QA, job + refresh endpoints mocked): 90/90 passed on android-chromium + iphone-webkit, incl. new e2e/consumption-errors.spec.ts (CUPS FAILED → Reintentar ≥ 44px → second POST same CUPS → /current-conditions, no refresh after an in-tab study; PDF submit 500 → Reintentar re-uploads filename=\"factura.pdf\" without picker; local file error has no Reintentar; restore → exactly one POST refresh; refresh 404 clears bm.lastCompletedJobId and keeps Current Conditions).",
+      "Screenshots reviewed: test-results/consumption-errors-retry-{android-chromium,iphone-webkit}.png (light) and an ad-hoc dark iphone-webkit run (not committed).",
+      "2026-10-16 independent validation (feature-validator): accept. Rerun ./init.sh 239/239, npm run test:e2e 90/90 both projects; backend refresh route (404 missing/foreign, 409 not completed) matches client; retry screenshot reviewed. Follow-up: manual local-QA checks (real refresh 200, 60 s tab return, retry after backend restart)."
+    ],
+    "notes": "Spec: docs/specs/consumption-job-refresh-errors.md. The backend refresh only recalculates a COMPLETED job (never re-runs); retry always creates a new job. Pending: manual refresh 200 against a real completed job on local QA (n8n), 60 s tab-return check in a real browser."
   },
   {
     "id": "cups-camera-ocr",

@@ -24,7 +24,7 @@ Spanish electricity supply point code identifying a customer's supply.
 Customer consumption study obtained asynchronously from a CUPS, a bill PDF, or a bill photo (job: submit → poll status → result).
 
 ### Consumption Job
-Backend async job (`jobId`) that produces a Consumption Report.
+Backend async job (`jobId`) that produces a Consumption Report. A failed job is never re-run: "Reintentar" submits a new job. A completed job can be *refreshed* (proposals and taxes recalculated at current prices, same `jobId`).
 
 ### Current Conditions
 The customer's present contract data entered by the Broker: holder, address, supplier, power term, energy prices, extra services, taxes.

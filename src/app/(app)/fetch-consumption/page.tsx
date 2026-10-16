@@ -8,7 +8,7 @@ import { StudyProgress } from "@/components/consumption/study-progress";
 
 /** BmApp FetchConsumptionScreen: typed CUPS and PDF bill upload. */
 export default function FetchConsumptionPage() {
-  const { state, startCups, startPdf } = useConsumptionStudy();
+  const { state, startCups, startPdf, retry } = useConsumptionStudy();
   // Client-side file check message; replaces any previous study error until the next attempt.
   const [fileError, setFileError] = useState<string | null>(null);
 
@@ -29,6 +29,7 @@ export default function FetchConsumptionPage() {
             key={state.kind === "failed" ? `failed-${state.source}-${state.cups}` : "idle"}
             initialValue={state.kind === "failed" ? state.cups : ""}
             error={fileError ?? studyError}
+            onRetry={state.kind === "failed" && state.canRetry && !fileError ? retry : undefined}
             onSubmit={(cups) => {
               setFileError(null);
               startCups(cups);

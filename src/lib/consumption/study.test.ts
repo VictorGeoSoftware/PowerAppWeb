@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { BmApiError } from "@/lib/api/bm-fetch";
-import { runStudy, type StudyFetch } from "./study";
+import { refreshReport, runStudy, type StudyFetch } from "./study";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -131,5 +131,24 @@ describe("runStudy", () => {
     });
     expect(r).toEqual({ ok: false, aborted: true });
     expect(calls).toEqual(["POST fetch-user-consumption-report-by-cups"]);
+  });
+});
+
+describe("refreshReport", () => {
+  it("POSTs the refresh path and returns the report on 200", async () => {
+    const fetch = vi.fn<StudyFetch>(async () => json({ success: true, iva: 10 }));
+    await expect(refreshReport(fetch, "job/1")).resolves.toEqual({ success: true, iva: 10 });
+    expect(fetch).toHaveBeenCalledWith("consumption-report-refresh/job%2F1", { method: "POST", signal: undefined });
+  });
+
+  it.each([404, 409, 500])("throws with the status on %i", async (status) => {
+    const fetch: StudyFetch = async () => {
+      throw new BmApiError(status, "x");
+    };
+    await expect(refreshReport(fetch, "job-1")).rejects.toMatchObject({ status });
+  });
+
+  it("throws on an unexpected 2xx", async () => {
+    await expect(refreshReport(async () => json({}, 202), "job-1")).rejects.toThrow("Unexpected refresh status 202");
   });
 });

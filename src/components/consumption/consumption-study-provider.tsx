@@ -7,7 +7,7 @@ import { BmApiError } from "@/lib/api/bm-fetch";
 import { useBmFetch } from "@/lib/api/use-bm-fetch";
 import { FAILURE_MESSAGES, type StudyStep } from "@/lib/consumption/messages";
 import { toConsumptionSession } from "@/lib/consumption/report";
-import { fetchResult, runStudy, type StudyFetch, type StudySubmission } from "@/lib/consumption/study";
+import { fetchResult, refreshReport, runStudy, type StudyFetch, type StudySubmission } from "@/lib/consumption/study";
 import {
   type JobSource,
   clearLastCompletedJobId,
@@ -20,8 +20,11 @@ import {
 export type StudyState =
   | { kind: "idle" }
   | { kind: "running"; step: StudyStep }
-  /** `cups` is the typed CUPS to refill the form; "" for PDF studies. */
-  | { kind: "failed"; message: string; source: JobSource; cups: string };
+  /**
+   * `cups` is the typed CUPS to refill the form; "" for PDF studies. `canRetry` is false
+   * for a PDF study whose file is no longer in memory (e.g. resumed after a reload).
+   */
+  | { kind: "failed"; message: string; source: JobSource; cups: string; canRetry: boolean };
 
 type StudyContextValue = {
   state: StudyState;
@@ -29,7 +32,13 @@ type StudyContextValue = {
   startCups: (cups: string) => void;
   /** Starts a study from a PDF bill already checked with `checkBillFile`. */
   startPdf: (file: File) => void;
+  /** Starts a new job with the failed study's input; no-op unless `canRetry`. */
+  retry: () => void;
+  /** Silent, throttled refresh of the published study's proposals and taxes. */
+  refreshStudy: () => void;
 };
+
+export const REFRESH_THROTTLE_MS = 60_000;
 
 type RunInput =
   | { submission: StudySubmission }
@@ -70,6 +79,8 @@ type Props = {
   children: React.ReactNode;
   /** Injectable for tests. */
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  /** Injectable for tests. */
+  refreshThrottleMs?: number;
 };
 
 /**
@@ -78,24 +89,73 @@ type Props = {
  * restore the last completed study (< 1 h). Lives under RequireAuth, so logout
  * unmounts it and aborts any polling.
  */
-export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Props) {
+export function ConsumptionStudyProvider({ children, sleep = visibleSleep, refreshThrottleMs = REFRESH_THROTTLE_MS }: Props) {
   const { user } = useAuth();
   const bmFetch = useBmFetch();
   const { session, setSession, resetCount } = useFeeFirstGate();
   const [state, setState] = useState<StudyState>({ kind: "idle" });
 
   const controller = useRef<AbortController | null>(null);
+  const refreshCtrl = useRef<AbortController | null>(null);
   const uidRef = useRef(user?.uid);
   uidRef.current = user?.uid;
   const fetchRef = useRef<StudyFetch>(bmFetch);
   fetchRef.current = bmFetch;
-  const hasSession = useRef(session != null);
-  hasSession.current = session != null;
+  const sessionJobId = useRef(session?.jobId ?? null);
+  sessionJobId.current = session?.jobId ?? null;
+  /** The last PDF picked in this tab, kept only for "Reintentar". */
+  const lastPdf = useRef<File | null>(null);
+  /** Last publish or refresh attempt; starts the refresh throttle. */
+  const lastRefreshAt = useRef(0);
 
   const abort = useCallback(() => {
     controller.current?.abort();
     controller.current = null;
+    refreshCtrl.current?.abort();
+    refreshCtrl.current = null;
   }, []);
+
+  /** Publishes a report; the ref lets a refresh started right after match this jobId before rerender. */
+  const publish = useCallback(
+    (report: Parameters<typeof toConsumptionSession>[0], jobId: string) => {
+      sessionJobId.current = jobId;
+      lastRefreshAt.current = Date.now();
+      setSession(toConsumptionSession(report, jobId));
+    },
+    [setSession],
+  );
+
+  /** BmApp `refreshActiveStudy`: silent; 404 clears the stored id, other errors are ignored. */
+  const doRefresh = useCallback(
+    async (jobId: string) => {
+      refreshCtrl.current?.abort();
+      const ctrl = new AbortController();
+      refreshCtrl.current = ctrl;
+      const uid = uidRef.current;
+      const stale = () => ctrl.signal.aborted || uidRef.current !== uid || sessionJobId.current !== jobId;
+      lastRefreshAt.current = Date.now();
+      try {
+        const report = await refreshReport((p, i) => fetchRef.current(p, i), jobId, ctrl.signal);
+        if (stale()) return;
+        saveLastCompletedJobId(jobId);
+        publish(report, jobId);
+      } catch (error) {
+        if (stale()) return;
+        if (error instanceof BmApiError && error.status === 404) clearLastCompletedJobId();
+        else console.warn("Consumption study refresh failed", error);
+      } finally {
+        if (refreshCtrl.current === ctrl) refreshCtrl.current = null;
+      }
+    },
+    [publish],
+  );
+
+  const refreshStudy = useCallback(() => {
+    const jobId = sessionJobId.current;
+    if (!jobId || controller.current || refreshCtrl.current) return;
+    if (Date.now() - lastRefreshAt.current < refreshThrottleMs) return;
+    void doRefresh(jobId);
+  }, [doRefresh, refreshThrottleMs]);
 
   const run = useCallback(
     async (input: RunInput) => {
@@ -131,17 +191,19 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
       controller.current = null;
       saveActiveJob(null);
       if (result.ok) {
+        lastPdf.current = null;
         saveLastCompletedJobId(result.jobId);
-        setSession(toConsumptionSession(result.report, result.jobId));
+        publish(result.report, result.jobId);
         setState({ kind: "idle" });
       } else if ("failure" in result) {
-        setState({ kind: "failed", message: FAILURE_MESSAGES[result.failure], source, cups: cups ?? "" });
+        const canRetry = source === "cups" ? !!cups : lastPdf.current != null;
+        setState({ kind: "failed", message: FAILURE_MESSAGES[result.failure], source, cups: cups ?? "", canRetry });
       }
     },
-    [abort, sleep, setSession],
+    [abort, sleep, publish],
   );
 
-  /** BmApp `restoreLastCompletedStudy`: 404 clears the id; other errors keep it. */
+  /** BmApp `restoreLastCompletedStudy`: 404 clears the id; other errors keep it. Then refresh prices once. */
   const restore = useCallback(
     async (jobId: string) => {
       abort();
@@ -149,23 +211,26 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
       controller.current = ctrl;
       const uid = uidRef.current;
       setState({ kind: "running", step: "FETCHING_RESULTS" });
+      let restored = false;
       try {
         const report = await fetchResult((p, i) => fetchRef.current(p, { ...i, signal: ctrl.signal }), jobId);
         if (ctrl.signal.aborted || uidRef.current !== uid) return;
-        setSession(toConsumptionSession(report, jobId));
+        publish(report, jobId);
+        restored = true;
       } catch (error) {
         if (ctrl.signal.aborted || uidRef.current !== uid) return;
         if (error instanceof BmApiError && error.status === 404) clearLastCompletedJobId();
       }
       controller.current = null;
       setState({ kind: "idle" });
+      if (restored) void doRefresh(jobId);
     },
-    [abort, setSession],
+    [abort, publish, doRefresh],
   );
 
   /** Resume an in-flight job, else restore the last completed one. */
   const resumeOrRestore = useCallback(() => {
-    if (controller.current || hasSession.current) return;
+    if (controller.current || sessionJobId.current) return;
     const active = loadActiveJob();
     if (active) {
       void run({ resume: active });
@@ -178,20 +243,23 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
   useEffect(() => {
     resumeOrRestore();
     const onVisible = () => {
-      if (document.visibilityState === "visible") resumeOrRestore();
+      if (document.visibilityState !== "visible") return;
+      if (sessionJobId.current) refreshStudy();
+      else resumeOrRestore();
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       abort();
     };
-  }, [resumeOrRestore, abort]);
+  }, [resumeOrRestore, refreshStudy, abort]);
 
   // "Nuevo estudio": storage is already cleared by the gate; stop polling and reset the form.
   const firstReset = useRef(resetCount);
   useEffect(() => {
     if (resetCount === firstReset.current) return;
     abort();
+    lastPdf.current = null;
     // A poll step or result may have landed between the reset and this effect.
     saveActiveJob(null);
     clearLastCompletedJobId();
@@ -199,8 +267,28 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep }: Pro
     setState({ kind: "idle" });
   }, [resetCount, abort, setSession]);
 
-  const startCups = useCallback((cups: string) => void run({ submission: { kind: "cups", cups } }), [run]);
-  const startPdf = useCallback((file: File) => void run({ submission: { kind: "pdf", file } }), [run]);
-  const value = useMemo(() => ({ state, startCups, startPdf }), [state, startCups, startPdf]);
+  const startCups = useCallback(
+    (cups: string) => {
+      lastPdf.current = null;
+      void run({ submission: { kind: "cups", cups } });
+    },
+    [run],
+  );
+  const startPdf = useCallback(
+    (file: File) => {
+      lastPdf.current = file;
+      void run({ submission: { kind: "pdf", file } });
+    },
+    [run],
+  );
+  const retry = useCallback(() => {
+    if (state.kind !== "failed" || !state.canRetry) return;
+    if (state.source === "cups") startCups(state.cups);
+    else if (lastPdf.current) startPdf(lastPdf.current);
+  }, [state, startCups, startPdf]);
+  const value = useMemo(
+    () => ({ state, startCups, startPdf, retry, refreshStudy }),
+    [state, startCups, startPdf, retry, refreshStudy],
+  );
   return <StudyContext.Provider value={value}>{children}</StudyContext.Provider>;
 }
