@@ -186,3 +186,31 @@
 - Verification run: `./init.sh` (239 tests), `npm run test:e2e` 90/90 (both projects); backend refresh route reviewed (404 missing/foreign, 409 not completed); retry screenshot reviewed.
 - Known risk or unresolved issue: manual local-QA checks still pending (real refresh 200 after reload, 60 s tab return in a real browser, retry after backend restart).
 - Next best step: run `feature-spec` for `cups-camera-ocr`.
+
+### Session 019
+
+- Date: 2026-10-16
+- Goal: `cups-camera-ocr` step 1 (spike tooling only).
+- Completed: `extractBestCandidate` (BmApp regex, trim 22→20, two passes) + 7 tests in `cups.test.ts`; `tesseract.js` ^5 + `cups-ocr.ts` (dynamic import, whitelist, SINGLE_BLOCK, default CDN); dev-only `/dev/cups-scan` bare scanner (10 s attempts, ~600 ms ticks, guide band 90%×25%, grayscale, upscale ≥1000 px); dev-only `POST /api/dev/cups-scan-log` → `.dev-logs/cups-scan.jsonl` (gitignored) + 3 route tests.
+- Verification run: `./init.sh` (249 tests); `npm run build` OK; Scenario 9 on `next start`: page 404, log POST 404, no `.dev-logs/` created; dev smoke: page 200, log line appended.
+- Next best step: user runs the Android spike (Scenario 8) via `adb reverse tcp:9003 tcp:9003`, `http://localhost:9003/dev/cups-scan`; then record the per-bill table here and decide on step 2.
+
+### Session 020
+
+- Date: 2026-10-16
+- Goal: `cups-camera-ocr` spike gate (Scenario 8) + step 2 (full feature).
+- Spike gate PASSED (Android Chrome via `adb reverse`, dev page `/dev/cups-scan`; bills unlabelled, recorded as #1–#5; user confirmed all against the paper bills):
+
+  | # | Distributor | Picked CUPS | Len | Time | Valid | False-valid |
+  |---|---|---|---|---|---|---|
+  | 1 | 0031 | ES0031102615113014GF | 20 (raw had trailing `GF0F`; 20-char base kept) | 1.1 s | yes | no |
+  | 2 | 0026 | ES0026000000456555FK0F | 22 | 0.3 s | yes | no |
+  | 3 | 0021 | ES0021000013154191MM | 20 (raw `MM1F`; 20-char base kept) | 0.9 s | yes | no |
+  | 4 | 0021 | ES0021000042760190GJ1Q | 22 | 0.7 s | yes | no |
+  | 5 | 0022 | ES0022000007603872PJ1P | 22 | 1.2 s | yes | no |
+
+  5/5 detected < 10 s (100%), 4 distributors, 3×22-char, 0 false-valid. Positions 21–22 (frontier point) are optional; returning the 20-char base when the suffix is misread is correct. iOS Safari deferred to `qa-real-device-checks`.
+- Completed (step 2): `use-camera-stream.ts` (rear camera, stops tracks on unmount/confirm/retry, track `ended` → error); `cups-scanner.tsx` full-screen dialog (Volver, Escape, guide frame, ~600 ms skip-if-busy OCR loop paused while hidden, manual-edit lock, camera/OCR error fallbacks, "Reintentar cámara", worker terminated on unmount; `createRecognizer`/`grab` test seams); `cups-scanner-option.tsx` method row between CUPS form and PDF row → `startCups`; unit + E2E tests; `consumption-pdf.spec.ts` Tab order updated for the new row; risks, technical-discovery, README docs. Dev spike page kept as is.
+- Verification run: `./init.sh` (256 tests), `npm run build` (tesseract only in async chunks), `npm run test:e2e` 94/94 both projects; screenshots of row and denied scanner reviewed (light).
+- Not run: dark-mode screenshot of the scanner; manual Scenario 4 (deny on a real Android) and Scenario 6 camera-indicator check on device — recommended during validation or `qa-real-device-checks`.
+- Next best step: run `feature-validator` on `cups-camera-ocr`.

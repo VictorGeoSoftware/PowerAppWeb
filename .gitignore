@@ -54,3 +54,6 @@ next-env.d.ts
 # IDE
 .idea/
 /playwright/.auth/
+
+# dev-only spike logs (cups-camera-ocr)
+/.dev-logs/

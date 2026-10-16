@@ -83,6 +83,7 @@ test("PDF option is visible, labelled and accepts PDFs", async ({ page }) => {
     // WebKit's default Tab order skips non-text controls (Safari setting), so check it on Chromium.
     await cupsInput(page).focus();
     await page.keyboard.press("Tab"); // Confirmar is disabled → skipped
+    await page.keyboard.press("Tab"); // "Escanear código CUPS" row
     await expect(fileInput(page)).toBeFocused();
   } else {
     await fileInput(page).focus();

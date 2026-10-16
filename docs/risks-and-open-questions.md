@@ -26,6 +26,9 @@
 ## Risks
 - Dev machine on Volvo corporate network cannot reach BmBackend QA ("Application Blocked"); mitigated by the local Docker QA stack (`../BmInfra/bm-local-qa`, localhost:9081).
 - Live in-browser CUPS OCR accuracy is lower than ML Kit; mitigated by photo-upload and manual-entry fallbacks.
+- Accepted: iOS Safari OCR accuracy unverified until `qa-real-device-checks` (same bills, same thresholds); if it fails, `cups-camera-ocr` reopens. iOS may end the camera track when the tab is hidden — the scanner then shows "Reintentar cámara".
+- Tesseract.js worker/core/lang data load from the library's default CDN (jsDelivr); offline or a blocked CDN shows "No se pudo iniciar el lector" (manual entry still works). Self-hosting belongs to `pwa-installable`.
+- When OCR misreads the optional CUPS suffix (positions 21–22, frontier point), the parser returns the valid 20-char base; this identifies the same supply point and is not a false-valid.
 - iOS PWA limitations (push only when installed, storage eviction, background tab throttling during polling).
 - Calculation drift between Android and web if logic is duplicated.
 - Local Docker QA can't complete a CUPS Consumption Job: no n8n/Datadis, and `docker-compose.yml` sets `N8N_WEBHOOK_URL` while BmBackend reads `N8N_FETCH_USER_CONSUMPTION_WEBHOOK_URL` (fix belongs to BmInfra/BmBackend). E2E mocks the job endpoints; the real end-to-end CUPS check needs a working n8n.
@@ -34,5 +37,5 @@
 - BmBackend keeps jobs in memory: a backend restart loses in-flight jobs and the 1 h restore (status/result 404 → error or cleared id).
 
 ## Research Tasks
-- Spike: Tesseract.js CUPS OCR on iPhone Safari with real bills.
+- Done (2026-10-16): Tesseract.js CUPS OCR spike on Android Chrome (`adb reverse`): 5/5 real bills detected < 10 s, 4 distributors, 3×22-char, 0 false-valid. iOS Safari accuracy still unverified (accepted risk, re-checked in `qa-real-device-checks`).
 - Verify backend `/user-data` and device binding do not assume Android-only fields.

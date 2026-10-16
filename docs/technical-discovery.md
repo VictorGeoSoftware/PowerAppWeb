@@ -21,7 +21,7 @@ No own database. All data via BmBackend. Client keeps only session and current-f
 - BmBackend `/api/v1` endpoints used by BmApp (price-table-results, consumption report jobs, comparator-pdf, collected-prices, user-data, user-activity, auth/logout).
 - Firebase Auth (project `brielmarnysos-1dc68`, shared with Android). Web app registered; public config from `NEXT_PUBLIC_FIREBASE_*` env vars (`src/lib/firebase/config.ts`); the web API key is restricted by HTTP referrer in Google Cloud and shared with BmWeb, so every BmWeb/PowerAppWeb origin (incl. localhost:9002/9003) must be listed. Firebase JS SDK pinned to v11 (v12 requires Node ≥24).
 - Web Push via FCM for web (service worker) — backend must store web tokens.
-- In-browser OCR for CUPS (e.g. Tesseract.js over `getUserMedia`); photo upload as fallback.
+- In-browser OCR for CUPS: Tesseract.js (v5, dynamic import, default CDN) over `getUserMedia`; photo upload as fallback. Real-device Android testing via `adb reverse tcp:9003 tcp:9003` (phone loads `http://localhost:9003`, a secure context, so no HTTPS needed).
 - New backend capability: accept bill photos (image) for consumption/CUPS extraction.
 
 ## Authentication and Authorization

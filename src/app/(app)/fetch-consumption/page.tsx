@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useConsumptionStudy } from "@/components/consumption/consumption-study-provider";
 import { CupsForm } from "@/components/consumption/cups-form";
+import { CupsScannerOption } from "@/components/consumption/cups-scanner-option";
 import { PdfUploadOption } from "@/components/consumption/pdf-upload-option";
 import { StudyProgress } from "@/components/consumption/study-progress";
 
-/** BmApp FetchConsumptionScreen: typed CUPS and PDF bill upload. */
+/** BmApp FetchConsumptionScreen: typed CUPS, CUPS camera scan and PDF bill upload. */
 export default function FetchConsumptionPage() {
   const { state, startCups, startPdf, retry } = useConsumptionStudy();
   // Client-side file check message; replaces any previous study error until the next attempt.
@@ -31,6 +32,12 @@ export default function FetchConsumptionPage() {
             error={fileError ?? studyError}
             onRetry={state.kind === "failed" && state.canRetry && !fileError ? retry : undefined}
             onSubmit={(cups) => {
+              setFileError(null);
+              startCups(cups);
+            }}
+          />
+          <CupsScannerOption
+            onConfirm={(cups) => {
               setFileError(null);
               startCups(cups);
             }}

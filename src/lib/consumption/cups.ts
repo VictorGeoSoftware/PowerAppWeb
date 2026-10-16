@@ -5,7 +5,7 @@
  * Format (Real Decreto 1110/2007): ES + 16 digits + 2 control letters [+ digit + letter].
  * Control letters: mod-529 of the 16 digits over "TRWAGMYFPDXBNJZSQVHLCKE".
  *
- * OCR candidate extraction is left for `cups-camera-ocr`.
+ * `extractBestCandidate` ports the OCR candidate extraction (`cups-camera-ocr`).
  */
 const CONTROL_ALPHABET = "TRWAGMYFPDXBNJZSQVHLCKE";
 const STRUCTURE = /^ES(\d{16})([A-Z]{2})([0-9][A-Z])?$/;
@@ -42,4 +42,36 @@ export function isValidCups(raw: string): boolean {
   const match = STRUCTURE.exec(toSubmittableCups(raw));
   if (!match) return false;
   return computeControlCode(match[1]) === match[2];
+}
+
+/** BmApp `candidateRegex`: "ES" followed by 18..28 chars of code or separators. */
+const CANDIDATE_REGEX = /ES[\s\-.,:;/|A-Z0-9]{18,28}/g;
+
+/** BmApp `tryTrimToValid`: fixed code if valid, else trimmed to 22, then 20. */
+function tryTrimToValid(normalized: string): string | null {
+  const fixed = fixOcrErrors(normalized);
+  if (isValidCups(fixed)) return fixed;
+  for (const len of [22, 20]) {
+    if (fixed.length > len) {
+      const trimmed = fixed.substring(0, len);
+      if (isValidCups(trimmed)) return trimmed;
+    }
+  }
+  return null;
+}
+
+function firstValid(text: string): string | null {
+  for (const m of text.matchAll(CANDIDATE_REGEX)) {
+    const hit = tryTrimToValid(normalize(m[0]));
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/**
+ * BmApp `extractBestCandidate`: first valid CUPS in OCR text (corrected form), or null.
+ * Pass 1 on uppercased text; pass 2 on fully normalized text.
+ */
+export function extractBestCandidate(text: string): string | null {
+  return firstValid(text.toUpperCase()) ?? firstValid(normalize(text));
 }

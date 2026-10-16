@@ -49,6 +49,7 @@ cp .env.example .env.local      # BM_BACKEND_URL=http://localhost:9081 + NEXT_PU
 npm run dev          # http://localhost:9003   (BmWeb uses 9002)
 npm run build        # production build; type/lint errors are not ignored
 ```
+- Camera on a real Android phone (USB debugging): `adb reverse tcp:9003 tcp:9003`, then open `http://localhost:9003` on the phone (localhost is a secure context, so the camera works without HTTPS). Dev-only OCR test page: `/dev/cups-scan` (logs attempts to `.dev-logs/cups-scan.jsonl`, gitignored; 404 in production).
 
 ### 6. E2E tests
 ```bash

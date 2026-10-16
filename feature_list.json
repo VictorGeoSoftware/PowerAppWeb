@@ -288,12 +288,19 @@
     "depends_on": [
       "consumption-by-cups-manual"
     ],
-    "status": "not_started",
+    "status": "passing",
     "verification": [
       "Spike accuracy on real bills with iPhone Safari and Android Chrome",
       "Permission denied -> fallback"
     ],
-    "evidence": [],
+    "evidence": [
+      "2026-10-16 spike gate (Android Chrome via adb reverse, dev page /dev/cups-scan): 5/5 real bills detected <10 s (0031 ES0031102615113014GF 1.1s; 0026 ES0026000000456555FK0F 0.3s; 0021 ES0021000013154191MM 0.9s; 0021 ES0021000042760190GJ1Q 0.7s; 0022 ES0022000007603872PJ1P 1.2s), 4 distributors, 3x22-char, 0 false-valid, user confirmed vs paper. iOS Safari deferred to qa-real-device-checks.",
+      "./init.sh: lint, typecheck, vitest 256 passed (cups-scanner 7, extractBestCandidate 7, dev log route 3)",
+      "npm run build OK; tesseract.js only in async chunks, not in /fetch-consumption chunk",
+      "npm run test:e2e 94/94 (iphone-webkit + android-chromium) incl. new e2e/consumption-camera.spec.ts (denied camera fallback + manual confirm; Volver submits nothing)",
+      "Scenario 9 (step 1): next start -> /dev/cups-scan 404, POST /api/dev/cups-scan-log 404, no .dev-logs written",
+      "Mobile screenshots (light): method row, scanner denied state on both projects"
+    ],
     "notes": "Research spike first; risk documented."
   },
   {
@@ -535,7 +542,8 @@
     ],
     "status": "not_started",
     "verification": [
-      "iPhone with notch, Safari and Home Screen (standalone), portrait and landscape: top bar below the status bar; menu and content not hidden by the notch or home indicator (app-shell-navigation Scenario 7)"
+      "iPhone with notch, Safari and Home Screen (standalone), portrait and landscape: top bar below the status bar; menu and content not hidden by the notch or home indicator (app-shell-navigation Scenario 7)",
+      "cups-camera-ocr iOS spike: repeat the CUPS camera OCR spike on iPhone Safari against the QA build with the same bills and thresholds (>=5 real paper bills from >=2 retailers incl. one 22-char CUPS, >=80% detected within 10 s, zero false-valid codes); if it fails, reopen cups-camera-ocr (manual entry fallback covers Brokers meanwhile)"
     ],
     "evidence": [],
     "notes": "Run after the first version is deployed to the QA environment. Add other real-device checks here as features defer them."

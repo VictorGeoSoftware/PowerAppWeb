@@ -13,6 +13,8 @@ Load the `feature-validator` skill and follow it for the feature id given in the
 
 - Do not fix code and do not modify any file. Persisting the verdict is the orchestrator's job.
 - Rerun checks where practical (`./init.sh`, focused tests, `npm run test:e2e` when relevant).
+- E2E credentials live in the macOS Keychain. Read them inline only for the test command; never print, echo, log or write them to files:
+  `E2E_EMAIL="$(security find-generic-password -a "$USER" -s bm-e2e-email -w)" E2E_PASSWORD="$(security find-generic-password -a "$USER" -s bm-e2e-password -w)" npm run test:e2e`
 
 Return the full validation report, then end with this line exactly:
 VERDICT: accept | revise | block

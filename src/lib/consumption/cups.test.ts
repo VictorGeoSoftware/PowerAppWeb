@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeControlCode, fixOcrErrors, isValidCups, normalize, toSubmittableCups } from "./cups";
+import { computeControlCode, extractBestCandidate, fixOcrErrors, isValidCups, normalize, toSubmittableCups } from "./cups";
 
 describe("CUPS (BmApp CupsCodeParser / backend CupsValidationTest fixtures)", () => {
   it("accepts valid 20- and 22-char codes", () => {
@@ -45,5 +45,34 @@ describe("CUPS (BmApp CupsCodeParser / backend CupsValidationTest fixtures)", ()
   it("computes the control code", () => {
     expect(computeControlCode("0031607515707001")).toBe("RC");
     expect(computeControlCode("123")).toBeNull();
+  });
+});
+
+describe("extractBestCandidate", () => {
+  it("finds a code inside noisy bill text", () => {
+    expect(extractBestCandidate("Datos del suministro\nCUPS: ES0031607515707001RC\nPotencia 4,6 kW")).toBe(
+      "ES0031607515707001RC",
+    );
+  });
+  it("handles separators and lowercase", () => {
+    expect(extractBestCandidate("cups es 0031 6075 1570 7001 rc")).toBe("ES0031607515707001RC");
+    expect(extractBestCandidate("ES-0031-6075-1570-7001-RC")).toBe("ES0031607515707001RC");
+  });
+  it("trims trailing words to 20 chars", () => {
+    expect(extractBestCandidate("ES0031607515707001RCTARIFA 2.0TD")).toBe("ES0031607515707001RC");
+  });
+  it("keeps 22-char codes", () => {
+    expect(extractBestCandidate("CUPS ES0031607515707001RC0F TARIFA")).toBe("ES0031607515707001RC0F");
+  });
+  it("corrects look-alikes", () => {
+    expect(extractBestCandidate("ESOO316O7515707OO1RC")).toBe("ES0031607515707001RC");
+  });
+  it("returns null without a valid code", () => {
+    expect(extractBestCandidate("ES0031607515707001AA")).toBeNull();
+    expect(extractBestCandidate("Factura de luz sin código")).toBeNull();
+    expect(extractBestCandidate("")).toBeNull();
+  });
+  it("uses the normalized fallback pass", () => {
+    expect(extractBestCandidate("E S0031607515707001RC")).toBe("ES0031607515707001RC");
   });
 });
