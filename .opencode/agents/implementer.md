@@ -12,6 +12,7 @@ Follow `AGENTS.md` (startup workflow, working rules, definition of done).
 - Run `./init.sh` and every check in the spec's verification plan, including a mobile viewport check for UI and `npm run test:e2e` when the spec requires it.
 - E2E credentials live in the macOS Keychain. Read them inline only for the test command; never print, echo, log or write them to files:
   `E2E_EMAIL="$(security find-generic-password -a "$USER" -s bm-e2e-email -w)" E2E_PASSWORD="$(security find-generic-password -a "$USER" -s bm-e2e-password -w)" npm run test:e2e`
+- Local QA backend: follow the "Local QA stack" rules in `AGENTS.md`. Only run `../BmInfra/bm-local-qa rebuild-backend` if this feature changed BmBackend code (10-minute timeout, no `tail`); otherwise just `../BmInfra/bm-local-qa ready`. Never call `docker compose` directly.
 - When verification actually passes, set the feature status to `passing` in `feature_list.json` with evidence and update `PROGRESS.md`. Never set `accepted`.
 - Do not commit or push. Never write secrets to files.
 

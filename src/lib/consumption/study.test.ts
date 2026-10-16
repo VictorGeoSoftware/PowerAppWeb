@@ -110,6 +110,25 @@ describe("runStudy", () => {
     expect(r).toEqual({ ok: false, failure: "SUBMIT_FAILED" });
   });
 
+  it("uploads a photo as multipart part `file` with an image name", async () => {
+    const submit = vi.fn<Route>(() => json({ jobId: "job-1" }, 202));
+    const { fetch, calls } = fakeFetch({ submit });
+    const steps: string[] = [];
+    const file = new File(["png"], "", { type: "image/png" });
+    const r = await runStudy({ fetch, submission: { kind: "photo", file }, onStep: (s) => steps.push(s), sleep });
+    expect(r.ok).toBe(true);
+    expect(calls[0]).toBe("POST fetch-user-consumption-report");
+    expect(steps[0]).toBe("UPLOADING_BILL");
+    expect(((submit.mock.calls[0][1]!.body as FormData).get("file") as File).name).toBe("factura.png");
+  });
+
+  it("photo submit 400 → SUBMIT_FAILED", async () => {
+    const file = new File(["x"], "a.jpg", { type: "image/jpeg" });
+    const submit = () => Promise.reject(new BmApiError(400, "Invalid image file"));
+    const r = await runStudy({ fetch: fakeFetch({ submit }).fetch, submission: { kind: "photo", file }, onStep: () => {}, sleep });
+    expect(r).toEqual({ ok: false, failure: "SUBMIT_FAILED" });
+  });
+
   it("resumes without submitting", async () => {
     const { fetch, calls } = fakeFetch();
     const steps: string[] = [];

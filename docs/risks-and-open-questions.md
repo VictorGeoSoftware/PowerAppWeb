@@ -8,7 +8,7 @@
 - Real-phone testing before hosting: add the Mac's LAN IP to Firebase Auth authorized domains, or test on the hosted HTTPS URL.
 - IONOS hosting details, domain, and TLS setup (same as BmWeb).
 - Comparator calculation: port `ProposalCalculationHelper` to TypeScript, or move it to the backend so both clients share it?
-- Backend changes: bill photo upload + extraction, web push token registration, device binding for web client type.
+- Backend changes: bill photo upload + extraction (done in `backend-bill-photo-extraction`: JPEG/PNG ~30–45 s end-to-end on local QA, 4000+ px photo 38 s), web push token registration, device binding for web client type.
 - Firebase web app registration in project `brielmarnysos-1dc68`.
 
 ## Later / Not MVP
@@ -25,6 +25,7 @@
 
 ## Risks
 - Dev machine on Volvo corporate network cannot reach BmBackend QA ("Application Blocked"); mitigated by the local Docker QA stack (`../BmInfra/bm-local-qa`, localhost:9081).
+- `consumption-by-photo`: backend photo support exists only on uncommitted BmBackend `feature/backend-bill-photo-extraction`; remote QA returns 400 → "No se pudo iniciar el estudio" until merged to `qa`. iOS HEIC→JPEG conversion via `accept="image/jpeg,image/png"` is NOT yet observed on a real iPhone (open); HEIC that still arrives is rejected locally with a clear message.
 - Live in-browser CUPS OCR accuracy is lower than ML Kit; mitigated by photo-upload and manual-entry fallbacks.
 - Accepted: iOS Safari OCR accuracy unverified until `qa-real-device-checks` (same bills, same thresholds); if it fails, `cups-camera-ocr` reopens. iOS may end the camera track when the tab is hidden — the scanner then shows "Reintentar cámara".
 - Tesseract.js worker/core/lang data load from the library's default CDN (jsDelivr); offline or a blocked CDN shows "No se pudo iniciar el lector" (manual entry still works). Self-hosting belongs to `pwa-installable`.

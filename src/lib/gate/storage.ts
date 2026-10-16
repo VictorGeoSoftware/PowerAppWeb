@@ -8,7 +8,7 @@ export const LAST_JOB_ID_KEY = "bm.lastCompletedJobId";
 export const ACTIVE_JOB_KEY = "bm.activeJob";
 export const LAST_JOB_ID_EXPIRY_MS = 60 * 60 * 1000;
 
-export type JobSource = "cups" | "pdf";
+export type JobSource = "cups" | "pdf" | "photo";
 export type ActiveJob = { jobId: string; source: JobSource; cups?: string; attempts: number };
 
 export function saveActiveJob(job: ActiveJob | null) {
@@ -25,7 +25,7 @@ export function loadActiveJob(): ActiveJob | null {
     const v = JSON.parse(sessionStorage.getItem(ACTIVE_JOB_KEY) ?? "null");
     if (!v || typeof v.jobId !== "string" || !v.jobId) return null;
     // Entries written before the PDF source existed have no `source`: they are CUPS jobs.
-    const source: JobSource = v.source === "pdf" ? "pdf" : "cups";
+    const source: JobSource = v.source === "pdf" || v.source === "photo" ? v.source : "cups";
     const job: ActiveJob = { jobId: v.jobId, source, attempts: Number(v.attempts) || 0 };
     if (source === "cups") job.cups = typeof v.cups === "string" ? v.cups : "";
     return job;

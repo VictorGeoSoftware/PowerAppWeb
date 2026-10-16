@@ -50,6 +50,10 @@ describe("gate storage", () => {
     expect(loadActiveJob()).toEqual({ jobId: "a", source: "cups", cups: "C", attempts: 3 });
     saveActiveJob({ jobId: "p", source: "pdf", attempts: 1 });
     expect(loadActiveJob()).toEqual({ jobId: "p", source: "pdf", attempts: 1 });
+    saveActiveJob({ jobId: "f", source: "photo", attempts: 2 });
+    expect(loadActiveJob()).toEqual({ jobId: "f", source: "photo", attempts: 2 });
+    sessionStorage.setItem(ACTIVE_JOB_KEY, JSON.stringify({ jobId: "u", source: "weird", attempts: 1 }));
+    expect(loadActiveJob()).toMatchObject({ source: "cups" });
     // Pre-PDF entries have no source: read as CUPS.
     sessionStorage.setItem(ACTIVE_JOB_KEY, JSON.stringify({ jobId: "old", cups: "C", attempts: 4 }));
     expect(loadActiveJob()).toEqual({ jobId: "old", source: "cups", cups: "C", attempts: 4 });

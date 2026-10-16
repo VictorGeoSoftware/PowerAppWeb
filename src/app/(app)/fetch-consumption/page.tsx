@@ -5,11 +5,12 @@ import { useConsumptionStudy } from "@/components/consumption/consumption-study-
 import { CupsForm } from "@/components/consumption/cups-form";
 import { CupsScannerOption } from "@/components/consumption/cups-scanner-option";
 import { PdfUploadOption } from "@/components/consumption/pdf-upload-option";
+import { PhotoUploadOption } from "@/components/consumption/photo-upload-option";
 import { StudyProgress } from "@/components/consumption/study-progress";
 
 /** BmApp FetchConsumptionScreen: typed CUPS, CUPS camera scan and PDF bill upload. */
 export default function FetchConsumptionPage() {
-  const { state, startCups, startPdf, retry } = useConsumptionStudy();
+  const { state, startCups, startPdf, startPhoto, retry } = useConsumptionStudy();
   // Client-side file check message; replaces any previous study error until the next attempt.
   const [fileError, setFileError] = useState<string | null>(null);
 
@@ -47,6 +48,13 @@ export default function FetchConsumptionPage() {
             onSelect={(file) => {
               setFileError(null);
               startPdf(file);
+            }}
+          />
+          <PhotoUploadOption
+            onError={setFileError}
+            onSelect={(file) => {
+              setFileError(null);
+              startPhoto(file);
             }}
           />
         </>

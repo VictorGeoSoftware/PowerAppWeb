@@ -313,12 +313,21 @@
     "depends_on": [
       "consumption-by-pdf"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "QA endpoint test with sample photo"
     ],
-    "evidence": [],
-    "notes": "BmBackend qa branch only."
+    "evidence": [
+      "BmBackend branch feature/backend-bill-photo-extraction (from qa @ fetch 2026-10-16), uncommitted, not pushed/deployed",
+      "./gradlew test: 164 tests, 0 failures (new ConsumptionUploadTypeTest, ImageToPdfConverterTest)",
+      "Local QA :9081 (rebuilt from branch): ib2.jpg 202→COMPLETED ES0031104740917002MS 43s; ib2.png COMPLETED 37s; repsol.jpg/png COMPLETED ES0021000013154191MM1F 31s/28s",
+      "Regression PDF: Iberdrola + Repsol PDFs COMPLETED 35s/34s",
+      "400 'Only PDF, JPEG or PNG files are accepted' for .txt/.heic/.gif/no-ext; 400 'Invalid image file' for text fake.jpg; blank.png 202→FAILED Docling 404; no auth 401",
+      "Scenario 7: 4134x5847 3.5MB JPEG COMPLETED 38s (downscaled to 2000px long edge); 90° rotated JPEG still COMPLETED 30s; 0 consumption_* temp files left in container /tmp",
+      "Real phone photo of a paper bill: deferred to consumption-by-photo (validator: non-blocking, OCR quality is a DoclingBillReader concern)",
+      "2026-10-16 validator: VERDICT accept (0 repair rounds), no blocking findings; user reviewed the BmBackend diff and accepted"
+    ],
+    "notes": "BmBackend feature branch only; image wrapped into 1-page PDF (OpenPDF). Example-bill photo must show the page with the CUPS (Iberdrola: page 2)."
   },
   {
     "id": "consumption-by-photo",
@@ -328,12 +337,16 @@
     "depends_on": [
       "backend-bill-photo-extraction"
     ],
-    "status": "not_started",
+    "status": "passing",
     "verification": [
       "Photo from iPhone camera produces report"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "2026-10-16: ./init.sh green (lint, typecheck, vitest 276 tests); npm run test:e2e full 120 passed + 2 photo resume tests failed on a test typo, fixed; e2e/consumption-photo.spec.ts rerun 30/30 passed on android-chromium + iphone-webkit; screenshots test-results/consumption-photo-{methods,uploading,file-error,error}-{android-chromium,iphone-webkit}.png reviewed at 390 px (light).",
+      "2026-10-16 Scenario 8 (USER-REPORTED, not observed by agent): user took a real paper-bill photo with the iPhone camera via local QA and reported \"Working!\" — flow reached the report end to end. HEIC→JPEG not observed directly; implied only by 'working' (the camera shot was not rejected by the backend, so it arrived as JPEG).",
+      "2026-10-16 re-run after spec fix: ./init.sh green (276 vitest); full npm run test:e2e 122 passed (first attempt hit a transient auth.setup login timeout, rerun green)."
+    ],
+    "notes": "All scenarios done; Scenario 8 is user-reported."
   },
   {
     "id": "current-conditions-form",

@@ -1,5 +1,5 @@
 import type { ConsumptionReportResponse, JobStatus } from "./report";
-import { billUploadName } from "./bill-file";
+import { billUploadName, photoUploadName } from "./bill-file";
 import type { StudyFailure, StudyStep } from "./messages";
 
 /** Backend call through the proxy; throws on non-2xx (see `useBmFetch`). */
@@ -19,7 +19,7 @@ export type StudyResult =
   | { ok: false; failure: StudyFailure }
   | { ok: false; aborted: true };
 
-export type StudySubmission = { kind: "cups"; cups: string } | { kind: "pdf"; file: File };
+export type StudySubmission = { kind: "cups"; cups: string } | { kind: "pdf"; file: File } | { kind: "photo"; file: File };
 
 export type RunStudyOptions = {
   fetch: StudyFetch;
@@ -99,7 +99,7 @@ export async function runStudy(opts: RunStudyOptions): Promise<StudyResult> {
       } else {
         // No Content-Type: the browser sets multipart with its boundary.
         const form = new FormData();
-        form.append("file", sub.file, billUploadName(sub.file));
+        form.append("file", sub.file, sub.kind === "pdf" ? billUploadName(sub.file) : photoUploadName(sub.file));
         res = await fetch(PDF_SUBMIT_PATH, { method: "POST", body: form, signal });
       }
       if (res.status !== 202) return fail("SUBMIT_FAILED");

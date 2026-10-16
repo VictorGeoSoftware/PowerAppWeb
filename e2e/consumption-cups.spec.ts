@@ -89,7 +89,7 @@ test("live validation, CUPS, scan and PDF methods", async ({ page }) => {
   await expect(page.getByText("ELIGE UN MÉTODO")).toBeVisible();
   await expect(page.getByText("Subir factura PDF")).toBeVisible();
   await expect(page.getByText("Escanear código CUPS")).toBeVisible();
-  await expect(page.getByText(/Foto/i)).toHaveCount(0);
+  await expect(page.getByText("Foto de la factura")).toBeVisible();
   await expect(page.getByText("Introduce el CUPS que aparece en la factura")).toBeVisible();
   await expect(confirm(page)).toBeDisabled();
   await shot(page, "empty");

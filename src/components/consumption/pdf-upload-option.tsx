@@ -3,7 +3,7 @@
 import { ChevronRightIcon, FileUpIcon } from "lucide-react";
 import { useId } from "react";
 import { checkBillFile } from "@/lib/consumption/bill-file";
-import { PDF_NOT_PDF, PDF_TOO_LARGE } from "@/lib/consumption/messages";
+import { PDF_NOT_PDF, BILL_TOO_LARGE } from "@/lib/consumption/messages";
 
 type Props = {
   /** Receives a file that passed `checkBillFile`. */
@@ -35,7 +35,7 @@ export function PdfUploadOption({ onSelect, onError }: Props) {
           if (!file) return;
           const check = checkBillFile(file);
           if (check === "NOT_PDF") onError(PDF_NOT_PDF);
-          else if (check === "TOO_LARGE") onError(PDF_TOO_LARGE);
+          else if (check === "TOO_LARGE") onError(BILL_TOO_LARGE);
           else onSelect(file);
         }}
       />

@@ -7,11 +7,12 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `backend-bill-photo-extraction` (run `feature-spec`)
+- Current next ready feature: `consumption-by-photo` (run `feature-spec`)
+- `../BmBackend` is checked out on `feature/backend-bill-photo-extraction` (uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-16 (cups-camera-ocr accepted: vitest 256, E2E 94/94 both projects, Android real-device checks OK)
+- Last verified at: 2026-10-16 (backend-bill-photo-extraction accepted: BmBackend gradle 164 tests, local QA photo uploads COMPLETED; PowerAppWeb vitest 256)
 
 ## Session Log
 
@@ -224,3 +225,62 @@
 - Status: `cups-camera-ocr` → `accepted`. Open risks: iOS Safari OCR accuracy deferred to `qa-real-device-checks`; OCR assets from public CDN (self-host in `pwa-installable`).
 - Note: `.opencode/agents/*.md` harness edits are pending and belong in a separate commit.
 - Next best step: run `feature-spec` for `backend-bill-photo-extraction`.
+
+### Session 022
+
+- Date: 2026-10-16
+- Goal: implement `backend-bill-photo-extraction`.
+- Completed (BmBackend, branch `feature/backend-bill-photo-extraction` from up-to-date `qa`, uncommitted, not pushed/deployed): `models/ConsumptionUploadType.kt`, `services/ImageToPdfConverter.kt` (magic-byte check, OpenPDF one page = image size, long edge downscaled to 2000 px), `services/InvalidImageException.kt`, `UserConsumptionService.processConsumptionReportFromImage`, route classifier + 400 messages + per-type temp suffix, tests, `docs/ASYNC_JOB_API.md`. PowerAppWeb docs: technical-discovery, risks.
+- Verification: `./gradlew test` 164 tests, 0 failures (needs a temp JVM truststore with `BmBackend/certs/*.crt` on the Volvo network via `JAVA_TOOL_OPTIONS`). Local QA backend rebuilt from the branch (`docker compose --project-name bminfra … up -d --build backend-qa`):
+
+  | File | HTTP | Job | CUPS | Time |
+  |---|---|---|---|---|
+  | Iberdrola p2 JPEG 200 dpi | 202 | COMPLETED | ES0031104740917002MS | 43 s |
+  | Iberdrola p2 PNG | 202 | COMPLETED | ES0031104740917002MS | 37 s |
+  | Iberdrola p2 JPEG 4134×5847, 3.5 MB | 202 | COMPLETED | ES0031104740917002MS | 38 s |
+  | Iberdrola p2 JPEG rotated 90° | 202 | COMPLETED | ES0031104740917002MS | 30 s |
+  | Repsol p1 JPEG / PNG | 202 | COMPLETED | ES0021000013154191MM1F | 31 / 28 s |
+  | Iberdrola PDF / Repsol PDF (regression) | 202 | COMPLETED | as above | 35 / 34 s |
+  | blank.png | 202 | FAILED (Docling 404 no CUPS) | – | 3 s |
+  | x.txt / x.heic / x.gif / no extension | 400 `Only PDF, JPEG or PNG files are accepted` | – | – | – |
+  | fake.jpg (text) | 400 `Invalid image file` | – | – | – |
+  | no token | 401 | – | – | – |
+
+  No `consumption_*` temp files left in the container `/tmp`. Note: a photo of Iberdrola page 1 completes Docling but fails at n8n because the CUPS is on page 2 — single-photo uploads must show the page with the CUPS (relevant for `consumption-by-photo` UX copy).
+- Not run: real phone photo of a paper bill (user must supply); PowerAppWeb proxy pass-through (optional).
+- Next best step: run `feature-validator` on `backend-bill-photo-extraction`.
+
+### Session 023
+
+- Date: 2026-10-16
+- Goal: validate and accept `backend-bill-photo-extraction`.
+- Validator: VERDICT accept, 0 repair rounds, no blocking findings (low: no route-level test; corrupted-after-header JPEG → failed job instead of 400). User reviewed the BmBackend diff and accepted.
+- Status: `backend-bill-photo-extraction` → `accepted`. User commits/pushes the BmBackend branch `feature/backend-bill-photo-extraction` (from `qa`) themselves.
+- Notes: local QA builds whatever is checked out in `../BmBackend` (currently the feature branch). Real phone photo check moves to `consumption-by-photo`; photos must show the CUPS page (Iberdrola: page 2). iPhone HEIC is rejected by the backend → handle client-side.
+- Next best step: run `feature-spec` for `consumption-by-photo`.
+
+### Session — consumption-by-photo (implementer)
+
+- Date: 2026-10-16
+- Goal: implement `consumption-by-photo` per `docs/specs/consumption-by-photo.md`.
+- Completed:
+  - `checkBillPhoto`/`photoUploadName` in `bill-file.ts`, `PHOTO_NOT_IMAGE`, `PDF_TOO_LARGE` renamed to `BILL_TOO_LARGE`.
+  - `photo` submission in `runStudy`; `JobSource` `photo` in storage.
+  - Provider `startPhoto` and `lastFile` retry.
+  - New `photo-upload-option.tsx` wired into `/fetch-consumption`.
+  - Unit tests and `e2e/consumption-photo.spec.ts`; cups E2E assertion updated.
+  - Docs updated: domain-model, risks.
+- Verification run:
+  - `./init.sh` green (276 vitest).
+  - Full `npm run test:e2e`: 120 passed, 2 failed on a typo in the new spec's expected jobId. After the fix, `consumption-photo.spec.ts` passed 30/30 on both projects.
+  - Mobile screenshots reviewed.
+  - Local QA `ready`. No BmBackend change.
+- Not run: Scenario 8 (real iPhone photo of a paper bill on local QA, HEIC→JPEG observation). It needs the user's device and bill. Status set to `blocked`.
+- Next best step: the user runs Scenario 8, or agrees to move it to `qa-real-device-checks`. Then mark `passing` and validate.
+
+### Session — consumption-by-photo (implementer, Scenario 8 close-out)
+
+- Date: 2026-10-16
+- Scenario 8 (user-reported): the user ran a real paper-bill photo from the iPhone camera against local QA and reported "Working!", meaning the flow reached the report end to end. The agent did not observe it. HEIC→JPEG was not checked directly. It is implied only because the camera shot was not rejected.
+- Re-verification: `./init.sh` green (276 vitest). Full `npm run test:e2e` passed 122/122. The first run hit a transient `auth.setup` login timeout, and a rerun passed.
+- Status: `passing`. Next: run `feature-validator` for `consumption-by-photo`.

@@ -28,4 +28,5 @@ export const FAILURE_MESSAGES: Record<StudyFailure, string> = {
 
 /** Client-side bill file checks (web-only). */
 export const PDF_NOT_PDF = "Selecciona un archivo PDF.";
-export const PDF_TOO_LARGE = "El archivo supera el tamaño máximo de 50 MB.";
+export const PHOTO_NOT_IMAGE = "Selecciona una foto JPG o PNG.";
+export const BILL_TOO_LARGE = "El archivo supera el tamaño máximo de 50 MB.";

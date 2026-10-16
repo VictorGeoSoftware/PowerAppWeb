@@ -35,6 +35,10 @@ Before writing code:
 - Do not silently change verification rules during implementation.
 - Behavior and numbers must match BmApp; when in doubt, read the Android source.
 - Develop against BmBackend QA. Backend changes go to the BmBackend `qa` branch only; never deploy to PROD.
+- Local QA stack (backend on `http://localhost:9081`): always use the `../BmInfra/bm-local-qa` launcher, never raw `docker compose` (project name is `bminfra`).
+  - No BmBackend changes: just check `../BmInfra/bm-local-qa ready`. Do not rebuild.
+  - BmBackend code changed: `../BmInfra/bm-local-qa rebuild-backend` (rebuilds only `backend-qa`, ends with a readiness check). Run it with a 10-minute shell timeout and do not pipe it through `tail`/`head`.
+  - Stack not running: `../BmInfra/bm-local-qa up` (10-minute timeout).
 - Never commit secrets (Firebase service accounts, keystores, tokens).
 - Update durable repo artifacts instead of relying on chat summaries.
 - Git: `main` on https://github.com/VictorGeoSoftware/PowerAppWeb. Commit only when asked; never commit `.env.local`, credentials or service accounts.

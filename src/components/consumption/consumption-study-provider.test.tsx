@@ -304,6 +304,67 @@ describe("ConsumptionStudyProvider + /fetch-consumption", () => {
     expect(retryButton()).toBeNull();
   });
 
+  const photo = (name = "factura.jpg", type = "image/jpeg", size?: number) => {
+    const f = new File(["jpg"], name, { type });
+    if (size) Object.defineProperty(f, "size", { value: size });
+    return f;
+  };
+  const photoInput = () => screen.getByLabelText("Foto de la factura") as HTMLInputElement;
+
+  it("photo input accepts JPEG/PNG only, without capture", () => {
+    stubBackend();
+    renderPage();
+    expect(photoInput()).toHaveAttribute("accept", "image/jpeg,image/png");
+    expect(photoInput()).not.toHaveAttribute("capture");
+  });
+
+  it("uploads a picked photo and persists source photo", async () => {
+    stubBackend();
+    let release: () => void = () => {};
+    renderPage(() => new Promise((r) => (release = r)));
+    await userEvent.upload(photoInput(), photo("", "image/png"));
+    await waitFor(() => expect(loadActiveJob()).toEqual({ jobId: "job-1", source: "photo", attempts: 0 }));
+    expect(screen.getByRole("status")).toHaveTextContent("Subiendo factura...");
+    for (let i = 0; i < 3; i++) await act(async () => release());
+    await waitFor(() => expect(screen.getByText("stage:CURRENT_CONDITIONS_REQUIRED")).toBeInTheDocument());
+    const init = vi.mocked(fetch).mock.calls[0][1]!;
+    expect(((init.body as FormData).get("file") as File).name).toBe("factura.png");
+  });
+
+  it.each([
+    ["HEIC", () => photo("factura.heic", "image/heic"), "Selecciona una foto JPG o PNG."],
+    ["PDF", () => photo("factura.pdf", "application/pdf"), "Selecciona una foto JPG o PNG."],
+    ["too large", () => photo("a.jpg", "image/jpeg", 50 * 1024 * 1024 + 1), "El archivo supera el tamaño máximo de 50 MB."],
+  ])("photo %s → local alert, no request, no retry", async (_, file, message) => {
+    stubBackend();
+    renderPage();
+    await userEvent.upload(photoInput(), file(), { applyAccept: false });
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(retryButton()).toBeNull();
+  });
+
+  it("Reintentar re-uploads the same photo", async () => {
+    stubBackend({ submitStatus: [400, 202], statuses: ["COMPLETED"] });
+    renderPage();
+    await userEvent.upload(photoInput(), photo("IMG_1.jpg"));
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo iniciar el estudio. Inténtalo de nuevo.");
+    expect(screen.getByLabelText("Introducir código CUPS")).toHaveValue("");
+    await userEvent.click(retryButton()!);
+    await waitFor(() => expect(screen.getByText("stage:CURRENT_CONDITIONS_REQUIRED")).toBeInTheDocument());
+    const uploads = vi.mocked(fetch).mock.calls.filter(([, init]) => init?.body instanceof FormData);
+    expect(uploads.map(([, init]) => ((init!.body as FormData).get("file") as File).name)).toEqual(["IMG_1.jpg", "IMG_1.jpg"]);
+  });
+
+  it("resumes a photo job without re-uploading; no retry when it fails", async () => {
+    saveActiveJob({ jobId: "job-1", source: "photo", attempts: 2 });
+    const calls = stubBackend({ statuses: ["FAILED"] });
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent("El procesamiento ha fallado. Inténtalo de nuevo.");
+    expect(calls.some((c) => c.includes("fetch-user-consumption-report"))).toBe(false);
+    expect(retryButton()).toBeNull();
+  });
+
   it("restore refreshes once and publishes the refreshed report with the same jobId", async () => {
     saveLastCompletedJobId("job-1");
     const calls = stubBackend();

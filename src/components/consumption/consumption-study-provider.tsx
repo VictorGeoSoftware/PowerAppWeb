@@ -32,6 +32,8 @@ type StudyContextValue = {
   startCups: (cups: string) => void;
   /** Starts a study from a PDF bill already checked with `checkBillFile`. */
   startPdf: (file: File) => void;
+  /** Starts a study from a bill photo already checked with `checkBillPhoto`. */
+  startPhoto: (file: File) => void;
   /** Starts a new job with the failed study's input; no-op unless `canRetry`. */
   retry: () => void;
   /** Silent, throttled refresh of the published study's proposals and taxes. */
@@ -103,8 +105,8 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep, refre
   fetchRef.current = bmFetch;
   const sessionJobId = useRef(session?.jobId ?? null);
   sessionJobId.current = session?.jobId ?? null;
-  /** The last PDF picked in this tab, kept only for "Reintentar". */
-  const lastPdf = useRef<File | null>(null);
+  /** The last PDF or photo picked in this tab, kept only for "Reintentar". */
+  const lastFile = useRef<File | null>(null);
   /** Last publish or refresh attempt; starts the refresh throttle. */
   const lastRefreshAt = useRef(0);
 
@@ -191,12 +193,12 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep, refre
       controller.current = null;
       saveActiveJob(null);
       if (result.ok) {
-        lastPdf.current = null;
+        lastFile.current = null;
         saveLastCompletedJobId(result.jobId);
         publish(result.report, result.jobId);
         setState({ kind: "idle" });
       } else if ("failure" in result) {
-        const canRetry = source === "cups" ? !!cups : lastPdf.current != null;
+        const canRetry = source === "cups" ? !!cups : lastFile.current != null;
         setState({ kind: "failed", message: FAILURE_MESSAGES[result.failure], source, cups: cups ?? "", canRetry });
       }
     },
@@ -259,7 +261,7 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep, refre
   useEffect(() => {
     if (resetCount === firstReset.current) return;
     abort();
-    lastPdf.current = null;
+    lastFile.current = null;
     // A poll step or result may have landed between the reset and this effect.
     saveActiveJob(null);
     clearLastCompletedJobId();
@@ -269,26 +271,34 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep, refre
 
   const startCups = useCallback(
     (cups: string) => {
-      lastPdf.current = null;
+      lastFile.current = null;
       void run({ submission: { kind: "cups", cups } });
     },
     [run],
   );
   const startPdf = useCallback(
     (file: File) => {
-      lastPdf.current = file;
+      lastFile.current = file;
       void run({ submission: { kind: "pdf", file } });
+    },
+    [run],
+  );
+  const startPhoto = useCallback(
+    (file: File) => {
+      lastFile.current = file;
+      void run({ submission: { kind: "photo", file } });
     },
     [run],
   );
   const retry = useCallback(() => {
     if (state.kind !== "failed" || !state.canRetry) return;
     if (state.source === "cups") startCups(state.cups);
-    else if (lastPdf.current) startPdf(lastPdf.current);
-  }, [state, startCups, startPdf]);
+    else if (lastFile.current && state.source === "photo") startPhoto(lastFile.current);
+    else if (lastFile.current) startPdf(lastFile.current);
+  }, [state, startCups, startPdf, startPhoto]);
   const value = useMemo(
-    () => ({ state, startCups, startPdf, retry, refreshStudy }),
-    [state, startCups, startPdf, retry, refreshStudy],
+    () => ({ state, startCups, startPdf, startPhoto, retry, refreshStudy }),
+    [state, startCups, startPdf, startPhoto, retry, refreshStudy],
   );
   return <StudyContext.Provider value={value}>{children}</StudyContext.Provider>;
 }
