@@ -7,11 +7,11 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `cups-camera-ocr` (run `feature-spec`)
+- Current next ready feature: `backend-bill-photo-extraction` (run `feature-spec`)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-16 (consumption-job-refresh-errors accepted: vitest 239, E2E 90/90 both projects)
+- Last verified at: 2026-10-16 (cups-camera-ocr accepted: vitest 256, E2E 94/94 both projects, Android real-device checks OK)
 
 ## Session Log
 
@@ -214,3 +214,13 @@
 - Verification run: `./init.sh` (256 tests), `npm run build` (tesseract only in async chunks), `npm run test:e2e` 94/94 both projects; screenshots of row and denied scanner reviewed (light).
 - Not run: dark-mode screenshot of the scanner; manual Scenario 4 (deny on a real Android) and Scenario 6 camera-indicator check on device — recommended during validation or `qa-real-device-checks`.
 - Next best step: run `feature-validator` on `cups-camera-ocr`.
+
+### Session 021
+
+- Date: 2026-10-16
+- Goal: validate and accept `cups-camera-ocr`.
+- Validator: VERDICT accept, 0 repair rounds; all 9 scenarios pass, no blocking findings (reran init 256 tests, build, E2E 94/94).
+- User manual checks on real Android Chrome: dark-mode scanner OK, camera-denied fallback OK, camera indicator off after "Volver" OK.
+- Status: `cups-camera-ocr` → `accepted`. Open risks: iOS Safari OCR accuracy deferred to `qa-real-device-checks`; OCR assets from public CDN (self-host in `pwa-installable`).
+- Note: `.opencode/agents/*.md` harness edits are pending and belong in a separate commit.
+- Next best step: run `feature-spec` for `backend-bill-photo-extraction`.

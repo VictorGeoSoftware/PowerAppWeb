@@ -288,7 +288,7 @@
     "depends_on": [
       "consumption-by-cups-manual"
     ],
-    "status": "passing",
+    "status": "accepted",
     "verification": [
       "Spike accuracy on real bills with iPhone Safari and Android Chrome",
       "Permission denied -> fallback"
@@ -299,7 +299,9 @@
       "npm run build OK; tesseract.js only in async chunks, not in /fetch-consumption chunk",
       "npm run test:e2e 94/94 (iphone-webkit + android-chromium) incl. new e2e/consumption-camera.spec.ts (denied camera fallback + manual confirm; Volver submits nothing)",
       "Scenario 9 (step 1): next start -> /dev/cups-scan 404, POST /api/dev/cups-scan-log 404, no .dev-logs written",
-      "Mobile screenshots (light): method row, scanner denied state on both projects"
+      "Mobile screenshots (light): method row, scanner denied state on both projects",
+      "2026-10-16 user manual checks on real Android Chrome: dark-mode scanner OK, camera-denied fallback (error + Reintentar cámara + manual entry) OK, camera indicator off after Volver OK",
+      "2026-10-16 validator: VERDICT accept (0 repair rounds); all 9 scenarios pass, no blocking findings"
     ],
     "notes": "Research spike first; risk documented."
   },
