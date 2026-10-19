@@ -2,6 +2,7 @@
 
 import { MenuIcon } from "lucide-react";
 import { createContext, useContext, useEffect, useState } from "react";
+import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { AppMenu } from "./app-menu";
 
 /** Right side of the top bar (e.g. "Crear informe" on Proposals, added by later features). */
@@ -40,6 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="mx-auto w-full max-w-[640px] flex-1 px-4 pr-[calc(1rem+env(safe-area-inset-right))] pb-[calc(1rem+env(safe-area-inset-bottom))] pl-[calc(1rem+env(safe-area-inset-left))]">
           {children}
+          <IosInstallBanner />
         </main>
       </div>
       <AppMenu open={menuOpen} onOpenChange={setMenuOpen} />

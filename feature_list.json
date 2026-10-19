@@ -501,21 +501,6 @@
     "notes": "Spec: docs/specs/comparator-pdf-share.md. Table and PDF share useComparator(). Real Android Chrome / iPhone Safari share-sheet checks (incl. the NotAllowedError 'Informe listo' fallback) deferred to qa-real-device-checks. Top-bar label uses text-foreground (BmApp yellow unreadable on light background)."
   },
   {
-    "id": "premium-comprehensive-pdf",
-    "area": "pdf",
-    "title": "PREMIUM comprehensive PDF",
-    "user_visible_behavior": "PREMIUM Brokers can generate comprehensive PDF; BASIC do not see it.",
-    "depends_on": [
-      "comparator-pdf-share"
-    ],
-    "status": "blocked",
-    "verification": [
-      "Test with BASIC and PREMIUM QA accounts"
-    ],
-    "evidence": [],
-    "notes": "Blocked 2026-10-19: comprehensive PDF format not defined; BmBackend has only tier + GET /me/access capability COMPREHENSIVE_COMPARATOR_PDF (docs/USER_TIERS.md: both tiers get the current PDF until the format exists); BmApp has no equivalent. Unblock when the format and a backend endpoint exist."
-  },
-  {
     "id": "user-activity-sync",
     "area": "platform",
     "title": "User data and activity reporting",
@@ -567,13 +552,21 @@
     "depends_on": [
       "app-shell-navigation"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Lighthouse installability",
       "Install on iPhone and Android"
     ],
-    "evidence": [],
-    "notes": "Final stage."
+    "evidence": [
+      "2026-10-19 implementation: ./init.sh green (611 vitest incl. platform, install-provider, manifest, logout hint key)",
+      "e2e/pwa.spec.ts 4/4 incl. setup (android-chromium): manifest fields, icons 200 image/png, apple-touch-icon, theme-color, SW ready with scope /, /sw.js no-cache without fetch handler, Android beforeinstallprompt menu entry used once, iOS-UA banner -> steps sheet -> dismissal survives reload",
+      "Installability: Chrome Page.getInstallabilityErrors (DevTools Application > Manifest equivalent; Lighthouse 12 has no PWA audit) returns [] on the E2E production build",
+      "Full npm run test:e2e: 79 passed (android-chromium); service worker does not affect page.route mocks",
+      "Icons visually checked (apple-touch opaque, maskable inside circle mask); screenshots test-results/pwa-ios-{banner,sheet}-android-chromium.png reviewed at 390px",
+      "Real install on iPhone and Android deferred to HTTPS QA deployment (qa-real-device-checks / docs/after-qa-release-tasks.md §6)",
+      "2026-10-19 validation: accept. ./init.sh rerun green (611 vitest); npm run test:e2e -- e2e/pwa.spec.ts 4/4 incl. setup (android-chromium), installability errors []; icons checked with ImageMagick (any icons transparent corners, maskable/apple opaque full-bleed, glyph inside safe zone); full suite not rerun (recorded 79 passed)"
+    ],
+    "notes": "Final stage. Spec: docs/specs/pwa-installable.md. Accepted by feature-validator 2026-10-19."
   },
   {
     "id": "web-push-registration",

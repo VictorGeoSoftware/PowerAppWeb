@@ -58,6 +58,7 @@ Mirror BmApp visually; adapt to mobile web conventions. Spanish UI.
 ## Existing Design Assets
 - `../BmApp/*.pen` + Compose theme: source of truth for screens, flow, and tokens.
 - `../logo_briel.png`, `../BmApp/launcher_icon_export/`: brand/PWA icons.
+- PWA icons (`public/icons/`, `src/app/favicon.ico`) are generated from `../BmApp/launcher_icon_export/hIYe8.png` by `scripts/generate-pwa-icons.sh`: `icon-192/512` keep the rounded transparent corners (`any`); `icon-maskable-512` and `apple-touch-icon` (180) are full-bleed and opaque (corners filled with the icon gradient; iOS rounds corners itself and shows transparency as black). The glyph already sits inside the maskable 80% safe zone.
 
 ## Layout
 - Designed for 360–430px width first; content max-width ~640px centered on larger screens.
@@ -68,6 +69,7 @@ Mirror BmApp visually; adapt to mobile web conventions. Spanish UI.
 - Comparator colours are fixed and identical in dark mode (BmApp hard-codes them): `--best-option` / `--best-option-foreground` (#DCFCE7 / #166534, best-option card); `--delta-negative` #D32F2F (proposal dearer); `--delta-positive` #000000 (proposal cheaper). The black text on the dark-mode `section-highlight` blue has low contrast, but it matches BmApp.
 - "Crear informe" (BmApp `PrintButton`) is a ghost text button on the right of the top bar, only on Proposals with at least one visible proposal; while generating it shows an 18px spinner (accessible name kept, `aria-busy`, disabled). Its label uses `text-foreground` instead of the BmApp primary yellow, which is unreadable on the light background. The Android share chooser becomes the native Web Share sheet; when the browser needs a fresh tap, an inline card "Informe listo" (primary "Compartir PDF", outline "Descargar", close ×, all ≥ 44px) appears above the comparator. Failures use an inline `role="alert"` (destructive tint) instead of the Android Toast.
 - Android Toasts become an inline `role="status"` `aria-live="polite"` pill fixed above the bottom safe area that hides after 2.5 s (first used by "Precios copiados desde …" on Current Conditions). No toast library. Android `ModalBottomSheet` becomes the shadcn `Sheet` with `side="bottom"`.
+- Install (`src/components/pwa/`): "Instalar aplicación" menu entry above "Cerrar sesión", shown only with a captured Android `beforeinstallprompt` (opens the native dialog, used once) or on iOS when not installed (opens the "Instalar PowerApp" bottom sheet: three numbered steps with the lucide `Share` / `SquarePlus` icons and a primary "Entendido" ≥ 44px). iOS also shows a bottom `bg-card` banner "Instala PowerApp en tu pantalla de inicio" with "Cómo" and close × until dismissed (`bm.installHintDismissed`, survives logout); a spacer keeps it from covering the last action. Nothing is shown when running standalone.
 
 ## Core Screens
 Login, Access pending, Fetch Consumption (CUPS / camera / PDF / photo), Current Conditions, Proposals/Comparator, Configuration.

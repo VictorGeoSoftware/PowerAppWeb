@@ -52,6 +52,12 @@ Firebase Analytics (web) for screen tracking, parity with Android events; backen
 - Privacy: no user id/properties, no identifying params (contract in `src/lib/analytics/tracker.ts`). Action events (login, CUPS scan, fetch, PDF…) are not implemented yet.
 - DebugView: build with `NEXT_PUBLIC_ANALYTICS_ENABLED=true NEXT_PUBLIC_ANALYTICS_DEBUG=true` (adds `debug_mode` to every event), walk the screens, check Firebase console > Analytics > DebugView.
 
+## PWA
+- `src/app/manifest.ts` (`/manifest.webmanifest`): standalone, portrait, `start_url`/`scope` `/`, theme/background `#F8FAFC`; icons in `public/icons/` (see `DESIGN.md`). `layout.tsx` adds the Apple web-app meta, the 180px apple-touch-icon and the light/dark theme colour.
+- `public/sw.js`: only `install` (skipWaiting) and `activate` (clients.claim); **no fetch handler**, no caching (online-only). Registered by `ServiceWorkerRegistrar` in production builds only; served with `Cache-Control: no-cache` and `Service-Worker-Allowed: /`. `web-push-registration` extends it.
+- Install UX (`InstallProvider` in the root layout): captures `beforeinstallprompt` early; iOS is detected by UA (`iPhone|iPad|iPod`, or iPadOS as Mac with touch), not by browser, because every iOS browser installs through Share on 16.4+. Standalone = `navigator.standalone` or `display-mode: standalone`.
+- Installability check: `e2e/pwa.spec.ts` asserts `Page.getInstallabilityErrors` is empty (Lighthouse 12 has no PWA audit).
+
 ## Constraints
 - Backend currently plain HTTP on a bare IP → the server proxy avoids mixed content/CORS.
 - iOS: push only in installed PWA (final stage); Android push works without install; no auto install prompt (show an "Add to Home Screen" hint); camera via HTTPS only.

@@ -17,7 +17,8 @@ export async function logoutFromBackend(user: Pick<User, "getIdToken">): Promise
 /**
  * Single place to clear per-session local data on logout (manual or forced).
  * Features that persist Broker data locally register their cleanup here.
- * Must NOT clear the Bound Device id (`bm.deviceId`), which survives logouts.
+ * Must NOT clear keys that survive logouts: the Bound Device id (`bm.deviceId`)
+ * and the dismissed iOS install hint (`bm.installHintDismissed`).
  */
 export function clearLocalSessionData(): void {
   clearStudyStorage();

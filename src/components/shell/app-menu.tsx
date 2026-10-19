@@ -5,8 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
+import { useInstall } from "@/components/pwa/install-provider";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { canReach, lockedHint } from "@/lib/gate/fee-first";
+import { INSTALL_ENTRY } from "@/lib/pwa/messages";
 import { cn } from "@/lib/utils";
 import { LOGOUT_LABEL, MENU_ENTRIES } from "./menu-entries";
 
@@ -60,6 +62,7 @@ export function AppMenu({ open, onOpenChange }: Props) {
   const pathname = usePathname();
   const { signOutUser } = useAuth();
   const { stage, startNewStudy } = useFeeFirstGate();
+  const { canPrompt, promptInstall, showIosHint, openIosSheet } = useInstall();
   const close = () => onOpenChange(false);
   const entries = MENU_ENTRIES.map((e) => ({ ...e, locked: e.gated && !canReach(stage, e.href) }));
   const anyLocked = entries.some((e) => e.locked);
@@ -95,6 +98,19 @@ export function AppMenu({ open, onOpenChange }: Props) {
               <InfoIcon className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
               {lockedHint(stage)}
             </p>
+          )}
+          {(canPrompt || showIosHint) && (
+            <button
+              type="button"
+              className={cn(entryClass, "hover:bg-muted")}
+              onClick={() => {
+                close();
+                if (canPrompt) void promptInstall();
+                else openIosSheet();
+              }}
+            >
+              {INSTALL_ENTRY}
+            </button>
           )}
           <button
             type="button"

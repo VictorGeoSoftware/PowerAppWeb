@@ -29,7 +29,7 @@ Brokers (existing and new), on smartphones — iOS Safari and Android Chrome fir
 2. Fetch Consumption: by CUPS (manual entry or live in-browser camera OCR), by bill PDF upload, or by bill photo upload; async job polling.
 3. Current Conditions form (gate step).
 4. Proposals / Comparator table, Configuration of visible Proposals.
-5. Comparator PDF generation and sharing (Web Share API, download fallback); PREMIUM comprehensive PDF.
+5. Comparator PDF generation and sharing (Web Share API, download fallback).
 6. Analytics parity (screen tracking) and forced logout handling.
 
 ### Final stage (before PROD, not blockers)

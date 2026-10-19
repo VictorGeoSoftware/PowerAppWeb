@@ -39,6 +39,12 @@ describe("clearLocalSessionData", () => {
     expect(localStorage.getItem("bm.deviceId")).toBe("web-abc");
   });
 
+  it("keeps the dismissed install hint", () => {
+    localStorage.setItem("bm.installHintDismissed", "1");
+    clearLocalSessionData();
+    expect(localStorage.getItem("bm.installHintDismissed")).toBe("1");
+  });
+
   it("clears current conditions and the last job id", () => {
     localStorage.setItem("bm.currentConditions", "{}");
     localStorage.setItem("bm.lastCompletedJobId", "job-1");
