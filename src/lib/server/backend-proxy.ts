@@ -16,6 +16,7 @@ export const ALLOWED_ROOTS = new Set([
   "user-data",
   "user-activity",
   "auth",
+  "push",
 ]);
 
 const FORWARDED_REQUEST_HEADERS = ["authorization", "content-type", "accept", "x-request-id"];

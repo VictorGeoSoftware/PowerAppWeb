@@ -19,7 +19,8 @@ type InstallState = {
   /** iOS banner not dismissed yet. */
   showIosBanner: boolean;
   dismissIosBanner: () => void;
-  openIosSheet: () => void;
+  /** `note`: extra line under the title (e.g. why push needs the install). */
+  openIosSheet: (note?: string) => void;
 };
 
 const noop = () => {};
@@ -42,6 +43,7 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
   const [ios, setIos] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetNote, setSheetNote] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const standalone = isStandalone(navigator, window.matchMedia?.bind(window));
@@ -90,7 +92,10 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const openIosSheet = useCallback(() => setSheetOpen(true), []);
+  const openIosSheet = useCallback((note?: string) => {
+    setSheetNote(note);
+    setSheetOpen(true);
+  }, []);
 
   const showIosHint = ios && !installed;
   const value = useMemo<InstallState>(
@@ -108,7 +113,7 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
   return (
     <InstallContext.Provider value={value}>
       {children}
-      {showIosHint && <IosInstallSheet open={sheetOpen} onOpenChange={setSheetOpen} />}
+      {showIosHint && <IosInstallSheet open={sheetOpen} onOpenChange={setSheetOpen} note={sheetNote} />}
     </InstallContext.Provider>
   );
 }

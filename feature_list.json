@@ -576,11 +576,17 @@
     "depends_on": [
       "pwa-installable"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Token visible in QA DB"
     ],
-    "evidence": [],
+    "evidence": [
+      "2026-10-19 feature-validator: accept. ./init.sh rerun green (635 vitest); npm run test:e2e -- e2e/push-registration.spec.ts e2e/app-shell.spec.ts 8/8 incl. setup (android-chromium); backend code reviewed (granted-only, owner-checked delete, grant wipe, masked logs); gradle/live psql not rerun",
+      "2026-10-19 BmBackend feature/web-push-registration from qa (uncommitted): ./gradlew test 172/172 incl. WebPushRoutesTest, WebPushTokensRepositoryTest (Postgres), GrantedUsersServiceTest wipe; local QA rebuilt, Flyway V14",
+      "2026-10-19 ./init.sh green (635 vitest); e2e/push-registration.spec.ts 4/4 incl. setup; full npm run test:e2e 82 passed (android-chromium)",
+      "2026-10-19 live local QA: real FCM token row in web_push_tokens (android, masked cd3-_Q2CVOIT) after app start; removed on logout",
+      "Real Android/iPhone install checks deferred to qa-real-device-checks (docs/after-qa-release-tasks.md)"
+    ],
     "notes": "Final stage. iOS requires installed PWA. Backend on qa branch."
   },
   {
@@ -626,7 +632,8 @@
     "verification": [
       "iPhone with notch, Safari and Home Screen (standalone), portrait and landscape: top bar below the status bar; menu and content not hidden by the notch or home indicator (app-shell-navigation Scenario 7)",
       "cups-camera-ocr iOS spike: repeat the CUPS camera OCR spike on iPhone Safari against the QA build with the same bills and thresholds (>=5 real paper bills from >=2 retailers incl. one 22-char CUPS, >=80% detected within 10 s, zero false-valid codes); if it fails, reopen cups-camera-ocr (manual entry fallback covers Brokers meanwhile)",
-      "analytics-screen-tracking DebugView (deferred): build with NEXT_PUBLIC_ANALYTICS_ENABLED=true NEXT_PUBLIC_ANALYTICS_DEBUG=true, walk login -> fetch -> scanner open/close -> current conditions -> proposals -> configuration; Firebase DebugView shows auth_login, fetch_consumption, cups_scanner, current_conditions, proposals, configuration once per entry and no automatic page_view"
+      "analytics-screen-tracking DebugView (deferred): build with NEXT_PUBLIC_ANALYTICS_ENABLED=true NEXT_PUBLIC_ANALYTICS_DEBUG=true, walk login -> fetch -> scanner open/close -> current conditions -> proposals -> configuration; Firebase DebugView shows auth_login, fetch_consumption, cups_scanner, current_conditions, proposals, configuration once per entry and no automatic page_view",
+      "web-push-registration: Android Chrome and installed iPhone PWA (iOS 16.4+) show the permission prompt from 'Activar notificaciones', a web_push_tokens row with the right platform appears in QA, logout removes it; an iPhone Safari tab opens the install sheet instead of prompting"
     ],
     "evidence": [],
     "notes": "Run after the first version is deployed to the QA environment. Add other real-device checks here as features defer them."

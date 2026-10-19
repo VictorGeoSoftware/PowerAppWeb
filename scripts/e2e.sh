@@ -80,7 +80,7 @@ fi
 
 if [ "${E2E_SKIP_BUILD:-0}" != "1" ]; then
   echo "e2e: building .next-e2e..." >&2
-  NEXT_DIST_DIR=.next-e2e NEXT_PUBLIC_E2E_POLL_INTERVAL_MS=750 npx next build &
+  NEXT_DIST_DIR=.next-e2e NEXT_PUBLIC_E2E=1 NEXT_PUBLIC_E2E_POLL_INTERVAL_MS=750 npx next build &
   BUILD_PID=$!
   wait "$BUILD_PID"
   build_status=$?

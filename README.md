@@ -42,6 +42,8 @@ Recommended: the local Docker QA stack (it also works on networks that block the
 cp .env.example .env.local      # BM_BACKEND_URL=http://localhost:9081 + NEXT_PUBLIC_FIREBASE_* (Firebase console > PowerAppWeb app)
 ```
 
+`NEXT_PUBLIC_FIREBASE_VAPID_KEY` (Firebase console > Project settings > Cloud Messaging > Web Push certificates, public key) enables "Activar notificaciones"; empty hides it.
+
 `BM_BACKEND_URL` is required: without it the proxy fails with a clear error (no built-in default).
 
 ### 5. Run

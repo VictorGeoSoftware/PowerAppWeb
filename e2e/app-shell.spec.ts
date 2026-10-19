@@ -21,6 +21,8 @@ test.describe("signed in", () => {
   const menuButton = (page: Page) => page.getByRole("button", { name: "Abrir menú" });
 
   test("menu shows BmApp entries; at the consumption step only 'Nuevo estudio' is enabled", async ({ page }) => {
+    // The push row depends on the browser (headless Chromium reports "denied"); covered by push-registration.spec.
+    await page.addInitScript(() => delete (window as { PushManager?: unknown }).PushManager);
     await openSignedIn(page);
     await menuButton(page).click();
     const menu = page.getByRole("dialog");

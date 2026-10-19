@@ -53,3 +53,13 @@ describe("clearLocalSessionData", () => {
     expect(localStorage.getItem("bm.lastCompletedJobId")).toBeNull();
   });
 });
+
+describe("clearLocalSessionData (push)", () => {
+  it("clears the registered push token but keeps the dismissed push card", () => {
+    localStorage.setItem("bm.pushToken", '{"uid":"u","token":"t"}');
+    localStorage.setItem("bm.pushPromptDismissed", "1");
+    clearLocalSessionData();
+    expect(localStorage.getItem("bm.pushToken")).toBeNull();
+    expect(localStorage.getItem("bm.pushPromptDismissed")).toBe("1");
+  });
+});

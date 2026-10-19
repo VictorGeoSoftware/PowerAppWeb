@@ -3,6 +3,7 @@
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { clearLocalSessionData, logoutFromBackend } from "@/lib/auth/logout";
+import { discardPushLocally, unregisterPush } from "@/lib/pwa/push";
 import { classifySessionError } from "@/lib/auth/session-errors";
 import { syncUserData } from "@/lib/auth/user-data-sync";
 import { getFirebaseAuth } from "@/lib/firebase/client";
@@ -79,6 +80,7 @@ export function AuthProvider({
   /** Forced logout: local sign-out only (no `/auth/logout`, BmApp parity) plus notice. */
   const forceSignOut = useCallback(async (message: string) => {
     setNotice(message);
+    discardPushLocally();
     clearLocalSessionData();
     await signOut(getFirebaseAuth()).catch(() => {});
   }, []);
@@ -142,7 +144,11 @@ export function AuthProvider({
     const previousStatus = status;
     manualLogout.current = true;
     setStatus("loading");
-    if (current) await logoutFromBackend(current);
+    if (current) {
+      // While the ID token is still valid (before auth/logout and signOut).
+      await unregisterPush(current);
+      await logoutFromBackend(current);
+    }
     clearLocalSessionData();
     try {
       await signOut(getFirebaseAuth());

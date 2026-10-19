@@ -7,14 +7,28 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: next dependency-ready feature in `feature_list.json` (`feature-spec`)
-- `../BmBackend` is checked out on `feature/backend-bill-photo-extraction` (uncommitted; local QA builds this checkout)
+- Current next ready feature: next dependency-ready feature in `feature_list.json`
+- `../BmBackend` is checked out on `feature/web-push-registration` (from `qa`, which already includes bill photo extraction #64; push changes uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (pwa-installable accepted: vitest 611, pwa E2E 4/4, full E2E 79 passed recorded)
+- Last verified at: 2026-10-19 (web-push-registration implemented: vitest 635, push E2E 4/4, full E2E 82 passed, live FCM token row in local QA DB)
+- BmBackend `feature/web-push-registration` has uncommitted `web-push-registration` changes (V14 `web_push_tokens`, `push/web-tokens` routes); local QA runs them
 
 ## Session Log
+
+### Validation: web-push-registration (2026-10-19)
+
+- Verdict: accept. `./init.sh` rerun green (635 vitest); `npm run test:e2e -- e2e/push-registration.spec.ts e2e/app-shell.spec.ts` 8/8 incl. setup (android-chromium). Full suite, BmBackend gradle and live psql not rerun (recorded 82 passed, 172/172, token row). Permission only on tap; refresh only on token/uid change; DELETE before `auth/logout`, forced logout local only; backend granted-only, owner-checked delete, grant wipe in the same transaction, masked token logs; no topic subscription/sending.
+- Notes (non-blocking): `app-shell` exact-menu test may still see the iOS `needs-install` push row on `iphone-webkit`; real devices → `qa-real-device-checks`. Stale BmBackend branch notes fixed (photo extraction is merged into `qa`).
+- Next: pick the next dependency-ready feature in `feature_list.json`.
+
+### Implementation: web-push-registration (2026-10-19)
+
+- Spec: `docs/specs/web-push-registration.md` (Implementation Notes list the deviations). BmBackend `qa` (uncommitted): `V14__web_push_tokens.sql`, `WebPushTokensDb`, `WebPushTokensRepository(+Port)`, `WebPushTokensService` (masked logging), `WebPushRoutes` (`POST`/`DELETE /api/v1/push/web-tokens`, granted only, owner-checked delete), `GrantedUsersService.deleteGrant` wipes tokens, `docs/WEB_PUSH.md`. Web: `src/lib/pwa/push.ts`, `src/components/pwa/{push-provider,push-menu-entry,push-prompt-card}.tsx`, provider in `(app)/layout.tsx`, card on `/fetch-consumption`, menu row in `AppMenu`, iOS install sheet `note`, logout wiring (`unregisterPush` before `auth/logout`; forced → `discardPushLocally`), `bm.pushToken` cleared by `clearLocalSessionData`, proxy root `push`, `NEXT_PUBLIC_FIREBASE_VAPID_KEY` in `.env.example`, `NEXT_PUBLIC_E2E=1` in `scripts/e2e.sh` (test seam `__bmPushTestToken`).
+- Evidence: BmBackend `./gradlew test` 172/172 (Postgres included); local QA rebuilt (Flyway V14). `./init.sh` green (635 vitest). `e2e/push-registration.spec.ts` 4/4 incl. setup; full `npm run test:e2e` 82 passed (first full run failed only `app-shell` exact-menu test because headless Chromium shows the "Notificaciones bloqueadas" row; that test now removes `PushManager`). E2E also caught a double POST when a tap granted permission (start-up refresh re-ran) — fixed, RTL regression added. Live: real FCM token row (`android`, masked `cd3-_Q2CVOIT`) in local QA `web_push_tokens`, gone after logout (headed persistent-profile Chromium; normal Playwright contexts are incognito without Push API). Pixel 7 screenshots reviewed.
+- Open: real Android/iPhone checks → `qa-real-device-checks`; QA deployment needs BmBackend V14 and the VAPID env (`docs/after-qa-release-tasks.md` §1). Topic subscription/sending are `web-push-price-updates`.
+- Next: `feature-validator` for `web-push-registration`.
 
 ### Validation: pwa-installable (2026-10-19)
 

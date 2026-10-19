@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import { useInstall } from "@/components/pwa/install-provider";
+import { PushMenuEntry } from "@/components/pwa/push-menu-entry";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { canReach, lockedHint } from "@/lib/gate/fee-first";
 import { INSTALL_ENTRY } from "@/lib/pwa/messages";
@@ -99,6 +100,7 @@ export function AppMenu({ open, onOpenChange }: Props) {
               {lockedHint(stage)}
             </p>
           )}
+          <PushMenuEntry className={entryClass} onClose={close} />
           {(canPrompt || showIosHint) && (
             <button
               type="button"

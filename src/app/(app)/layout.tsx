@@ -3,6 +3,7 @@
 import { RequireAuth } from "@/components/auth/guards";
 import { UserActivityReporter } from "@/components/auth/user-activity-reporter";
 import { ConsumptionStudyProvider } from "@/components/consumption/consumption-study-provider";
+import { PushProvider } from "@/components/pwa/push-provider";
 import { FeeFirstGateGuard, FeeFirstGateProvider } from "@/components/gate/fee-first-gate-provider";
 import { AppShell } from "@/components/shell/app-shell";
 
@@ -11,13 +12,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <RequireAuth>
       <UserActivityReporter />
-      <FeeFirstGateProvider>
-        <ConsumptionStudyProvider>
-          <AppShell>
-            <FeeFirstGateGuard>{children}</FeeFirstGateGuard>
-          </AppShell>
-        </ConsumptionStudyProvider>
-      </FeeFirstGateProvider>
+      <PushProvider>
+        <FeeFirstGateProvider>
+          <ConsumptionStudyProvider>
+            <AppShell>
+              <FeeFirstGateGuard>{children}</FeeFirstGateGuard>
+            </AppShell>
+          </ConsumptionStudyProvider>
+        </FeeFirstGateProvider>
+      </PushProvider>
     </RequireAuth>
   );
 }

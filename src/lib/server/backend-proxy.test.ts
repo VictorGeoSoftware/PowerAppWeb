@@ -98,4 +98,21 @@ describe("proxyToBackend", () => {
     expect(res.headers.get("content-disposition")).toBe("attachment");
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(pdf);
   });
+
+  it("forwards DELETE push/web-tokens with its JSON body", async () => {
+    fetchMock.mockResolvedValue(new Response('{"success":true}', { status: 200 }));
+    const res = await proxyToBackend(
+      req("push/web-tokens", {
+        method: "DELETE",
+        headers: { ...auth, "content-type": "application/json" },
+        body: '{"token":"t1"}',
+      }),
+      ["push", "web-tokens"],
+    );
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`${BASE}/api/v1/push/web-tokens`);
+    expect(init.method).toBe("DELETE");
+    expect(new TextDecoder().decode(init.body as ArrayBuffer)).toBe('{"token":"t1"}');
+    expect(res.status).toBe(200);
+  });
 });

@@ -20,7 +20,7 @@ export function IosInstallBanner() {
       >
         <div className="mx-auto flex min-h-16 w-full max-w-[640px] items-center gap-2 px-4 py-2">
           <p className="flex-1 text-sm font-medium text-card-foreground">{IOS_BANNER_TEXT}</p>
-          <Button type="button" className="h-11 px-4 font-bold" onClick={openIosSheet}>
+          <Button type="button" className="h-11 px-4 font-bold" onClick={() => openIosSheet()}>
             {IOS_BANNER_HOW}
           </Button>
           <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={IOS_BANNER_CLOSE} onClick={dismissIosBanner}>

@@ -18,6 +18,12 @@ vi.mock("@/lib/auth/logout", () => ({
   logoutFromBackend: (u: unknown) => logoutFromBackend(u),
   clearLocalSessionData: () => clearLocalSessionData(),
 }));
+const unregisterPush = vi.fn();
+const discardPushLocally = vi.fn();
+vi.mock("@/lib/pwa/push", () => ({
+  unregisterPush: (u: unknown) => unregisterPush(u),
+  discardPushLocally: () => discardPushLocally(),
+}));
 
 import {
   ACCESS_REVOKED_MESSAGE,
@@ -104,6 +110,8 @@ describe("AuthProvider logout and forced logout", () => {
     expect(logoutFromBackend).toHaveBeenCalledWith(user);
     expect(clearLocalSessionData).toHaveBeenCalled();
     expect(logoutFromBackend.mock.invocationCallOrder[0]).toBeLessThan(signOut.mock.invocationCallOrder[0]);
+    expect(unregisterPush).toHaveBeenCalledWith(user);
+    expect(unregisterPush.mock.invocationCallOrder[0]).toBeLessThan(logoutFromBackend.mock.invocationCallOrder[0]);
     expect(screen.getByText("signed-out|")).toBeInTheDocument();
   });
 
@@ -135,6 +143,8 @@ describe("AuthProvider logout and forced logout", () => {
     renderWith(vi.fn().mockRejectedValue(new BmApiError(403, "Revocada")));
     await emit(user);
     expect(logoutFromBackend).not.toHaveBeenCalled();
+    expect(unregisterPush).not.toHaveBeenCalled();
+    expect(discardPushLocally).toHaveBeenCalled();
     expect(clearLocalSessionData).toHaveBeenCalled();
     expect(screen.getByText("signed-out|Revocada")).toBeInTheDocument();
   });

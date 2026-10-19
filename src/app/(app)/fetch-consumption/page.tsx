@@ -7,6 +7,7 @@ import { CupsScannerOption } from "@/components/consumption/cups-scanner-option"
 import { PdfUploadOption } from "@/components/consumption/pdf-upload-option";
 import { PhotoUploadOption } from "@/components/consumption/photo-upload-option";
 import { StudyProgress } from "@/components/consumption/study-progress";
+import { PushPromptCard } from "@/components/pwa/push-prompt-card";
 
 /** BmApp FetchConsumptionScreen: typed CUPS, CUPS camera scan and PDF bill upload. */
 export default function FetchConsumptionPage() {
@@ -22,6 +23,7 @@ export default function FetchConsumptionPage() {
       <p className="text-base text-muted-foreground">
         Necesitamos tu consumo real antes de introducir las condiciones actuales.
       </p>
+      <PushPromptCard />
       {state.kind === "running" ? (
         <StudyProgress step={state.step} />
       ) : (
