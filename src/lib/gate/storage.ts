@@ -14,6 +14,8 @@ export const PROPOSAL_FIXED_AMOUNTS_KEY = "bm.proposalFixedAmounts";
 export const PROPOSAL_VISIBILITY_KEY = "bm.proposalVisibility";
 /** Last `jobId@customerTotal` the uncompetitive auto-hide ran for (BmApp `lastAutoHideSignature`). */
 export const PROPOSAL_AUTO_HIDE_SIGNATURE_KEY = "bm.proposalAutoHideSignature";
+/** jobId already counted as a `proposals-response` (once per job, when the table is first shown). */
+export const PROPOSALS_RESPONSE_JOB_ID_KEY = "bm.proposalsResponseJobId";
 export const LAST_JOB_ID_EXPIRY_MS = 60 * 60 * 1000;
 
 export type JobSource = "cups" | "pdf" | "photo";
@@ -138,9 +140,26 @@ export function saveAutoHideSignature(signature: string) {
   }
 }
 
+export function loadProposalsResponseJobId(): string | null {
+  try {
+    return localStorage.getItem(PROPOSALS_RESPONSE_JOB_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveProposalsResponseJobId(jobId: string) {
+  try {
+    localStorage.setItem(PROPOSALS_RESPONSE_JOB_ID_KEY, jobId);
+  } catch {
+    // storage unavailable: the in-memory guard still applies
+  }
+}
+
 /** Clears the study's local data (BmApp `resetActiveStudy`). */
 export function clearStudyStorage() {
   localStorage.removeItem(CONDITIONS_KEY);
+  localStorage.removeItem(PROPOSALS_RESPONSE_JOB_ID_KEY);
   localStorage.removeItem(PROPOSAL_FIXED_AMOUNTS_KEY);
   localStorage.removeItem(PROPOSAL_VISIBILITY_KEY);
   localStorage.removeItem(PROPOSAL_AUTO_HIDE_SIGNATURE_KEY);

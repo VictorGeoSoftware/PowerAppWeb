@@ -11,6 +11,8 @@ import {
   loadProposalFixedAmounts,
   loadAutoHideSignature,
   loadProposalVisibility,
+  loadProposalsResponseJobId,
+  saveProposalsResponseJobId,
   PROPOSAL_AUTO_HIDE_SIGNATURE_KEY,
   PROPOSAL_FIXED_AMOUNTS_KEY,
   PROPOSAL_VISIBILITY_KEY,
@@ -61,9 +63,12 @@ describe("gate storage", () => {
     saveProposalFixedAmounts({ A: "12,5" });
     saveProposalVisibility({ A: false, B: true });
     saveAutoHideSignature("j@1.0");
+    saveProposalsResponseJobId("j");
+    expect(loadProposalsResponseJobId()).toBe("j");
     expect(loadProposalVisibility()).toEqual({ A: false });
     expect(loadAutoHideSignature()).toBe("j@1.0");
     clearStudyStorage();
+    expect(loadProposalsResponseJobId()).toBeNull();
     expect(localStorage.getItem(PROPOSAL_VISIBILITY_KEY)).toBeNull();
     expect(localStorage.getItem(PROPOSAL_AUTO_HIDE_SIGNATURE_KEY)).toBeNull();
     expect(localStorage.getItem(PROPOSAL_FIXED_AMOUNTS_KEY)).toBeNull();

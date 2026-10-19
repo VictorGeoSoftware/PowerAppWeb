@@ -12,9 +12,22 @@
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (comparator-pdf-share implemented: vitest 562, E2E 73/73 android-chromium)
+- Last verified at: 2026-10-19 (user-activity-sync accepted: vitest 578, focused E2E 5/5, android-chromium)
 
 ## Session Log
+
+### Validation: user-activity-sync (2026-10-19)
+
+- Verdict: accept. `./init.sh` rerun green (578 vitest); `npm run test:e2e -- e2e/user-activity.spec.ts e2e/proposals.spec.ts` 5/5 incl. setup (android-chromium). Full suite not rerun (recorded 74 passed + flaky comparator-pdf rerun 4/4). Payload/name fallback matches BmApp `MainActivity.sendUserActivity`; online/offline deduplicated and only while granted; `keepalive`; `bmFetch` direct (no forced logout); proposals-response once per jobId, deviation documented.
+- Notes (non-blocking): the comment in `saveProposalsResponseJobId` mentions an in-memory guard that does not exist; `e2e/proposals.spec.ts` does not route `user-activity/*`, so E2E runs bump QA "Respuestas mensuales"; BmWeb UI and iOS `pagehide` delivery → `qa-real-device-checks`; keep `docs/archive/opencode-agents/*` deletions and the unrelated `blocked` status change out of this feature's commit.
+- Next: pick the next dependency-ready feature in `feature_list.json`.
+
+### Implementation: user-activity-sync (2026-10-19)
+
+- Spec: `docs/specs/user-activity-sync.md`. New `src/lib/auth/user-activity.ts` (`activityPayload`, best-effort `sendUserActivity` with `keepalive`, cached token) and `src/components/auth/user-activity-reporter.tsx` (mounted in `src/app/(app)/layout.tsx`; online when granted / tab visible, offline on hidden / `pagehide`, deduplicated, only while granted). `ProposalsComparator` sends `proposals-response` once per jobId when the table first shows a visible proposal (`bm.proposalsResponseJobId`, cleared by `clearStudyStorage`). This is a deliberate deviation from BmApp (which counts every publish), documented in `docs/domain-model.md`.
+- Evidence: `./init.sh` green (578 vitest; `create-report-action.test.tsx` auth mock gained `useAuth`); `e2e/user-activity.spec.ts` 3/3 incl. setup; full `npm run test:e2e` 74 passed, 1 failed (`comparator-pdf` share test stuck on the access-check spinner because QA `user-data` was slow; rerunning that spec gave 4/4). Live local QA: the `user_activity` row tracks web online/offline, and one proposals study moved `monthly_usage_count` from 7 to 8.
+- Open: BmWeb users page not opened visually (DB row is its source); iOS `pagehide`/keepalive → `qa-real-device-checks`.
+- Next: `feature-validator` for `user-activity-sync`.
 
 ### Validation: comparator-pdf-share (2026-10-19)
 

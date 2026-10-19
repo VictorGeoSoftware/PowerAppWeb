@@ -32,6 +32,7 @@ Session end (`logout-force-logout`):
 - Manual logout: best-effort `POST /auth/logout` (marks offline), then Firebase sign-out. The Bound Device id is kept.
 - Forced logout (local sign-out + notice on `/login`, no `/auth/logout`): 403 → backend message; 401 → "Tu sesión ha caducado…"; revoked Firebase session (`auth/user-token-expired`, `user-disabled`, `user-not-found`, `invalid-user-token`; BmWeb grant deletion revokes refresh tokens) → "Tu acceso ha sido revocado…". Network/5xx never sign out.
 - No push channel on web yet: access is re-checked via `/user-data` when the tab becomes visible (throttled to 60 s). Instant force logout arrives with web push.
+- User activity (`src/components/auth/user-activity-reporter.tsx`, mounted in `src/app/(app)/layout.tsx`): BmApp `onResume`/`onStop` map to `visibilitychange` (`visible`/`hidden`) and `pagehide`; events use `bmFetch` directly with `keepalive: true` (not `useBmFetch`, so a 401/403 there never forces logout). Headless browser closes and some mobile kills may not deliver `offline`; iOS `pagehide` delivery is checked in `qa-real-device-checks`.
 - Signed-in features MUST call the backend through `useBmFetch()` (`src/lib/api/use-bm-fetch.ts`) so 401/403 from any call ends the session; per-session local data must be cleared in `clearLocalSessionData()` (`src/lib/auth/logout.ts`).
 
 ## Deployment and Operations

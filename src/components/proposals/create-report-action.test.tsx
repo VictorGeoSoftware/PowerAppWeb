@@ -19,6 +19,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/components/auth/auth-provider", () => ({
   FullScreenSpinner: () => <div role="status" />,
+  useAuth: () => ({ user: null }),
 }));
 vi.mock("@/lib/api/use-bm-fetch", () => ({ useBmFetch: () => bmFetch }));
 vi.mock("@/components/shell/app-shell", async () => {

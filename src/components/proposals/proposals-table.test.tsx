@@ -2,16 +2,19 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/proposals", useRouter: () => ({ replace: vi.fn() }) }));
+const auth = vi.hoisted(() => ({ user: null as unknown }));
 vi.mock("@/components/auth/auth-provider", () => ({
   FullScreenSpinner: () => <div role="status" />,
-  useAuth: () => ({ user: null, reportApiError: vi.fn() }),
+  useAuth: () => ({ user: auth.user, reportApiError: vi.fn() }),
 }));
+const sendUserActivity = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/lib/auth/user-activity", () => ({ sendUserActivity }));
 
 import { FeeFirstGateProvider } from "@/components/gate/fee-first-gate-provider";
 import { calculateComparatorSummary } from "@/lib/comparator/calculate";
 import { twoDecimals } from "@/lib/comparator/format";
 import type { ConsumptionSession, CurrentConditions } from "@/lib/gate/fee-first";
-import { saveAutoHideSignature, saveConditions, saveProposalVisibility } from "@/lib/gate/storage";
+import { PROPOSALS_RESPONSE_JOB_ID_KEY, saveAutoHideSignature, saveConditions, saveProposalVisibility } from "@/lib/gate/storage";
 import { autoHideSignature } from "@/lib/proposals/visibility";
 import { ProposalsComparator } from "./proposals-table";
 
@@ -61,6 +64,8 @@ const renderTable = (s: ConsumptionSession = session) =>
 
 describe("ProposalsComparator", () => {
   beforeEach(() => {
+    auth.user = null;
+    sendUserActivity.mockClear();
     localStorage.clear();
     saveConditions(conditions);
   });
@@ -152,5 +157,35 @@ describe("ProposalsComparator", () => {
     saveProposalVisibility({ Barata: false, Media: false });
     renderTable(s);
     expect(screen.getByText("Aún no hay propuestas que comparar.")).toBeTruthy();
+  });
+
+  describe("proposals-response", () => {
+    const user = { email: "b@x.es", displayName: "B" };
+    const responses = () => sendUserActivity.mock.calls.filter((c) => (c as unknown[])[1] === "proposals-response");
+    beforeEach(() => {
+      auth.user = user;
+    });
+
+    it("is sent once per jobId, not on re-render, remount or fixed-amount edits", () => {
+      const { unmount } = renderTable();
+      expect(responses()).toHaveLength(1);
+      expect(responses()[0]).toEqual([user, "proposals-response"]);
+      fireEvent.change(screen.getAllByRole("textbox")[0], { target: { value: "12" } });
+      unmount();
+      renderTable().unmount();
+      expect(responses()).toHaveLength(1);
+      expect(localStorage.getItem(PROPOSALS_RESPONSE_JOB_ID_KEY)).toBe("job-1");
+    });
+
+    it("a new jobId counts again", () => {
+      renderTable().unmount();
+      renderTable({ ...session, jobId: "job-2" });
+      expect(responses()).toHaveLength(2);
+    });
+
+    it("is not sent for the empty state", () => {
+      renderTable({ ...session, proposals: [] });
+      expect(responses()).toHaveLength(0);
+    });
   });
 });

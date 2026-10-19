@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo } from "react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import {
   CreateReportButton,
@@ -19,6 +20,8 @@ import { bestSavingLabel, percentLabel } from "@/lib/comparator/format";
 import { EMPTY_MESSAGE } from "@/lib/proposals/messages";
 import { buildComparatorReportRequest } from "@/lib/pdf/comparator-report";
 import { autoHideSignature } from "@/lib/proposals/visibility";
+import { sendUserActivity } from "@/lib/auth/user-activity";
+import { loadProposalsResponseJobId, saveProposalsResponseJobId } from "@/lib/gate/storage";
 
 const own = <V,>(record: Record<string, V>, key: string): V | undefined =>
   Object.hasOwn(record, key) ? record[key] : undefined;
@@ -34,6 +37,15 @@ export function ProposalsComparator() {
     if (!jobId || summary.proposals.length === 0) return;
     hideProposalsOnce(autoHideSignature(jobId, summary.customerTotalAnnualPrice), selectUncompetitiveProposals(summary));
   }, [jobId, summary, hideProposalsOnce]);
+
+  // Counted once per job, the first time the table is shown (deviation from BmApp, see domain-model).
+  const { user } = useAuth();
+  const hasVisible = visible.length > 0;
+  useEffect(() => {
+    if (!jobId || !hasVisible || !user || loadProposalsResponseJobId() === jobId) return;
+    saveProposalsResponseJobId(jobId);
+    void sendUserActivity(user, "proposals-response");
+  }, [jobId, hasVisible, user]);
 
   const buildRequest = useCallback(
     () => (session ? buildComparatorReportRequest(session, summary, visible, proposalFixedAmounts) : null),

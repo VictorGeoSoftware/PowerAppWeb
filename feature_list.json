@@ -508,12 +508,12 @@
     "depends_on": [
       "comparator-pdf-share"
     ],
-    "status": "not_started",
+    "status": "blocked",
     "verification": [
       "Test with BASIC and PREMIUM QA accounts"
     ],
     "evidence": [],
-    "notes": ""
+    "notes": "Blocked 2026-10-19: comprehensive PDF format not defined; BmBackend has only tier + GET /me/access capability COMPREHENSIVE_COMPARATOR_PDF (docs/USER_TIERS.md: both tiers get the current PDF until the format exists); BmApp has no equivalent. Unblock when the format and a backend endpoint exist."
   },
   {
     "id": "user-activity-sync",
@@ -523,12 +523,18 @@
     "depends_on": [
       "access-gate"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Activity visible in BmWeb users page"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "Validator accept 2026-10-19: ./init.sh rerun green (578 vitest); npm run test:e2e -- e2e/user-activity.spec.ts e2e/proposals.spec.ts 5/5 incl. setup (android-chromium); full suite not rerun (recorded 74 passed + comparator-pdf flaky rerun 4/4)",
+      "./init.sh green (578 vitest): user-activity helper (payload/name fallback, blank email no request, keepalive, cached token, errors swallowed), reporter (granted online, hidden/visible, hidden+pagehide = one offline, no duplicates, nothing while loading/verifying/signed-out/error, listeners removed after sign-out, 401 does not sign out), comparator proposals-response (once per jobId across re-render/remount/fixed-amount edit, new jobId counts, empty state none), clearStudyStorage clears bm.proposalsResponseJobId",
+      "npm run test:e2e:quick -- e2e/user-activity.spec.ts: 3 passed incl. setup (android-chromium): online {name,email} after sign-in; hidden+pagehide -> one offline; visible x2 -> one online; no proposals-response on /current-conditions, exactly one on /proposals, none after back/forward or reload and return",
+      "Full npm run test:e2e (android-chromium), 2026-10-19: 74 passed, 1 failed (comparator-pdf share test stuck on the access-check spinner, slow QA user-data); rerun npm run test:e2e -- e2e/comparator-pdf.spec.ts 4/4 passed",
+      "Live local QA backend (user_activity table, same data BmWeb users page reads): web online/offline update is_online/last_connected_at/last_disconnected_at; npm run test:e2e -- e2e/proposals.spec.ts (one table study with reload+return, one empty) moved monthly_usage_count 7 -> 8"
+    ],
+    "notes": "Spec: docs/specs/user-activity-sync.md. Reporter mounted in src/app/(app)/layout.tsx. proposals-response counted once per jobId when the table is first shown (deliberate deviation from BmApp, documented in docs/domain-model.md). BmWeb UI itself not opened; iOS pagehide/keepalive delivery -> qa-real-device-checks."
   },
   {
     "id": "analytics-screen-tracking",
