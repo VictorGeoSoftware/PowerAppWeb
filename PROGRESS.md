@@ -12,9 +12,22 @@
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (user-activity-sync accepted: vitest 578, focused E2E 5/5, android-chromium)
+- Last verified at: 2026-10-19 (analytics-screen-tracking accepted: vitest 598, analytics E2E 2/2; DebugView deferred to qa-real-device-checks)
 
 ## Session Log
+
+### Validation: analytics-screen-tracking (2026-10-19)
+
+- Verdict: accept, after the user deferred the manual Firebase DebugView check to `qa-real-device-checks` (spec verification plan and `feature_list.json` updated). `./init.sh` rerun green (598 vitest); `npm run test:e2e -- e2e/analytics.spec.ts` 2/2 incl. setup (android-chromium), zero GA requests. Full suite not rerun (recorded 75 passed + flaky consumption-cups rerun 12/12). Screen names match `BmAppRouteAnalytics.kt`; redirect branch sends nothing; `send_page_view:false`; params only `firebase_screen`/`firebase_screen_class`/`debug_mode`.
+- Notes (non-blocking): production flag location still undefined (deployment); keep `docs/archive/opencode-agents/*` deletions out of this feature's commit.
+- Next: pick the next dependency-ready feature in `feature_list.json`.
+
+### Implementation: analytics-screen-tracking (2026-10-19)
+
+- Spec: `docs/specs/analytics-screen-tracking.md`. New `src/lib/analytics/{policy,screens,tracker}.ts` (BmApp collection policy, `BmAppRouteAnalytics` names, lazy Firebase tracker with queue + sanitizing + privacy contract) and `src/components/analytics/screen-tracking.tsx` (`useTrackScreen`, `TrackScreen`, `RouteScreenTracking`, `useScreenOverride`). Wired in `FeeFirstGateGuard` (non-redirect branch only), `/login` (inside `RedirectIfAuthenticated`) and `CupsScannerOption`. `getFirebaseApp` exported from `src/lib/firebase/client.ts`.
+- Evidence: `./init.sh` green (598 vitest); `e2e/analytics.spec.ts` 2/2 incl. setup (no GA traffic); full `npm run test:e2e` 75 passed, 1 failed (`consumption-cups` reload-mid-poll timing race, unrelated); its rerun was 12/12.
+- Docs: `.env.example` (`NEXT_PUBLIC_ANALYTICS_ENABLED/DEBUG=false`), `README.md`, `docs/technical-discovery.md` (Observability).
+- Open: manual Firebase DebugView check (user, console access) → then `feature-validator`. Production flag location is still undefined (deployment). The `analytics-events` follow-up is proposed but not added.
 
 ### Validation: user-activity-sync (2026-10-19)
 

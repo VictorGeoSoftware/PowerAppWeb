@@ -47,6 +47,11 @@ Same setup as BmWeb, hosted at IONOS. Must be HTTPS (required for camera, servic
 ## Observability
 Firebase Analytics (web) for screen tracking, parity with Android events; backend logs with `X-Request-Id`.
 
+- Gate (BmApp `AnalyticsCollectionPolicy`): collection only when `NEXT_PUBLIC_ANALYTICS_ENABLED` is exactly `true`, `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` is set and `isSupported()` resolves true. Otherwise the tracker is a no-op and `firebase/analytics` is never loaded (E2E asserts no GA traffic). Only the production deployment sets the flag; the deployment config is not in this repo yet (open item for deployment / `pwa-installable`).
+- `initializeAnalytics(app, { config: { send_page_view: false } })`; one `screen_view` (`firebase_screen` = `firebase_screen_class`) per screen entry, names hard-coded in `src/lib/analytics/screens.ts` (BmApp `BmAppRouteAnalytics.kt`): `auth_login`, `fetch_consumption`, `cups_scanner`, `current_conditions`, `proposals`, `configuration`. Sent only when the screen renders (never on gate redirects); the CUPS scanner overlay reports `cups_scanner`, closing it reports `fetch_consumption` again.
+- Privacy: no user id/properties, no identifying params (contract in `src/lib/analytics/tracker.ts`). Action events (login, CUPS scan, fetch, PDF…) are not implemented yet.
+- DebugView: build with `NEXT_PUBLIC_ANALYTICS_ENABLED=true NEXT_PUBLIC_ANALYTICS_DEBUG=true` (adds `debug_mode` to every event), walk the screens, check Firebase console > Analytics > DebugView.
+
 ## Constraints
 - Backend currently plain HTTP on a bare IP → the server proxy avoids mixed content/CORS.
 - iOS: push only in installed PWA (final stage); Android push works without install; no auto install prompt (show an "Add to Home Screen" hint); camera via HTTPS only.

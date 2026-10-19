@@ -5,6 +5,8 @@ let pathname = "/";
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace }) }));
 vi.mock("@/components/auth/auth-provider", () => ({ FullScreenSpinner: () => <div role="status" /> }));
+const trackScreen = vi.fn();
+vi.mock("@/lib/analytics/tracker", () => ({ getAnalyticsTracker: () => ({ trackScreen, track: vi.fn() }) }));
 
 import type { FeeFirstStage } from "@/lib/gate/fee-first";
 import { saveConditions } from "@/lib/gate/storage";
@@ -69,6 +71,7 @@ describe("FeeFirstGateGuard", () => {
     expect(replace).toHaveBeenCalledWith("/fetch-consumption");
     expect(screen.queryByText("pantalla")).toBeNull();
     expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(trackScreen).not.toHaveBeenCalled();
   });
 
   it("reachable route renders", () => {
@@ -78,6 +81,7 @@ describe("FeeFirstGateGuard", () => {
     expect(gate.stage).toBe("UNLOCKED");
     expect(replace).not.toHaveBeenCalled();
     expect(screen.getByText("pantalla")).toBeInTheDocument();
+    expect(trackScreen.mock.calls).toEqual([["proposals"]]);
   });
 
   it("re-checks on stage change: new study sends the Broker to the fetch step", () => {

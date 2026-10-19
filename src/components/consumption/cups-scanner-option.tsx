@@ -2,6 +2,7 @@
 
 import { ChevronRightIcon, ScanLineIcon } from "lucide-react";
 import { useCallback, useState } from "react";
+import { useScreenOverride } from "@/components/analytics/screen-tracking";
 import { CupsScanner } from "@/components/consumption/cups-scanner";
 
 export const SCAN_ROW_TITLE = "Escanear código CUPS";
@@ -16,6 +17,7 @@ type Props = {
 export function CupsScannerOption({ onConfirm }: Props) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  useScreenOverride(open ? "cups_scanner" : null);
   return (
     <>
       <button

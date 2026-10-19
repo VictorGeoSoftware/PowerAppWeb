@@ -47,3 +47,4 @@ Devices: **iPhone** = Safari and Home Screen (standalone) once `pwa-installable`
 - [ ] `web-push-registration` / `web-push-price-updates`: permission prompt and notification received on Android Chrome and on iPhone, where web push requires the installed PWA on iOS 16.4 or later.
 - [ ] `premium-comprehensive-pdf`: BASIC and PREMIUM QA accounts on a real device.
 - [ ] `device-binding-hardening`: the second-device rejection, phone vs browser.
+- [ ] `analytics-events` (proposed, not yet in `feature_list.json`; depends on `analytics-screen-tracking`): track the BmApp action events with the same names, params and failure reasons (`login_*`, `cups_scan_*`, `consumption_fetch_*`, `proposals_generated`, `proposal_pdf_*`, `proposal_visibility_changed`; see BmApp `AnalyticsEvent.kt` / `AnalyticsFailureReason.kt`), using `track()` from `src/lib/analytics/tracker.ts`. Check them in Firebase DebugView from a real iPhone and Android next to the BmApp events.

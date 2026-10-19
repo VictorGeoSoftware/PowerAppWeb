@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { TrackScreen } from "@/components/analytics/screen-tracking";
 import { LoginForm } from "@/components/auth/login-form";
 import { useAuth } from "@/components/auth/auth-provider";
 import { RedirectIfAuthenticated } from "@/components/auth/guards";
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const { notice, clearNotice } = useAuth();
   return (
     <RedirectIfAuthenticated>
+      <TrackScreen name="auth_login" />
       <main className="mx-auto flex min-h-dvh w-full max-w-[400px] flex-col items-center px-6 pt-[max(3.75rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="flex size-24 items-center justify-center rounded-3xl bg-primary">
           <Image src="/brand-icon.png" alt="Icono de PowerApp" width={96} height={96} priority />

@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { RouteScreenTracking } from "@/components/analytics/screen-tracking";
 import { FullScreenSpinner } from "@/components/auth/auth-provider";
 import { toProposalPrices } from "@/lib/comparator/proposal";
 import {
@@ -228,5 +229,5 @@ export function FeeFirstGateGuard({ children }: { children: React.ReactNode }) {
     if (target) router.replace(target);
   }, [target, router]);
 
-  return target ? <FullScreenSpinner /> : <>{children}</>;
+  return target ? <FullScreenSpinner /> : <RouteScreenTracking>{children}</RouteScreenTracking>;
 }

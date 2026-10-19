@@ -544,12 +544,20 @@
     "depends_on": [
       "app-shell-navigation"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
-      "DebugView shows events"
+      "Unit tests: gate, BmApp screen names, init once with send_page_view:false, once-per-entry screen views",
+      "E2E: no GA traffic with collection disabled",
+      "Firebase DebugView check deferred to qa-real-device-checks"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "./init.sh green (598 vitest): policy (flag exactly 'true' + measurement id), screen map = BmAppRouteAnalytics, tracker (no-op when unset, init once with send_page_view:false, queued calls delivered, debug_mode only in debug, unsupported/load failure no-op, name/param sanitizing), screen hook (once per entry under StrictMode, re-render no event, A->B->A twice, scanner open cups_scanner / close fetch_consumption, unknown path none), FeeFirstGateGuard redirect branch sends nothing and reachable /proposals sends one 'proposals'",
+      "npm run test:e2e:quick -- e2e/analytics.spec.ts: 2 passed incl. setup (android-chromium): fetch -> current conditions -> proposals -> configuration with zero google-analytics.com/googletagmanager.com requests",
+      "Full npm run test:e2e (android-chromium), 2026-10-19: 75 passed, 1 failed (consumption-cups 'reload mid-poll' race: job completed and auto-advanced to /current-conditions before the heading assertion); rerun npm run test:e2e -- e2e/consumption-cups.spec.ts 12/12 passed",
+      "DEFERRED (user decision 2026-10-19): manual Firebase DebugView check moved to qa-real-device-checks",
+      "Validator accept 2026-10-19: ./init.sh rerun green (598 vitest); npm run test:e2e -- e2e/analytics.spec.ts 2/2 incl. setup, zero GA requests"
+    ],
+    "notes": "Spec: docs/specs/analytics-screen-tracking.md. Code: src/lib/analytics/{policy,screens,tracker}.ts, src/components/analytics/screen-tracking.tsx (wired in FeeFirstGateGuard, /login, CupsScannerOption). Production flag location not in repo yet (deployment). Action events -> proposed follow-up 'analytics-events' (not added)."
   },
   {
     "id": "pwa-installable",
@@ -624,7 +632,8 @@
     "status": "not_started",
     "verification": [
       "iPhone with notch, Safari and Home Screen (standalone), portrait and landscape: top bar below the status bar; menu and content not hidden by the notch or home indicator (app-shell-navigation Scenario 7)",
-      "cups-camera-ocr iOS spike: repeat the CUPS camera OCR spike on iPhone Safari against the QA build with the same bills and thresholds (>=5 real paper bills from >=2 retailers incl. one 22-char CUPS, >=80% detected within 10 s, zero false-valid codes); if it fails, reopen cups-camera-ocr (manual entry fallback covers Brokers meanwhile)"
+      "cups-camera-ocr iOS spike: repeat the CUPS camera OCR spike on iPhone Safari against the QA build with the same bills and thresholds (>=5 real paper bills from >=2 retailers incl. one 22-char CUPS, >=80% detected within 10 s, zero false-valid codes); if it fails, reopen cups-camera-ocr (manual entry fallback covers Brokers meanwhile)",
+      "analytics-screen-tracking DebugView (deferred): build with NEXT_PUBLIC_ANALYTICS_ENABLED=true NEXT_PUBLIC_ANALYTICS_DEBUG=true, walk login -> fetch -> scanner open/close -> current conditions -> proposals -> configuration; Firebase DebugView shows auth_login, fetch_consumption, cups_scanner, current_conditions, proposals, configuration once per entry and no automatic page_view"
     ],
     "evidence": [],
     "notes": "Run after the first version is deployed to the QA environment. Add other real-device checks here as features defer them."

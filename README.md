@@ -89,4 +89,4 @@ E2E_EMAIL=<qa broker email> E2E_PASSWORD=<password> npm run test:e2e
 | `e2e/` | Playwright specs and fixtures |
 
 ## Secrets
-Not in this repo and never to be committed: `.env.local`, Firebase service-account JSON, keystores, test credentials. The Firebase **web** config comes from `NEXT_PUBLIC_FIREBASE_*` in `.env.local`; it is public by design (inlined in the bundle) and protected by API key restrictions in Google Cloud, but kept out of git.
+Not in this repo and never to be committed: `.env.local`, Firebase service-account JSON, keystores, test credentials. The Firebase **web** config comes from `NEXT_PUBLIC_FIREBASE_*` in `.env.local`; it is public by design (inlined in the bundle) and protected by API key restrictions in Google Cloud, but kept out of git. `NEXT_PUBLIC_ANALYTICS_ENABLED` must stay `false`/unset everywhere except the production deployment; `NEXT_PUBLIC_ANALYTICS_DEBUG=true` is only for Firebase DebugView checks.
