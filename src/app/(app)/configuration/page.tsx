@@ -1,5 +1,7 @@
-import { SectionPlaceholder } from "@/components/shell/section-placeholder";
+"use client";
+
+import { ProposalVisibilityList } from "@/components/proposals/proposal-visibility-list";
 
 export default function ConfigurationPage() {
-  return <SectionPlaceholder title="Configuración" />;
+  return <ProposalVisibilityList />;
 }

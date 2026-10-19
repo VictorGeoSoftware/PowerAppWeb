@@ -12,9 +12,25 @@
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (conditions-copy-from-proposal implemented: vitest 534, E2E 69/69 android-chromium)
+- Last verified at: 2026-10-19 (proposals-configuration accepted: vitest 546, E2E 70/70 android-chromium)
 
 ## Session Log
+
+### Validation: proposals-configuration (2026-10-19)
+
+- Verdict: accept. `./init.sh` rerun green (546 vitest); `npm run test:e2e -- e2e/proposals-configuration.spec.ts e2e/proposals.spec.ts` 4/4 incl. setup (android-chromium). Full suite not rerun (recorded 70 passed). Auto-hide signature/once/never-re-show/existing-titles-only checked against BmApp `ProposalsViewModel` + `ConsumptionSessionRepositoryImpl`; 390px screenshot reviewed.
+- Notes (non-blocking): the auto-hide effect re-fires on fixed-amount edits but is a no-op unless the customer total changes (same as BmApp); keep `docs/archive/opencode-agents/*` changes out of this feature's commit.
+- Next: pick the next dependency-ready feature in `feature_list.json`.
+
+### Implementation: proposals-configuration (2026-10-19)
+
+- Spec: `docs/specs/proposals-configuration.md`. `/configuration` placeholder replaced by `ProposalVisibilityList` (BmApp `ProposalVisibilityConfigurationView`: heading, hint, divider, full-row `<label>` + new `src/components/ui/switch.tsx` (Base UI), hidden rows `opacity-45`, rows ≥ 44px).
+- `FeeFirstGateProvider`: `proposalVisibility`, `setProposalVisibility`, `hideProposalsOnce`; hidden titles in `localStorage["bm.proposalVisibility"]`, signature in `bm.proposalAutoHideSignature`, both cleared by `clearStudyStorage` / `startNewStudy`, stale titles pruned on refresh. Persisting across reloads deviates from BmApp (in memory), per spec.
+- `ProposalsComparator`: table, empty state and best option use visible proposals only; effect runs the one-time uncompetitive auto-hide (`jobId@customerTotal`, Kotlin `Double.toString`).
+- `e2e/proposals.spec.ts`: dearer fixture 2000 → 1100 € (otherwise auto-hidden now; still red delta).
+- Evidence: `./init.sh` green (546 vitest); `e2e/proposals-configuration.spec.ts` + `e2e/proposals.spec.ts` 4/4; full `npm run test:e2e` 70 passed (android-chromium). Screenshot `test-results/proposals-configuration-android-chromium.png` (390px, reviewed).
+- Docs: `docs/domain-model.md` (visibility + auto-hide rules).
+- Next: `feature-validator` for `proposals-configuration`.
 
 ### Validation: conditions-copy-from-proposal (2026-10-19)
 

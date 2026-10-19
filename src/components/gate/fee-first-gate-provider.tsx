@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FullScreenSpinner } from "@/components/auth/auth-provider";
 import { toProposalPrices } from "@/lib/comparator/proposal";
 import {
@@ -14,10 +14,14 @@ import {
 } from "@/lib/gate/fee-first";
 import {
   clearStudyStorage,
+  loadAutoHideSignature,
   loadConditions,
   loadProposalFixedAmounts,
+  loadProposalVisibility,
+  saveAutoHideSignature,
   saveConditions,
   saveProposalFixedAmounts,
+  saveProposalVisibility,
 } from "@/lib/gate/storage";
 
 type GateContextValue = {
@@ -36,6 +40,12 @@ type GateContextValue = {
   proposalFixedAmounts: Record<string, string>;
   /** BmApp `setProposalFixedAmount`: ignored for titles not in the current report. */
   setProposalFixedAmount: (title: string, value: string) => void;
+  /** Visibility per current proposal title (default true); hidden titles persisted for the study. */
+  proposalVisibility: Record<string, boolean>;
+  /** BmApp `setProposalVisibility`: ignored for titles not in the current report. */
+  setProposalVisibility: (title: string, visible: boolean) => void;
+  /** BmApp `hideProposalsOnce`: hides `titles` once per `signature`; never re-shows. */
+  hideProposalsOnce: (signature: string, titles: Set<string>) => void;
   /** Incremented by `startNewStudy` so running studies can cancel themselves. */
   resetCount: number;
 };
@@ -105,12 +115,70 @@ export function FeeFirstGateProvider({ children, initialSession = null }: Props)
     [proposalTitles],
   );
 
+  const [storedVisibility, setStoredVisibility] = useState<Record<string, boolean>>(() =>
+    typeof window === "undefined" ? {} : loadProposalVisibility(),
+  );
+  const autoHideSignature = useRef<string | null>(null);
+  const autoHideSignatureLoaded = useRef(false);
+
+  const proposalVisibility = useMemo(() => {
+    if (!proposalTitles) return storedVisibility;
+    return Object.fromEntries(proposalTitles.map((t) => [t, storedVisibility[t] !== false]));
+  }, [proposalTitles, storedVisibility]);
+
+  useEffect(() => {
+    if (!proposalTitles) return;
+    const stale = Object.keys(storedVisibility).some((t) => !proposalTitles.includes(t));
+    if (stale) {
+      const kept = Object.fromEntries(Object.entries(storedVisibility).filter(([t]) => proposalTitles.includes(t)));
+      saveProposalVisibility(kept);
+      setStoredVisibility(kept);
+    }
+  }, [proposalTitles, storedVisibility]);
+
+  const setProposalVisibility = useCallback(
+    (title: string, visible: boolean) => {
+      if (!proposalTitles?.includes(title)) return;
+      setStoredVisibility((current) => {
+        const next = { ...current };
+        if (visible) delete next[title];
+        else next[title] = false;
+        saveProposalVisibility(next);
+        return next;
+      });
+    },
+    [proposalTitles],
+  );
+
+  const hideProposalsOnce = useCallback(
+    (signature: string, titles: Set<string>) => {
+      if (!autoHideSignatureLoaded.current) {
+        autoHideSignatureLoaded.current = true;
+        autoHideSignature.current = loadAutoHideSignature();
+      }
+      if (signature === autoHideSignature.current) return;
+      autoHideSignature.current = signature;
+      saveAutoHideSignature(signature);
+      const hide = [...titles].filter((t) => proposalTitles?.includes(t));
+      if (hide.length === 0) return;
+      setStoredVisibility((current) => {
+        const next = { ...current, ...Object.fromEntries(hide.map((t) => [t, false])) };
+        saveProposalVisibility(next);
+        return next;
+      });
+    },
+    [proposalTitles],
+  );
+
   const startNewStudy = useCallback(() => {
     clearStudyStorage();
     setResetCount((n) => n + 1);
     setSession(null);
     setConditionsState(null);
     setStoredFixedAmounts({});
+    setStoredVisibility({});
+    autoHideSignature.current = null;
+    autoHideSignatureLoaded.current = true;
   }, []);
 
   const value = useMemo(() => {
@@ -125,8 +193,22 @@ export function FeeFirstGateProvider({ children, initialSession = null }: Props)
       resetCount,
       proposalFixedAmounts,
       setProposalFixedAmount,
+      proposalVisibility,
+      setProposalVisibility,
+      hideProposalsOnce,
     };
-  }, [session, conditions, setConditions, startNewStudy, resetCount, proposalFixedAmounts, setProposalFixedAmount]);
+  }, [
+    session,
+    conditions,
+    setConditions,
+    startNewStudy,
+    resetCount,
+    proposalFixedAmounts,
+    setProposalFixedAmount,
+    proposalVisibility,
+    setProposalVisibility,
+    hideProposalsOnce,
+  ]);
 
   return <GateContext.Provider value={value}>{children}</GateContext.Provider>;
 }

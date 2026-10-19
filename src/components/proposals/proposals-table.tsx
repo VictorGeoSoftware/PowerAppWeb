@@ -1,31 +1,40 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import { BestProposalCard } from "@/components/proposals/best-proposal-card";
 import { ConsumptionLabelsColumn } from "@/components/proposals/consumption-labels-column";
 import { CustomerConditionsColumn } from "@/components/proposals/customer-conditions-column";
 import { ProposalColumn } from "@/components/proposals/proposal-column";
-import { bestProposalAmong, calculateComparatorSummary } from "@/lib/comparator/calculate";
+import { bestProposalAmong, calculateComparatorSummary, selectUncompetitiveProposals } from "@/lib/comparator/calculate";
 import { bestSavingLabel, percentLabel } from "@/lib/comparator/format";
 import { EMPTY_MESSAGE } from "@/lib/proposals/messages";
+import { autoHideSignature, visibleProposals } from "@/lib/proposals/visibility";
 
 const own = <V,>(record: Record<string, V>, key: string): V | undefined =>
   Object.hasOwn(record, key) ? record[key] : undefined;
 
-/** Port of BmApp `ProposalsContent` / `ComparatorProposalsView` (no visibility, PDF or copy sheet yet). */
+/** Port of BmApp `ProposalsContent` / `ComparatorProposalsView` (no PDF yet). */
 export function ProposalsComparator() {
-  const { session, conditions, proposalFixedAmounts, setProposalFixedAmount } = useFeeFirstGate();
+  const { session, conditions, proposalFixedAmounts, setProposalFixedAmount, proposalVisibility, hideProposalsOnce } =
+    useFeeFirstGate();
   const summary = useMemo(
     () => calculateComparatorSummary(session, conditions, proposalFixedAmounts),
     [session, conditions, proposalFixedAmounts],
   );
+  const jobId = session?.jobId;
 
-  if (!session || summary.proposals.length === 0) {
+  // BmApp `hideUncompetitiveProposals`: arriving at Proposals applies the rule once per signature.
+  useEffect(() => {
+    if (!jobId || summary.proposals.length === 0) return;
+    hideProposalsOnce(autoHideSignature(jobId, summary.customerTotalAnnualPrice), selectUncompetitiveProposals(summary));
+  }, [jobId, summary, hideProposalsOnce]);
+
+  const visible = visibleProposals(summary.proposals, proposalVisibility);
+  if (!session || visible.length === 0) {
     return <p className="text-sm text-table-text-secondary">{EMPTY_MESSAGE}</p>;
   }
 
-  const visible = summary.proposals;
   const best = bestProposalAmong(summary, visible);
   const bestDelta = best ? own(summary.annualPriceDeltaByTitle, best.proposalTitle) : undefined;
 

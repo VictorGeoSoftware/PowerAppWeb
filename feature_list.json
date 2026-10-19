@@ -465,12 +465,18 @@
     "depends_on": [
       "proposals-table"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Toggle hides proposal in table after reload"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "./init.sh green (546 vitest): storage, provider (default/persist/prune/hideProposalsOnce/startNewStudy), visibility helper, table and configuration list tests",
+      "npm run test:e2e:quick -- e2e/proposals-configuration.spec.ts e2e/proposals.spec.ts: 4 passed (android-chromium)",
+      "Full npm run test:e2e: 70 passed (android-chromium), 2026-10-19",
+      "Mobile screenshot: test-results/proposals-configuration-android-chromium.png",
+      "Validator accept 2026-10-19: ./init.sh rerun green (546 vitest); focused npm run test:e2e -- e2e/proposals-configuration.spec.ts e2e/proposals.spec.ts 4 passed (android-chromium); auto-hide/visibility checked against BmApp ProposalsViewModel + ConsumptionSessionRepositoryImpl"
+    ],
+    "notes": "Spec: docs/specs/proposals-configuration.md. Visibility persisted per study in localStorage (web deviation; BmApp in memory). Auto-hide of uncompetitive (>=15% dearer) proposals once per jobId@customerTotal signature. e2e/proposals.spec.ts dearer fixture changed 2000 -> 1100 so it is not auto-hidden."
   },
   {
     "id": "comparator-pdf-share",

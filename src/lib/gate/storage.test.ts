@@ -9,11 +9,17 @@ import {
   loadConditions,
   loadLastCompletedJobId,
   loadProposalFixedAmounts,
+  loadAutoHideSignature,
+  loadProposalVisibility,
+  PROPOSAL_AUTO_HIDE_SIGNATURE_KEY,
   PROPOSAL_FIXED_AMOUNTS_KEY,
+  PROPOSAL_VISIBILITY_KEY,
   saveActiveJob,
+  saveAutoHideSignature,
   saveConditions,
   saveLastCompletedJobId,
   saveProposalFixedAmounts,
+  saveProposalVisibility,
 } from "./storage";
 
 const c = { powerTermPriceByPeriod: { P1: "0,1" }, energyPriceByPeriod: {}, extraServices: "", companyName: "X" };
@@ -22,6 +28,15 @@ describe("gate storage", () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+  });
+
+  it("round-trips hidden proposals only; all visible or corrupt clears", () => {
+    saveProposalVisibility({ A: false, B: true });
+    expect(localStorage.getItem(PROPOSAL_VISIBILITY_KEY)).toBe('{"A":false}');
+    saveProposalVisibility({ A: true });
+    expect(localStorage.getItem(PROPOSAL_VISIBILITY_KEY)).toBeNull();
+    localStorage.setItem(PROPOSAL_VISIBILITY_KEY, "{oops");
+    expect(loadProposalVisibility()).toEqual({});
   });
 
   it("round-trips conditions", () => {
@@ -44,7 +59,13 @@ describe("gate storage", () => {
     localStorage.setItem("bm.deviceId", "web-1");
     sessionStorage.setItem(COLLECTED_PRICES_JOBS_KEY, '["j"]');
     saveProposalFixedAmounts({ A: "12,5" });
+    saveProposalVisibility({ A: false, B: true });
+    saveAutoHideSignature("j@1.0");
+    expect(loadProposalVisibility()).toEqual({ A: false });
+    expect(loadAutoHideSignature()).toBe("j@1.0");
     clearStudyStorage();
+    expect(localStorage.getItem(PROPOSAL_VISIBILITY_KEY)).toBeNull();
+    expect(localStorage.getItem(PROPOSAL_AUTO_HIDE_SIGNATURE_KEY)).toBeNull();
     expect(localStorage.getItem(PROPOSAL_FIXED_AMOUNTS_KEY)).toBeNull();
     expect(sessionStorage.getItem(COLLECTED_PRICES_JOBS_KEY)).toBeNull();
     expect(localStorage.getItem(CONDITIONS_KEY)).toBeNull();

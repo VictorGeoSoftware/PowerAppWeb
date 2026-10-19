@@ -159,3 +159,74 @@ describe("proposal fixed amounts", () => {
     expect(localStorage.getItem("bm.proposalFixedAmounts")).toBeNull();
   });
 });
+
+describe("proposal visibility", () => {
+  const proposal = (proposalTitle: string) => ({
+    proposalTitle,
+    powerTermItems: [0.1],
+    annualPowerTermCost: 1,
+    consumedEnergyItems: [0.2],
+    annualEnergyCost: 2,
+    extraServices: 0,
+    iva: 0.63,
+    electricalTax: 0.15,
+    totalAnnualPrice: 3.78,
+  });
+  const withProposals = (...titles: string[]) => ({ ...session, proposals: titles.map(proposal) });
+
+  beforeEach(() => {
+    replace.mockReset();
+    localStorage.clear();
+    pathname = "/current-conditions";
+  });
+
+  it("defaults to visible, ignores unknown titles and persists across remount", () => {
+    const { unmount } = renderGuarded(withProposals("A", "B"));
+    expect(gate.proposalVisibility).toEqual({ A: true, B: true });
+    act(() => gate.setProposalVisibility("B", false));
+    act(() => gate.setProposalVisibility("Z", false));
+    expect(gate.proposalVisibility).toEqual({ A: true, B: false });
+    unmount();
+    renderGuarded(withProposals("A", "B"));
+    expect(gate.proposalVisibility).toEqual({ A: true, B: false });
+    act(() => gate.setProposalVisibility("B", true));
+    expect(localStorage.getItem("bm.proposalVisibility")).toBeNull();
+  });
+
+  it("a refreshed report keeps current titles and drops missing ones", () => {
+    renderGuarded(withProposals("A", "B"));
+    act(() => gate.setProposalVisibility("A", false));
+    act(() => gate.setProposalVisibility("B", false));
+    act(() => gate.setSession(withProposals("B", "C")));
+    expect(gate.proposalVisibility).toEqual({ B: false, C: true });
+    act(() => gate.setSession(withProposals("A", "B")));
+    expect(gate.proposalVisibility).toEqual({ A: true, B: false });
+  });
+
+  it("hideProposalsOnce runs once per signature, only hides existing titles and survives remount", () => {
+    const { unmount } = renderGuarded(withProposals("A", "B"));
+    act(() => gate.hideProposalsOnce("j@1.0", new Set(["A", "Z"])));
+    expect(gate.proposalVisibility).toEqual({ A: false, B: true });
+    act(() => gate.setProposalVisibility("A", true));
+    act(() => gate.hideProposalsOnce("j@1.0", new Set(["A", "B"])));
+    expect(gate.proposalVisibility).toEqual({ A: true, B: true });
+    unmount();
+    renderGuarded(withProposals("A", "B"));
+    act(() => gate.hideProposalsOnce("j@1.0", new Set(["A"])));
+    expect(gate.proposalVisibility).toEqual({ A: true, B: true });
+    act(() => gate.setProposalVisibility("A", false));
+    act(() => gate.hideProposalsOnce("j@2.0", new Set(["B"])));
+    expect(gate.proposalVisibility).toEqual({ A: false, B: false });
+  });
+
+  it("startNewStudy resets visibility and the signature", () => {
+    renderGuarded(withProposals("A"));
+    act(() => gate.hideProposalsOnce("j@1.0", new Set(["A"])));
+    act(() => gate.startNewStudy());
+    act(() => gate.setSession(withProposals("A")));
+    expect(gate.proposalVisibility).toEqual({ A: true });
+    expect(localStorage.getItem("bm.proposalVisibility")).toBeNull();
+    act(() => gate.hideProposalsOnce("j@1.0", new Set(["A"])));
+    expect(gate.proposalVisibility).toEqual({ A: false });
+  });
+});

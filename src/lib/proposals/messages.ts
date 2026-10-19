@@ -17,3 +17,5 @@ export const fixedAmountLabel = (title: string) => `Importe fijo ${title}`;
 export const bestOptionTitle = (title: string) => `Mejor opción: ${title}`;
 export const bestOptionMessage = (saving: string) =>
   `Ahorro estimado de ${saving}\u00A0€ al año frente a sus condiciones actuales.`;
+export const VISIBLE_PROPOSALS_TITLE = "Propuestas visibles";
+export const VISIBLE_PROPOSALS_HINT = "Usa el botón a la izquierda de la propuesta para ocultarla/mostrarla";

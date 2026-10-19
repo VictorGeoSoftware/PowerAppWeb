@@ -8,7 +8,8 @@ import { FeeFirstGateProvider } from "@/components/gate/fee-first-gate-provider"
 import { calculateComparatorSummary } from "@/lib/comparator/calculate";
 import { twoDecimals } from "@/lib/comparator/format";
 import type { ConsumptionSession, CurrentConditions } from "@/lib/gate/fee-first";
-import { saveConditions } from "@/lib/gate/storage";
+import { saveAutoHideSignature, saveConditions, saveProposalVisibility } from "@/lib/gate/storage";
+import { autoHideSignature } from "@/lib/proposals/visibility";
 import { ProposalsComparator } from "./proposals-table";
 
 const proposal = (proposalTitle: string, total: number) => ({
@@ -62,8 +63,9 @@ describe("ProposalsComparator", () => {
   });
 
   it("renders labels, customer and proposal columns in order with BmApp formatting", () => {
-    renderTable();
     const summary = calculateComparatorSummary(session, conditions, {});
+    saveAutoHideSignature(autoHideSignature("job-1", summary.customerTotalAnnualPrice));
+    renderTable();
     expect(screen.getByText("3.0TD")).toBeTruthy();
     expect(screen.getByText("4.6")).toBeTruthy();
     expect(screen.getByText("5.0")).toBeTruthy();
@@ -120,5 +122,32 @@ describe("ProposalsComparator", () => {
     renderTable({ ...session, proposals: [] });
     expect(screen.getByText("Aún no hay propuestas que comparar.")).toBeTruthy();
     expect(screen.queryByTestId("comparator-scroll")).toBeNull();
+  });
+
+  it("auto-hides uncompetitive proposals once per signature", () => {
+    const { unmount } = renderTable();
+    const columns = screen.getAllByTestId("proposal-column");
+    expect(columns).toHaveLength(1);
+    expect(within(columns[0]).getByText("Barata")).toBeTruthy();
+    expect(localStorage.getItem("bm.proposalVisibility")).toBe('{"IBERDROLA PLAN ESTABLE A CO 5":false}');
+    unmount();
+    // Re-shown by the Broker: the same signature never hides it again.
+    saveProposalVisibility({});
+    renderTable();
+    expect(screen.getAllByTestId("proposal-column")).toHaveLength(2);
+  });
+
+  it("hidden proposals have no column and are not the best option; all hidden is empty", () => {
+    const s = { ...session, proposals: [proposal("Barata", 500), proposal("Media", 600)] };
+    saveProposalVisibility({ Barata: false });
+    const { unmount } = renderTable(s);
+    const columns = screen.getAllByTestId("proposal-column");
+    expect(columns).toHaveLength(1);
+    expect(within(columns[0]).getByText("Media")).toBeTruthy();
+    expect(screen.getByTestId("best-option").textContent).toContain("Mejor opción: Media");
+    unmount();
+    saveProposalVisibility({ Barata: false, Media: false });
+    renderTable(s);
+    expect(screen.getByText("Aún no hay propuestas que comparar.")).toBeTruthy();
   });
 });

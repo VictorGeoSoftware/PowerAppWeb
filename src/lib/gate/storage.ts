@@ -10,6 +10,10 @@ export const ACTIVE_JOB_KEY = "bm.activeJob";
 export const COLLECTED_PRICES_JOBS_KEY = "bm.collectedPricesJobIds";
 /** Comparator fixed amount typed per proposal title, as typed (BmApp `proposalFixedAmountByTitle`). */
 export const PROPOSAL_FIXED_AMOUNTS_KEY = "bm.proposalFixedAmounts";
+/** Hidden proposal titles (`false` entries only); BmApp keeps this in memory, the web keeps it per study. */
+export const PROPOSAL_VISIBILITY_KEY = "bm.proposalVisibility";
+/** Last `jobId@customerTotal` the uncompetitive auto-hide ran for (BmApp `lastAutoHideSignature`). */
+export const PROPOSAL_AUTO_HIDE_SIGNATURE_KEY = "bm.proposalAutoHideSignature";
 export const LAST_JOB_ID_EXPIRY_MS = 60 * 60 * 1000;
 
 export type JobSource = "cups" | "pdf" | "photo";
@@ -98,10 +102,48 @@ export function saveProposalFixedAmounts(amounts: Record<string, string>) {
   }
 }
 
+export function loadProposalVisibility(): Record<string, boolean> {
+  try {
+    const v = JSON.parse(localStorage.getItem(PROPOSAL_VISIBILITY_KEY) ?? "null");
+    if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+    return Object.fromEntries(Object.entries(v).filter((e): e is [string, boolean] => e[1] === false));
+  } catch {
+    return {};
+  }
+}
+
+export function saveProposalVisibility(visibility: Record<string, boolean>) {
+  try {
+    const hidden = Object.fromEntries(Object.entries(visibility).filter(([, v]) => v === false));
+    if (Object.keys(hidden).length > 0) localStorage.setItem(PROPOSAL_VISIBILITY_KEY, JSON.stringify(hidden));
+    else localStorage.removeItem(PROPOSAL_VISIBILITY_KEY);
+  } catch {
+    // storage unavailable: visibility lives in memory only
+  }
+}
+
+export function loadAutoHideSignature(): string | null {
+  try {
+    return localStorage.getItem(PROPOSAL_AUTO_HIDE_SIGNATURE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveAutoHideSignature(signature: string) {
+  try {
+    localStorage.setItem(PROPOSAL_AUTO_HIDE_SIGNATURE_KEY, signature);
+  } catch {
+    // storage unavailable: the in-memory guard still applies
+  }
+}
+
 /** Clears the study's local data (BmApp `resetActiveStudy`). */
 export function clearStudyStorage() {
   localStorage.removeItem(CONDITIONS_KEY);
   localStorage.removeItem(PROPOSAL_FIXED_AMOUNTS_KEY);
+  localStorage.removeItem(PROPOSAL_VISIBILITY_KEY);
+  localStorage.removeItem(PROPOSAL_AUTO_HIDE_SIGNATURE_KEY);
   localStorage.removeItem(LAST_JOB_ID_KEY);
   saveActiveJob(null);
   try {

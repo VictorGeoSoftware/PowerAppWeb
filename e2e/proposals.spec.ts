@@ -24,7 +24,7 @@ const proposal = (proposalTitle: string, totalAnnualPrice: number) => ({
   totalAnnualPrice,
 });
 
-const PROPOSALS = [proposal("Barata Luz", 700), proposal("IBERDROLA PLAN ESTABLE A CO 5", 2000)];
+const PROPOSALS = [proposal("Barata Luz", 700), proposal("IBERDROLA PLAN ESTABLE A CO 5", 1100)];
 
 const report = (proposals: unknown[]) => ({
   success: true,
@@ -114,7 +114,7 @@ test("comparator shows BmApp numbers, sticky labels, best option and persisted f
   await expect(page.getByText("1234", { exact: true })).toBeVisible();
   await expect(columns(page)).toHaveCount(2);
   await expect(columns(page).nth(0).getByTestId("total")).toHaveText("700.00€");
-  await expect(columns(page).nth(1).getByTestId("total")).toHaveText("2000.00€");
+  await expect(columns(page).nth(1).getByTestId("total")).toHaveText("1100.00€");
   await expect(columns(page).nth(1).getByText("IBERDRO...E A CO 5")).toBeVisible();
 
   const cheap = columns(page).nth(0).getByTestId("delta");
