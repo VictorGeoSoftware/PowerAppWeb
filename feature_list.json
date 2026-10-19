@@ -399,12 +399,18 @@
     "depends_on": [
       "bootstrap-nextjs-app"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Golden-case unit tests generated from Android"
     ],
-    "evidence": [],
-    "notes": "Decide port vs backend (open question)."
+    "evidence": [
+      "2026-10-19: scripts/golden/generate-comparator-golden.sh compiles the real BmApp sources (ProposalCalculationHelper, CalculateComparatorSummaryUseCase, SelectUncompetitiveProposalsUseCase, models, FormatUtils) with kotlinc 2.3.21/JDK 17 -> 51 cases (21 hand + 30 seeded random) + 20 parseDecimal and 30 %.2f/%.6f/round primitives. Regenerated twice: byte-identical.",
+      "2026-10-19: src/lib/comparator/calculate.golden.test.ts 102/102 exact equality (all summary fields, best proposal, uncompetitive sets at 15 and 25). ./init.sh green (lint, typecheck, vitest 482).",
+      "2026-10-19 negative checks: removing kWh truncation -> 42 golden failures; Math.round instead of half-even in roundToTwoDecimals -> 7 failures; both reverted.",
+      "E2E not run: pure library, no route/UI/API change (per spec).",
+      "2026-10-19 validator: accept. ./init.sh green (vitest 482 incl. golden 102/102); generate-comparator-golden.sh rerun -> 51 cases, byte-identical JSON; calculator reviewed line by line vs BmApp Kotlin; BmApp untouched; no security findings. Negative checks not rerun (recorded)."
+    ],
+    "notes": "Decision: client port with Android-generated goldens (docs/risks-and-open-questions.md). Code: src/lib/comparator/."
   },
   {
     "id": "proposals-table",

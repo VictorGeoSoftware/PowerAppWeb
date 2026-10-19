@@ -7,14 +7,28 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `comparator-calculation` (`feature-spec`)
+- Current next ready feature: `proposals-table` (`feature-spec`)
 - `../BmBackend` is checked out on `feature/backend-bill-photo-extraction` (uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (collected-prices-submit implemented: vitest 329, full E2E 65 passed on android-chromium)
+- Last verified at: 2026-10-19 (comparator-calculation implemented: vitest 482 incl. 102 golden checks)
 
 ## Session Log
+
+### Validation: comparator-calculation (2026-10-19)
+
+- Verdict: accept. `./init.sh` green (482 vitest, golden 102/102); `scripts/golden/generate-comparator-golden.sh` rerun -> 51 cases, byte-identical JSON. Calculator reviewed line by line against BmApp Kotlin; BmApp untouched. Negative checks and E2E not rerun (pure library, per spec).
+- Notes (non-blocking): the generator retypes `ProposalPriceData.mapToDomain` and the repository `toInt()` truncation (verified against source), so drift in those two BmApp spots is not caught by the goldens. The `docs/archive/opencode-agents/*` staged-then-deleted entries are unrelated; keep them out of this feature's commit.
+- Next: `feature-spec` for `proposals-table`.
+
+### Implementation: comparator-calculation (2026-10-19)
+
+- Spec: `docs/specs/comparator-calculation.md`. Decision: port to the client (open question closed in `docs/risks-and-open-questions.md`).
+- New `src/lib/comparator/{rounding,proposal,calculate}.ts`: Kotlin half-even `round`, Java `%.nf` HALF_UP on shortest digits, `toDoubleOrNull` grammar, proposal mapping (%.6f items / %.2f costs), summary, `bestProposalAmong`, `selectUncompetitiveProposals`. Energy kWh truncated in the calculator (session shape unchanged).
+- Goldens: `scripts/golden/generate-comparator-golden.sh` compiles the BmApp sources + `ComparatorGolden.kt` -> `src/lib/comparator/__golden__/comparator-cases.json` (51 cases + primitives; deterministic).
+- Evidence: `./init.sh` green (482 vitest); golden test 102/102; negative checks fail as expected (no truncation: 42, `Math.round`: 7). No E2E (pure library).
+- Next: `feature-validator` for `comparator-calculation`.
 
 ### Validation: collected-prices-submit (2026-10-19)
 

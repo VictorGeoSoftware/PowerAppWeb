@@ -84,6 +84,8 @@ E2E_EMAIL=<qa broker email> E2E_PASSWORD=<password> npm run test:e2e
 | `src/components/shell/` | Top bar and menu |
 | `src/components/gate/` | Fee-First Gate state (study, conditions) and redirects |
 | `src/lib/gate/` | Fee-First Gate rules and browser storage |
+| `src/lib/comparator/` | Comparator pricing rule (BmApp port) + golden cases |
+| `scripts/golden/` | Golden generator: `scripts/golden/generate-comparator-golden.sh` compiles the BmApp comparator sources (needs `kotlinc` + JDK 17) and rewrites `src/lib/comparator/__golden__/comparator-cases.json`. Rerun after BmApp comparator changes. |
 | `e2e/` | Playwright specs and fixtures |
 
 ## Secrets

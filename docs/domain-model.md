@@ -14,6 +14,7 @@ Mirrors BmApp (`../BmApp/domain`). PowerAppWeb adds no new domain concepts.
 - A Broker has exactly one Bound Device (Android phone OR browser).
 - A comparison session = one Consumption Report + one Current Conditions + visible Proposals.
 - Tier decides which Comparator PDF variants are available.
+- Comparison rules: `src/lib/comparator/` (port of BmApp `CalculateComparatorSummaryUseCase` and helpers). Customer column = power kW × €/kW·day × 365 + kWh × €/kWh, plus IVA and electricity tax on that base, plus extra services (no IVA). Annual kWh is truncated to an integer, like BmApp. A per-proposal fixed amount > 0 adds that amount plus its IVA to the proposal. Kotlin rounding (half-even, Java `%.2f`) is reproduced exactly.
 
 ## States and Lifecycles
 - Fee-First Gate: `CONSUMPTION_REQUIRED` → (Consumption Report ready) → `CURRENT_CONDITIONS_REQUIRED` → (conditions valid) → `UNLOCKED`. Blocked routes redirect to the current step.
