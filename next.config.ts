@@ -8,6 +8,9 @@ function buildVersion() {
 }
 
 const nextConfig: NextConfig = {
+  // E2E builds into their own dir so they never clash with a running `npm run dev`.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  outputFileTracingRoot: __dirname,
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || buildVersion(),
   },

@@ -25,7 +25,7 @@
 
 ## Risks
 - Dev machine on Volvo corporate network cannot reach BmBackend QA ("Application Blocked"); mitigated by the local Docker QA stack (`../BmInfra/bm-local-qa`, localhost:9081).
-- `consumption-by-photo`: backend photo support exists only on uncommitted BmBackend `feature/backend-bill-photo-extraction`; remote QA returns 400 → "No se pudo iniciar el estudio" until merged to `qa`. iOS HEIC→JPEG conversion via `accept="image/jpeg,image/png"` is NOT yet observed on a real iPhone (open); HEIC that still arrives is rejected locally with a clear message.
+- `consumption-by-photo`: backend photo support exists only on uncommitted BmBackend `feature/backend-bill-photo-extraction`; remote QA returns 400 → "No se pudo iniciar el estudio" until merged to `qa`. iOS HEIC→JPEG conversion via `accept="image/jpeg,image/png"` confirmed indirectly on a real iPhone (2026-10-16: camera shot uploaded and reached the report; HEIC would have been rejected locally). Not yet observed in a network log.
 - Live in-browser CUPS OCR accuracy is lower than ML Kit; mitigated by photo-upload and manual-entry fallbacks.
 - Accepted: iOS Safari OCR accuracy unverified until `qa-real-device-checks` (same bills, same thresholds); if it fails, `cups-camera-ocr` reopens. iOS may end the camera track when the tab is hidden — the scanner then shows "Reintentar cámara".
 - Tesseract.js worker/core/lang data load from the library's default CDN (jsDelivr); offline or a blocked CDN shows "No se pudo iniciar el lector" (manual entry still works). Self-hosting belongs to `pwa-installable`.

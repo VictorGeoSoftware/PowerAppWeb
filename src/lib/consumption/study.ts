@@ -6,7 +6,8 @@ import type { StudyFailure, StudyStep } from "./messages";
 export type StudyFetch = (path: string, init?: RequestInit) => Promise<Response>;
 
 export const MAX_POLL_ATTEMPTS = 60;
-export const POLL_INTERVAL_MS = 3_000;
+/** BmApp polls every 3 s; only the Playwright build (`.next-e2e`) shortens it. */
+export const POLL_INTERVAL_MS = Number(process.env.NEXT_PUBLIC_E2E_POLL_INTERVAL_MS) || 3_000;
 
 export const SUBMIT_PATH = "fetch-user-consumption-report-by-cups";
 export const PDF_SUBMIT_PATH = "fetch-user-consumption-report";

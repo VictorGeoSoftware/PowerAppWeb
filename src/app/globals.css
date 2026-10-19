@@ -15,6 +15,10 @@
   --color-section-highlight: var(--section-highlight);
   --color-section-border: var(--section-border);
   --color-tertiary: var(--tertiary);
+  --color-gate-locked: var(--gate-locked);
+  --color-gate-locked-foreground: var(--gate-locked-foreground);
+  --color-gate-unlocked: var(--gate-unlocked);
+  --color-gate-unlocked-foreground: var(--gate-unlocked-foreground);
   --color-tertiary-foreground: var(--tertiary-foreground);
 
   --color-background: var(--background);
@@ -106,6 +110,11 @@
   --header-background: #FFFFFF;
   --section-highlight: #D0E7FF;
   --section-border: #222222;
+  /* BmApp FeeFirstGateBanner (fixed colours, same in dark mode). */
+  --gate-locked: #FEE2E2;
+  --gate-locked-foreground: #991B1B;
+  --gate-unlocked: #DCFCE7;
+  --gate-unlocked-foreground: #166534;
 }
 
 @media (prefers-color-scheme: dark) {

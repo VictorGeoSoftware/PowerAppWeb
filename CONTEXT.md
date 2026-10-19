@@ -27,7 +27,7 @@ Customer consumption study obtained asynchronously from a CUPS, a bill PDF, or a
 Backend async job (`jobId`) that produces a Consumption Report. A failed job is never re-run: "Reintentar" submits a new job. A completed job can be *refreshed* (proposals and taxes recalculated at current prices, same `jobId`).
 
 ### Current Conditions
-The customer's present contract data entered by the Broker: holder, address, supplier, power term, energy prices, extra services, taxes.
+The customer's present contract data entered by the Broker: supplier, power term and energy prices per report period, optional annual extra services. Holder, address and CUPS come from the Consumption Report (holder/address editable). Taxes (IVA, impuesto eléctrico) are not entered; they come from the report.
 
 ### Proposal
 A retailer price offer compared against Current Conditions.

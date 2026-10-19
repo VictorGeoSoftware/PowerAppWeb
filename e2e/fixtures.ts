@@ -41,7 +41,7 @@ export const FETCH_HEADING = "Selecciona primero una factura de luz para procede
 
 /** Opens the app with the restored session; the access check runs on load. */
 export async function openSignedIn(page: Page) {
-  await page.goto("/");
+  await page.goto("/fetch-consumption");
   await expect(page).toHaveURL(/\/fetch-consumption$/);
   await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 }

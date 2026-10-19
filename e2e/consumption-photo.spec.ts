@@ -70,7 +70,7 @@ const shot = (page: Page, name: string) =>
 async function expectSummary(page: Page) {
   await expect(page).toHaveURL(/\/current-conditions$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Consumo obtenido" })).toBeVisible();
-  await expect(page.getByText(CUPS)).toBeVisible();
+  await expect(page.getByLabel("Consumo obtenido").getByText(CUPS)).toBeVisible();
 }
 
 test("photo option is visible, labelled and accepts JPEG/PNG without capture", async ({ page }) => {
@@ -200,7 +200,7 @@ test("Nuevo estudio during a photo job stops polling and clears both keys", asyn
   const keys = await page.evaluate(() => [localStorage.getItem("bm.lastCompletedJobId"), sessionStorage.getItem("bm.activeJob")]);
   expect(keys).toEqual([null, null]);
   const seen = calls.status;
-  await page.waitForTimeout(4_000);
+  await page.waitForTimeout(1_200);
   expect(calls.status).toBe(seen);
 });
 
@@ -214,6 +214,6 @@ test("logout during a photo job stops polling and clears it", async ({ page }) =
   await expect(page).toHaveURL(/\/login$/);
   expect(await activeJob(page)).toBeNull();
   const seen = calls.status;
-  await page.waitForTimeout(4_000);
+  await page.waitForTimeout(1_200);
   expect(calls.status).toBe(seen);
 });

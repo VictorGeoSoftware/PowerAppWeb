@@ -11,8 +11,14 @@ if [ ! -f package.json ]; then
   exit 0
 fi
 
-echo "Installing dependencies..."
-npm ci
+# Reinstall only when package-lock.json changed (npm ci wipes node_modules and
+# breaks any E2E run or dev server using it at the same time).
+if [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
+  echo "Installing dependencies..."
+  npm ci
+else
+  echo "Dependencies up to date (package-lock.json unchanged)"
+fi
 
 echo "Running baseline verification..."
 npm run lint

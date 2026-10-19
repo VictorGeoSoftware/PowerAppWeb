@@ -337,14 +337,15 @@
     "depends_on": [
       "backend-bill-photo-extraction"
     ],
-    "status": "passing",
+    "status": "accepted",
     "verification": [
       "Photo from iPhone camera produces report"
     ],
     "evidence": [
       "2026-10-16: ./init.sh green (lint, typecheck, vitest 276 tests); npm run test:e2e full 120 passed + 2 photo resume tests failed on a test typo, fixed; e2e/consumption-photo.spec.ts rerun 30/30 passed on android-chromium + iphone-webkit; screenshots test-results/consumption-photo-{methods,uploading,file-error,error}-{android-chromium,iphone-webkit}.png reviewed at 390 px (light).",
       "2026-10-16 Scenario 8 (USER-REPORTED, not observed by agent): user took a real paper-bill photo with the iPhone camera via local QA and reported \"Working!\" — flow reached the report end to end. HEIC→JPEG not observed directly; implied only by 'working' (the camera shot was not rejected by the backend, so it arrived as JPEG).",
-      "2026-10-16 re-run after spec fix: ./init.sh green (276 vitest); full npm run test:e2e 122 passed (first attempt hit a transient auth.setup login timeout, rerun green)."
+      "2026-10-16 re-run after spec fix: ./init.sh green (276 vitest); full npm run test:e2e 122 passed (first attempt hit a transient auth.setup login timeout, rerun green).",
+      "2026-10-19 validator accept: ./init.sh green (276 vitest); npm run test:e2e -- e2e/consumption-photo.spec.ts 30/30 passed (android-chromium + iphone-webkit) on local QA. HEIC→JPEG confirmed indirectly by the user's real iPhone run (HEIC is rejected client-side, so a successful upload was JPEG)."
     ],
     "notes": "All scenarios done; Scenario 8 is user-reported."
   },
@@ -356,13 +357,19 @@
     "depends_on": [
       "consumption-by-cups-manual"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Validation unit tests matching Android",
       "Numeric keyboard on iOS"
     ],
-    "evidence": [],
-    "notes": ""
+    "evidence": [
+      "2026-10-19: ./init.sh green (lint, typecheck, vitest 308 tests; new: src/lib/conditions/decimal-input.test.ts 23, src/components/conditions/fee-first-gate-banner.test.tsx 3, current-conditions-form.test.tsx 6 incl. inputmode=decimal + text-base on every price input).",
+      "2026-10-19: new e2e/current-conditions.spec.ts (fill → unlock + menu Propuestas link, invalid keystroke ignored, zero re-locks, reload keeps prices not holder, CTA → /proposals, computed font-size ≥ 16px). Older consumption specs scoped their CUPS check to the summary card (CUPS now also shown in the form). Full npm run test:e2e 124 passed (android-chromium + iphone-webkit) on local QA.",
+      "Screenshots: test-results/conditions-{locked,unlocked}-{android-chromium,iphone-webkit}.png reviewed at 390 px (light).",
+      "Not done: iOS decimal keypad on a real iPhone (only inputmode attribute verified) and side-by-side parity with BmApp on a real QA CUPS — deferred to user / qa-real-device-checks.",
+      "2026-10-19 validation: accept. ./init.sh green (vitest 308); npm run test:e2e -- e2e/current-conditions.spec.ts e2e/fee-first-gate.spec.ts 4/4 on android-chromium. Regex, strings (values-es) and placeholders checked against BmApp source. Non-blocking: harness/E2E tooling changes share the working tree (commit separately); gate banner uses fixed BmApp colours (--gate-*) not listed in DESIGN.md."
+    ],
+    "notes": "Follows BmApp: no tax inputs, no Save button (every valid keystroke persists). Copy-from-proposal sheet deferred to proposals-table."
   },
   {
     "id": "collected-prices-submit",
@@ -377,7 +384,7 @@
       "Proxy log/QA DB shows entry"
     ],
     "evidence": [],
-    "notes": "Port CollectedPricesMapper."
+    "notes": "Port CollectedPricesMapper. Hook: onGoToProposals in src/components/conditions/current-conditions-form.tsx."
   },
   {
     "id": "comparator-calculation",
@@ -408,7 +415,7 @@
       "Same CUPS shows same values as Android app"
     ],
     "evidence": [],
-    "notes": ""
+    "notes": "Includes BmApp 'Copiar precios de una propuesta' sheet on Current Conditions (deferred from current-conditions-form)."
   },
   {
     "id": "proposals-configuration",

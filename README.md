@@ -55,7 +55,9 @@ npm run build        # production build; type/lint errors are not ignored
 ```bash
 E2E_EMAIL=<qa broker email> E2E_PASSWORD=<password> npm run test:e2e
 ```
-- Projects: `iphone-webkit` (iPhone 13) and `android-chromium` (Pixel 7). The dev server starts automatically or is reused.
+- Projects: `iphone-webkit` (iPhone 13) and `android-chromium` (Pixel 7).
+- Server: Playwright builds into `.next-e2e` and starts `next start` on port **9004** (allowed referrer of the QA Firebase key), so it never touches your 9003 dev server. `scripts/e2e.sh` (behind both npm scripts) allows one run at a time per machine, auto-reuses `.next-e2e` when no source/config file changed since the last build (use `E2E_FORCE_BUILD=1` to force a rebuild), stops any leftover server on 9004 before and after (including on `INT`/`TERM`), and reads credentials from the keychain if `E2E_EMAIL`/`E2E_PASSWORD` are unset.
+- Quick loop: `npm run test:e2e:quick -- e2e/<spec>.spec.ts` (Android Chromium only, stops at first failure). `npm run test:e2e` is the full suite on Android Chromium only (development phase); `npm run test:e2e:all` adds `iphone-webkit` and is run by the user after development.
 - Without the env vars, signed-in tests are skipped. **Never commit credentials.**
 - Sign-in once per browser: the `setup-*` projects (`e2e/auth.setup.ts`) sign in with the QA account and save the session (incl. IndexedDB, where Firebase keeps it) to `playwright/.auth/` (gitignored). Signed-in specs call `useSignedInSession()` + `openSignedIn(page)` from `e2e/fixtures.ts` instead of typing credentials. Only `login.spec.ts` exercises the real login form. This keeps a full run at ~4 Firebase password sign-ins (repeated runs hit `QUOTA_EXCEEDED` otherwise).
 - Runs serially (`workers: 1`): all signed-in tests share one account and one bound device.

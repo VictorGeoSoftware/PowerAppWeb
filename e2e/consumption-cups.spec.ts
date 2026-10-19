@@ -76,7 +76,7 @@ async function submitCups(page: Page, value = CUPS) {
 async function expectSummary(page: Page) {
   await expect(page).toHaveURL(/\/current-conditions$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Consumo obtenido" })).toBeVisible();
-  await expect(page.getByText(CUPS)).toBeVisible();
+  await expect(page.getByLabel("Consumo obtenido").getByText(CUPS)).toBeVisible();
   await expect(page.getByText("P1 · 1.234 kWh")).toBeVisible();
   await expect(page.getByText("P3 · 800 kWh")).toBeVisible();
   await expect(page.getByText("P2 · 4,6 kW")).toBeVisible();
@@ -206,6 +206,6 @@ test("logout while polling stops the job and clears it", async ({ page }) => {
   await expect(page).toHaveURL(/\/login$/);
   expect(await page.evaluate(() => sessionStorage.getItem("bm.activeJob"))).toBeNull();
   const seen = calls.status;
-  await page.waitForTimeout(4_000);
+  await page.waitForTimeout(1_200);
   expect(calls.status).toBe(seen);
 });

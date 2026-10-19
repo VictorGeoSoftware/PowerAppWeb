@@ -7,14 +7,41 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `consumption-by-photo` (run `feature-spec`)
+- Current next ready feature: `collected-prices-submit` (`feature-spec`)
 - `../BmBackend` is checked out on `feature/backend-bill-photo-extraction` (uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-16 (backend-bill-photo-extraction accepted: BmBackend gradle 164 tests, local QA photo uploads COMPLETED; PowerAppWeb vitest 256)
+- Last verified at: 2026-10-19 (current-conditions-form implemented: vitest 308, full E2E 124 passed)
 
 ## Session Log
+
+### Validation: current-conditions-form (2026-10-19)
+
+- Verdict: accept. `./init.sh` green (308 vitest); `npm run test:e2e -- e2e/current-conditions.spec.ts e2e/fee-first-gate.spec.ts` 4/4 on android-chromium. Full suite not rerun (recorded 124 passed for the same code). Regex, Spanish strings and placeholders verified against BmApp source.
+- Notes (non-blocking): E2E/harness tooling changes share the working tree (commit separately); `--gate-*` banner colours not documented in `DESIGN.md`; real-iPhone keypad and BmApp side-by-side parity deferred to `qa-real-device-checks`.
+- Next: `feature-spec` for `collected-prices-submit`.
+
+### Implementation: current-conditions-form (2026-10-19)
+
+- Spec: `docs/specs/current-conditions-form.md`. Replaced the `/current-conditions` placeholder with the BmApp form: gate banner (locked/unlocked, "N de M campos completados", progressbar), customer data (Titular/Dirección editable in session, CUPS read-only, Comercializadora), power/energy price rows per report period, Servicios extra, CTA "Ir a las propuestas de precios" when unlocked (hook for `collected-prices-submit` in `onGoToProposals`).
+- New: `src/lib/conditions/{decimal-input,messages}.ts`, `src/components/conditions/{current-conditions-form,fee-first-gate-banner}.tsx`, `e2e/current-conditions.spec.ts`; `isFilledPrice` exported from `fee-first.ts`; `--gate-*` colour tokens (BmApp banner colours) in `globals.css`.
+- Parity choices: no tax inputs, no Save button (BmApp). Copy-from-proposal sheet deferred to `proposals-table`.
+- Evidence: `./init.sh` green (308 vitest); full `npm run test:e2e` 124 passed on both browsers. The first full run had 20 failures, all from consumption specs using `getByText(CUPS)`, which now matched twice; those checks are now limited to the summary card.
+- Open: real-iPhone decimal keypad check and side-by-side BmApp parity on a real QA CUPS not done.
+- Next: `feature-validator` for `current-conditions-form`.
+
+### Validation: consumption-by-photo (2026-10-19)
+
+- Verdict: accept. `./init.sh` green (276 vitest); `npm run test:e2e -- e2e/consumption-photo.spec.ts` 30/30 on android-chromium + iphone-webkit against local QA (stack rebuilt via `bm-local-qa up` after Docker restart). Full suite not rerun (recorded 122 passed for the same code).
+- Notes (non-blocking): Scenario 8 is user-reported; HEIC→JPEG confirmed indirectly (client rejects HEIC, real iPhone upload succeeded). Backend photo support still only on BmBackend `feature/backend-bill-photo-extraction` (not merged to `qa`). Photo job timeout covered by shared `runStudy` unit tests only.
+- Next: `feature-spec` for `current-conditions-form`.
+
+### E2E process fix (2026-10-16)
+
+- Cause of ~20 min runs: an orphaned `next dev` (parent `launchd`, left behind by a killed run) stuck at 100%+ CPU and reused via `reuseExistingServer`, concurrent/subagent runs, unconditional `npm ci` in `init.sh` under corporate Endpoint Security, 3 s poll intervals across 26 mocked tests, and bash signal-trap deferral leaving orphaned `:9004` servers when runs were aborted.
+- Fix: Playwright builds `.next-e2e` (`NEXT_PUBLIC_E2E_POLL_INTERVAL_MS=750`, `outputFileTracingRoot`) and runs `next start` on 9004 (added to the QA Firebase key referrers), never reuses a server; `scripts/e2e.sh` adds a one-run lock, background `wait` with immediate `INT`/`TERM`/`HUP` child-tree cleanup, automatic `.next-e2e` build stamp reuse when `src/` and config are unchanged, and keychain credentials; `init.sh` skips `npm ci` when `package-lock.json` is unchanged; `openSignedIn` navigates directly to `/fetch-consumption`; `feature-validator` and `feature-spec` skills updated to run inline (never spawning a subagent) and rerun only the feature's focused E2E spec when full-suite evidence already exists; fast-shell rules in `AGENTS.md`.
+- Evidence: `./init.sh` 10 s (was ~60 s); `consumption-photo.spec.ts` quick run 15 passed in 37.8 s reusing `.next-e2e`; `photo+cups+pdf` quick run 37 passed in 1.8 min incl. build (was ~20 min).
 
 ### Session 001
 
@@ -223,7 +250,7 @@
 - Validator: VERDICT accept, 0 repair rounds; all 9 scenarios pass, no blocking findings (reran init 256 tests, build, E2E 94/94).
 - User manual checks on real Android Chrome: dark-mode scanner OK, camera-denied fallback OK, camera indicator off after "Volver" OK.
 - Status: `cups-camera-ocr` → `accepted`. Open risks: iOS Safari OCR accuracy deferred to `qa-real-device-checks`; OCR assets from public CDN (self-host in `pwa-installable`).
-- Note: `.opencode/agents/*.md` harness edits are pending and belong in a separate commit.
+- Note: the subagent harness (`.opencode/agents`, `.opencode/commands`) was parked in `docs/archive/opencode-agents/` because it was too slow. Skills now run inline. To restore it, move the folders back to `.opencode/`.
 - Next best step: run `feature-spec` for `backend-bill-photo-extraction`.
 
 ### Session 022

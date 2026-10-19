@@ -37,7 +37,8 @@ export type CurrentConditions = {
   companyName: string | null;
 };
 
-const isFilledPrice = (value: string | undefined) => {
+/** BmApp gate rule: a typed price counts when it parses (comma or dot) to a number > 0. */
+export const isFilledPrice = (value: string | undefined) => {
   if (value == null) return false;
   const normalized = value.trim().replaceAll(",", ".");
   if (normalized === "") return false;
