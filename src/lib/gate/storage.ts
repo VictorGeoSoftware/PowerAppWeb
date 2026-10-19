@@ -8,6 +8,8 @@ export const LAST_JOB_ID_KEY = "bm.lastCompletedJobId";
 export const ACTIVE_JOB_KEY = "bm.activeJob";
 /** sessionStorage job ids whose Collected Prices were already sent (see conditions/collected-prices). */
 export const COLLECTED_PRICES_JOBS_KEY = "bm.collectedPricesJobIds";
+/** Comparator fixed amount typed per proposal title, as typed (BmApp `proposalFixedAmountByTitle`). */
+export const PROPOSAL_FIXED_AMOUNTS_KEY = "bm.proposalFixedAmounts";
 export const LAST_JOB_ID_EXPIRY_MS = 60 * 60 * 1000;
 
 export type JobSource = "cups" | "pdf" | "photo";
@@ -77,9 +79,29 @@ export function saveConditions(conditions: CurrentConditions | null) {
   else localStorage.removeItem(CONDITIONS_KEY);
 }
 
+export function loadProposalFixedAmounts(): Record<string, string> {
+  try {
+    const v = JSON.parse(localStorage.getItem(PROPOSAL_FIXED_AMOUNTS_KEY) ?? "null");
+    if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+    return Object.fromEntries(Object.entries(v).filter((e): e is [string, string] => typeof e[1] === "string"));
+  } catch {
+    return {};
+  }
+}
+
+export function saveProposalFixedAmounts(amounts: Record<string, string>) {
+  try {
+    if (Object.keys(amounts).length > 0) localStorage.setItem(PROPOSAL_FIXED_AMOUNTS_KEY, JSON.stringify(amounts));
+    else localStorage.removeItem(PROPOSAL_FIXED_AMOUNTS_KEY);
+  } catch {
+    // storage unavailable: amounts live in memory only
+  }
+}
+
 /** Clears the study's local data (BmApp `resetActiveStudy`). */
 export function clearStudyStorage() {
   localStorage.removeItem(CONDITIONS_KEY);
+  localStorage.removeItem(PROPOSAL_FIXED_AMOUNTS_KEY);
   localStorage.removeItem(LAST_JOB_ID_KEY);
   saveActiveJob(null);
   try {

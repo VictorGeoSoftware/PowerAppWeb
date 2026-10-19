@@ -1,15 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId } from "react";
+import { Copy } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { CopyProposalPricesSheet } from "@/components/conditions/copy-proposal-prices-sheet";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { collectPricesOnNavigate } from "@/lib/conditions/collected-prices";
+import { availableProposals, copyPricesFromProposal, initialSelection } from "@/lib/conditions/copy-from-proposal";
 import { isValidDecimalInput } from "@/lib/conditions/decimal-input";
 import {
   ADDRESS_LABEL,
+  COPY_PRICES_ACTION,
+  copySuccess,
   ANNUAL_AMOUNT,
   COMPANY_NAME_LABEL,
   COMPANY_NAME_PLACEHOLDER,
@@ -99,10 +104,32 @@ export function CurrentConditionsForm() {
   const { session, conditions, setSession, setConditions, stage } = useFeeFirstGate();
   const { user } = useAuth();
   const router = useRouter();
+  const [isSheetOpen, setSheetOpen] = useState(false);
+  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(noticeTimer.current), []);
   if (!session) return null;
 
   const current = conditions ?? EMPTY;
   const update = (patch: Partial<CurrentConditions>) => setConditions({ ...current, ...patch });
+  const proposals = availableProposals(session);
+
+  const onCopyClicked = () => {
+    if (proposals.length === 0) return;
+    setSelectedTitle(initialSelection(proposals, selectedTitle));
+    setSheetOpen(true);
+  };
+
+  const onCopyConfirmed = () => {
+    if (selectedTitle == null) return;
+    const copied = copyPricesFromProposal(session, conditions, selectedTitle);
+    if (copied) setConditions(copied);
+    setSheetOpen(false);
+    setNotice(copySuccess(selectedTitle));
+    clearTimeout(noticeTimer.current);
+    noticeTimer.current = setTimeout(() => setNotice(null), 2500);
+  };
 
   const onGoToProposals = () => {
     if (user) collectPricesOnNavigate(user, session, conditions);
@@ -155,6 +182,15 @@ export function CurrentConditionsForm() {
       </div>
 
       <HighlightHeader>{CONDITIONS_TITLE}</HighlightHeader>
+      <Button
+        type="button"
+        variant="secondary"
+        className="h-12 w-full rounded-full text-base font-bold"
+        onClick={onCopyClicked}
+      >
+        <Copy aria-hidden className="size-[18px]" />
+        {COPY_PRICES_ACTION}
+      </Button>
 
       <SubtleHeader>{POWER_TERM_TITLE}</SubtleHeader>
       <div className="border border-table-border">
@@ -209,6 +245,25 @@ export function CurrentConditionsForm() {
           {GO_TO_PROPOSALS}
         </Button>
       )}
+
+      <CopyProposalPricesSheet
+        open={isSheetOpen}
+        proposals={proposals}
+        selectedTitle={selectedTitle}
+        onSelect={setSelectedTitle}
+        onDismiss={() => setSheetOpen(false)}
+        onConfirm={onCopyConfirmed}
+      />
+
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 flex justify-center"
+      >
+        {notice && (
+          <span className="rounded-full bg-foreground px-4 py-2 text-sm text-background shadow-lg">{notice}</span>
+        )}
+      </div>
     </div>
   );
 }

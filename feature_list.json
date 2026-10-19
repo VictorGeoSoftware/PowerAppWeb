@@ -421,12 +421,41 @@
       "current-conditions-form",
       "comparator-calculation"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Same CUPS shows same values as Android app"
     ],
-    "evidence": [],
-    "notes": "Includes BmApp 'Copiar precios de una propuesta' sheet on Current Conditions (deferred from current-conditions-form)."
+    "evidence": [
+      "2026-10-19 implementation: ./init.sh green (518 vitest). New format.test.ts covers Kotlin Double.toString, %.6f/%.2f/%.2f %, delta text and tone, middle ellipsis, fixed-amount regex. Provider/storage tests cover set/persist/reload, dropping unknown titles on refresh and clearing on new study. proposals-table.test.tsx covers column order, formatting, recalculation, best card and empty state.",
+      "2026-10-19: e2e/proposals.spec.ts 2/2 (android-chromium). Customer/proposal totals, deltas and the best card match calculateComparatorSummary. The dearer delta is rgb(211,47,47). The labels column x is unchanged after scrollLeft=300. Page scrollWidth <= innerWidth. A fixed amount of 12,59 recalculates and survives a reload. Empty state shown. Screenshots: test-results/proposals-{table,table-dark,scrolled}-android-chromium.png.",
+      "2026-10-19: full npm run test:e2e 66 passed, 1 failed (consumption-cups 'reload mid-poll resumes the same job': race where the resumed job finished before the heading check). It passed on rerun (consumption-cups.spec.ts 12/12), so it is flaky and unrelated.",
+      "Open: manual side-by-side parity with BmApp on the same CUPS against local QA has not been done yet (deferred to the user / qa-real-device-checks).",
+      "2026-10-19 validator: accept. ./init.sh green (518 vitest); e2e/proposals.spec.ts 2/2 + setup (android-chromium); formatting/colours/strings verified vs BmApp source; 390px screenshot reviewed; no security findings. Full suite not rerun (recorded). Manual BmApp side-by-side parity deferred to qa-real-device-checks."
+    ],
+    "notes": "Table only: comparison columns, per-proposal fixed amounts, savings row, 'Mejor opción' card, empty state. Copy-prices sheet split out to conditions-copy-from-proposal."
+  },
+  {
+    "id": "conditions-copy-from-proposal",
+    "area": "conditions",
+    "title": "Copy prices from a proposal",
+    "user_visible_behavior": "On Current Conditions, 'Copiar precios de una propuesta' opens a bottom sheet listing the study's proposals; choosing one fills the power/energy prices and extra services (BmApp parity).",
+    "depends_on": [
+      "current-conditions-form",
+      "comparator-calculation"
+    ],
+    "status": "accepted",
+    "verification": [
+      "Unit tests for copy mapping (toDecimalInput, %.2f extra services)",
+      "E2E: copy fills the form and unlocks the gate"
+    ],
+    "evidence": [
+      "2026-10-19: ./init.sh green (534 vitest; copy-from-proposal.test.ts 13, current-conditions-form.test.tsx +3 RTL)",
+      "2026-10-19: npm run test:e2e:quick -- e2e/copy-from-proposal.spec.ts 2/2 (android-chromium)",
+      "2026-10-19: full npm run test:e2e 69 passed (android-chromium)",
+      "Screenshot (390px): test-results/copy-from-proposal-sheet-android-chromium.png — Cancelar/Copiar visible without scrolling",
+      "2026-10-19 validator: accept. ./init.sh green (534 vitest); e2e/copy-from-proposal.spec.ts 2/2 + setup (android-chromium); copy logic and strings verified vs BmApp source; screenshot reviewed; no security findings. Full suite not rerun (recorded 69 passed)."
+    ],
+    "notes": "Split from proposals-table (2026-10-19). BmApp: CurrentUserConditionsView CopyProposalPricesSheet + ViewModel.copyPricesFromProposal."
   },
   {
     "id": "proposals-configuration",

@@ -8,9 +8,12 @@ import {
   loadActiveJob,
   loadConditions,
   loadLastCompletedJobId,
+  loadProposalFixedAmounts,
+  PROPOSAL_FIXED_AMOUNTS_KEY,
   saveActiveJob,
   saveConditions,
   saveLastCompletedJobId,
+  saveProposalFixedAmounts,
 } from "./storage";
 
 const c = { powerTermPriceByPeriod: { P1: "0,1" }, energyPriceByPeriod: {}, extraServices: "", companyName: "X" };
@@ -40,7 +43,9 @@ describe("gate storage", () => {
     localStorage.setItem(LAST_JOB_ID_KEY, "j");
     localStorage.setItem("bm.deviceId", "web-1");
     sessionStorage.setItem(COLLECTED_PRICES_JOBS_KEY, '["j"]');
+    saveProposalFixedAmounts({ A: "12,5" });
     clearStudyStorage();
+    expect(localStorage.getItem(PROPOSAL_FIXED_AMOUNTS_KEY)).toBeNull();
     expect(sessionStorage.getItem(COLLECTED_PRICES_JOBS_KEY)).toBeNull();
     expect(localStorage.getItem(CONDITIONS_KEY)).toBeNull();
     expect(localStorage.getItem(LAST_JOB_ID_KEY)).toBeNull();
@@ -64,6 +69,17 @@ describe("gate storage", () => {
     expect(loadActiveJob()).toBeNull();
     sessionStorage.setItem(ACTIVE_JOB_KEY, "{oops");
     expect(loadActiveJob()).toBeNull();
+  });
+
+  it("round-trips proposal fixed amounts; empty removes, corrupt loads empty", () => {
+    saveProposalFixedAmounts({ A: "12,5", B: "" });
+    expect(loadProposalFixedAmounts()).toEqual({ A: "12,5", B: "" });
+    saveProposalFixedAmounts({});
+    expect(localStorage.getItem(PROPOSAL_FIXED_AMOUNTS_KEY)).toBeNull();
+    localStorage.setItem(PROPOSAL_FIXED_AMOUNTS_KEY, "{oops");
+    expect(loadProposalFixedAmounts()).toEqual({});
+    localStorage.setItem(PROPOSAL_FIXED_AMOUNTS_KEY, JSON.stringify({ A: 1, B: "2" }));
+    expect(loadProposalFixedAmounts()).toEqual({ B: "2" });
   });
 
   it("last completed job id expires after 1 h and is cleared", () => {

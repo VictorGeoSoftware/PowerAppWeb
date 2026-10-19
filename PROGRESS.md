@@ -7,14 +7,44 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `proposals-table` (`feature-spec`)
+- Current next ready feature: next dependency-ready feature in `feature_list.json` (`feature-spec`)
 - `../BmBackend` is checked out on `feature/backend-bill-photo-extraction` (uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (comparator-calculation implemented: vitest 482 incl. 102 golden checks)
+- Last verified at: 2026-10-19 (conditions-copy-from-proposal implemented: vitest 534, E2E 69/69 android-chromium)
 
 ## Session Log
+
+### Validation: conditions-copy-from-proposal (2026-10-19)
+
+- Verdict: accept. `./init.sh` green (534 vitest); `npm run test:e2e -- e2e/copy-from-proposal.spec.ts` 2/2 + setup (android-chromium). Full suite not rerun (recorded 69 passed). Index-aligned copy, `%.8f` trimmed, extra services `%.2f`, supplier kept and Spanish strings verified against BmApp source; 390px screenshot reviewed.
+- Notes (non-blocking): the "Precios copiados" notice would also show if the copy returned null (unreachable from the UI); keep `proposals-table` and `docs/archive/opencode-agents/*` changes out of this feature's commit.
+- Next: pick the next dependency-ready feature in `feature_list.json`.
+
+### Implementation: conditions-copy-from-proposal (2026-10-19)
+
+- Spec: `docs/specs/conditions-copy-from-proposal.md`. New `src/lib/conditions/copy-from-proposal.ts` (`toDecimalInput`, `copyPricesFromProposal`, `initialSelection`) and `src/components/conditions/copy-proposal-prices-sheet.tsx` (bottom `Sheet`, radiogroup). `CurrentConditionsForm` renders the secondary pill button under "CONDICIONES ACTUALES", the sheet, and a `role="status"` notice (2.5 s) instead of the Android Toast.
+- BmApp parity kept: index-aligned items, all proposals listed, no-op without proposals, supplier kept (stored as `null` when never typed; BmApp stores "" — no gate difference). The selected title is React state, so it resets on reload (BmApp `rememberSaveable` also resets on process death).
+- Evidence: `./init.sh` green (534 vitest); `e2e/copy-from-proposal.spec.ts` 2/2; full `npm run test:e2e` 69 passed (android-chromium). Screenshot `test-results/copy-from-proposal-sheet-android-chromium.png`.
+- Docs: `docs/domain-model.md` (copy rule), `DESIGN.md` (Toast → status notice, ModalBottomSheet → Sheet).
+- Next: `feature-validator` for `conditions-copy-from-proposal`.
+
+### Validation: proposals-table (2026-10-19)
+
+- Verdict: accept. `./init.sh` green (518 vitest); `npm run test:e2e -- e2e/proposals.spec.ts` 2/2 + setup (android-chromium). Full suite not rerun (recorded 66 passed + 1 flaky that passed on rerun). Formatting, delta colours, ellipsis and Spanish strings verified against BmApp source; 390px screenshot reviewed.
+- Notes (non-blocking): manual BmApp side-by-side parity on the same CUPS deferred to `qa-real-device-checks`; reload on `/proposals` lands on `/current-conditions` (existing restore behaviour, possible follow-up); keep the `docs/archive/opencode-agents/*` entries out of this feature's commit.
+- Next: `feature-spec` for `conditions-copy-from-proposal`.
+
+### Implementation: proposals-table (2026-10-19)
+
+- Spec: `docs/specs/proposals-table.md` (copy-prices sheet split out to `conditions-copy-from-proposal`). The `/proposals` placeholder was replaced by `ProposalsComparator` (`src/components/proposals/`): labels / "Tarifa actual" / proposal columns, editable fixed amount, delta line, "Mejor opción" card and empty state. Numbers come from `calculateComparatorSummary`; display formatting is in `src/lib/comparator/format.ts`.
+- Fixed amounts: `proposalFixedAmounts` / `setProposalFixedAmount` in `FeeFirstGateProvider`, persisted in `localStorage["bm.proposalFixedAmounts"]`, synced to current titles on refresh and cleared by `clearStudyStorage`.
+- Tokens: `--best-option(-foreground)`, `--delta-negative`, `--delta-positive`, which are fixed colours (as in BmApp). `DESIGN.md` records the mobile adaptations (176px sticky labels column, 168px columns, fixed row heights).
+- Evidence: `./init.sh` green (518 vitest). `e2e/proposals.spec.ts` 2/2. Full `npm run test:e2e` 66 passed, 1 flaky failure (`consumption-cups` reload mid-poll race) that passed on rerun, 12/12. Screenshots: `test-results/proposals-{table,table-dark,scrolled}-android-chromium.png`.
+- Note: reloading on `/proposals` restores the study but lands on `/current-conditions` (existing restore behaviour, out of scope). The E2E goes back through the button.
+- Open: manual BmApp side-by-side parity on the same CUPS (local QA) is not done.
+- Next: `feature-validator` for `proposals-table`.
 
 ### Validation: comparator-calculation (2026-10-19)
 

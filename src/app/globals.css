@@ -19,6 +19,10 @@
   --color-gate-locked-foreground: var(--gate-locked-foreground);
   --color-gate-unlocked: var(--gate-unlocked);
   --color-gate-unlocked-foreground: var(--gate-unlocked-foreground);
+  --color-best-option: var(--best-option);
+  --color-best-option-foreground: var(--best-option-foreground);
+  --color-delta-negative: var(--delta-negative);
+  --color-delta-positive: var(--delta-positive);
   --color-tertiary-foreground: var(--tertiary-foreground);
 
   --color-background: var(--background);
@@ -115,6 +119,11 @@
   --gate-locked-foreground: #991B1B;
   --gate-unlocked: #DCFCE7;
   --gate-unlocked-foreground: #166534;
+  /* BmApp ProposalsScreen / PriceProposalColumn (fixed colours, same in dark mode). */
+  --best-option: #DCFCE7;
+  --best-option-foreground: #166534;
+  --delta-negative: #D32F2F;
+  --delta-positive: #000000;
 }
 
 @media (prefers-color-scheme: dark) {

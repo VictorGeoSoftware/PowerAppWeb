@@ -117,3 +117,64 @@ describe("CurrentConditionsForm", () => {
     expect(gate.completed).toBe(0);
   });
 });
+
+describe("Copiar precios de una propuesta", () => {
+  const proposal = (title: string, power: number[], energy: number[], extraServices: number) => ({
+    proposalTitle: title,
+    powerTermItems: power,
+    annualPowerTermCost: 1,
+    consumedEnergyItems: energy,
+    annualEnergyCost: 1,
+    extraServices,
+    iva: 21,
+    electricalTax: 1,
+    totalAnnualPrice: 1,
+  });
+  const withProposals: ConsumptionSession = {
+    ...session,
+    proposals: [proposal("Fija A", [0.1, 0.2], [0.11, 0.12, 0.13], 0), proposal("Fija B", [0.3, 0.4], [0.21, 0.22, 0.23], 12.5)],
+  };
+  const renderWith = (s: ConsumptionSession) =>
+    render(
+      <FeeFirstGateProvider initialSession={s}>
+        <Probe />
+        <CurrentConditionsForm />
+      </FeeFirstGateProvider>,
+    );
+  const copyButton = () => screen.getByRole("button", { name: "Copiar precios de una propuesta" });
+
+  beforeEach(() => localStorage.clear());
+
+  it("opens the sheet with the first proposal preselected and copies the chosen one", async () => {
+    renderWith(withProposals);
+    type("Comercializadora actual", "Endesa");
+    fireEvent.click(copyButton());
+    expect(await screen.findByText("Copiar precios desde propuesta")).toBeInTheDocument();
+    expect(screen.getByText("Solo se muestran propuestas compatibles con tu tarifa.")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Fija A" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(screen.getByRole("radio", { name: "Fija B" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copiar" }));
+    expect(valueOf("Potencia P1")).toBe("0.3");
+    expect(valueOf("Potencia P2")).toBe("0.4");
+    expect(valueOf("Energía P3")).toBe("0.23");
+    expect(valueOf("Importe total anual")).toBe("12.50");
+    expect(valueOf("Comercializadora actual")).toBe("Endesa");
+    expect(screen.getByRole("status")).toHaveTextContent("Precios copiados desde Fija B");
+    expect(gate.stage).toBe("UNLOCKED");
+    expect(stored().powerTermPriceByPeriod.P1).toBe("0.3");
+  });
+
+  it("Cancelar leaves the conditions unchanged", async () => {
+    renderWith(withProposals);
+    fireEvent.click(copyButton());
+    fireEvent.click(await screen.findByRole("button", { name: "Cancelar" }));
+    expect(valueOf("Potencia P1")).toBe("");
+    expect(screen.getByRole("status")).toHaveTextContent("");
+  });
+
+  it("does nothing without proposals", () => {
+    renderWith(session);
+    fireEvent.click(copyButton());
+    expect(screen.queryByText("Copiar precios desde propuesta")).not.toBeInTheDocument();
+  });
+});

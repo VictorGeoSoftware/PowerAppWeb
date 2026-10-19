@@ -15,6 +15,15 @@ export const PRICE_PLACEHOLDER = "0.00000000";
 export const EXTRA_SERVICES_PLACEHOLDER = "0.00€";
 export const GO_TO_PROPOSALS = "Ir a las propuestas de precios";
 
+export const COPY_PRICES_ACTION = "Copiar precios de una propuesta";
+export const COPY_SHEET_TITLE = "Copiar precios desde propuesta";
+export const COPY_SHEET_SUBTITLE = "Selecciona una propuesta para copiar sus precios en las condiciones actuales.";
+export const COPY_SHEET_LIST_LABEL = "Propuestas disponibles";
+export const COPY_SHEET_HELPER = "Solo se muestran propuestas compatibles con tu tarifa.";
+export const COPY_BUTTON = "Copiar";
+export const CANCEL = "Cancelar";
+export const copySuccess = (title: string) => `Precios copiados desde ${title}`;
+
 export const GATE_LOCKED_TITLE = "Propuestas bloqueadas";
 export const GATE_LOCKED_MESSAGE = "Rellena todos los precios de potencia y energía para desbloquear el menú.";
 export const GATE_UNLOCKED_TITLE = "Navegación desbloqueada";

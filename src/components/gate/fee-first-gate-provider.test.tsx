@@ -108,3 +108,54 @@ describe("FeeFirstGateGuard", () => {
     expect(replace).toHaveBeenCalledWith("/current-conditions");
   });
 });
+
+describe("proposal fixed amounts", () => {
+  const proposal = (proposalTitle: string) => ({
+    proposalTitle,
+    powerTermItems: [0.1],
+    annualPowerTermCost: 1,
+    consumedEnergyItems: [0.2],
+    annualEnergyCost: 2,
+    extraServices: 0,
+    iva: 0.63,
+    electricalTax: 0.15,
+    totalAnnualPrice: 3.78,
+  });
+  const withProposals = (...titles: string[]) => ({ ...session, proposals: titles.map(proposal) });
+
+  beforeEach(() => {
+    replace.mockReset();
+    localStorage.clear();
+    pathname = "/current-conditions";
+  });
+
+  it("sets known titles only, persists and reloads", () => {
+    const { unmount } = renderGuarded(withProposals("A", "B"));
+    expect(gate.proposalFixedAmounts).toEqual({ A: "", B: "" });
+    act(() => gate.setProposalFixedAmount("A", "12,5"));
+    act(() => gate.setProposalFixedAmount("Z", "9"));
+    expect(gate.proposalFixedAmounts).toEqual({ A: "12,5", B: "" });
+    unmount();
+    renderGuarded(withProposals("A", "B"));
+    expect(gate.proposalFixedAmounts).toEqual({ A: "12,5", B: "" });
+  });
+
+  it("a refreshed report keeps current titles and drops missing ones", () => {
+    renderGuarded(withProposals("A", "B"));
+    act(() => gate.setProposalFixedAmount("A", "1"));
+    act(() => gate.setProposalFixedAmount("B", "2"));
+    act(() => gate.setSession(withProposals("B", "C")));
+    expect(gate.proposalFixedAmounts).toEqual({ B: "2", C: "" });
+    act(() => gate.setSession(withProposals("A", "B")));
+    expect(gate.proposalFixedAmounts).toEqual({ A: "", B: "2" });
+  });
+
+  it("startNewStudy clears them", () => {
+    renderGuarded(withProposals("A"));
+    act(() => gate.setProposalFixedAmount("A", "3"));
+    act(() => gate.startNewStudy());
+    act(() => gate.setSession(withProposals("A")));
+    expect(gate.proposalFixedAmounts).toEqual({ A: "" });
+    expect(localStorage.getItem("bm.proposalFixedAmounts")).toBeNull();
+  });
+});

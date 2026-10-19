@@ -26,6 +26,10 @@ const light: Record<string, string> = {
   "header-background": "#FFFFFF",
   "section-highlight": "#D0E7FF",
   "section-border": "#222222",
+  "best-option": "#DCFCE7",
+  "best-option-foreground": "#166534",
+  "delta-negative": "#D32F2F",
+  "delta-positive": "#000000",
 };
 const dark: Record<string, string> = {
   primary: "#FACC15",

@@ -64,6 +64,9 @@ Mirror BmApp visually; adapt to mobile web conventions. Spanish UI.
 - Android drawer → hamburger menu with same entries; sticky top bar.
 - Respect safe areas (`env(safe-area-inset-*)`) for iOS notch/home indicator in standalone mode.
 - Comparator table: horizontal scroll with sticky first column on phones.
+- Comparator (`src/components/proposals/`, port of BmApp `ComparatorProposalsView`). Deliberate mobile adaptations: the labels column is 176px instead of 400dp and sticks to the left (`sticky left-0 bg-background`) while the other columns scroll under it. The value columns are 168px instead of 200dp. Rows have fixed heights (`ROW_H` in `table-cells.tsx`) so the separate column stacks line up. Only the table scrolls sideways; the page never does. Fixed amounts survive a reload (BmApp keeps them in memory only).
+- Comparator colours are fixed and identical in dark mode (BmApp hard-codes them): `--best-option` / `--best-option-foreground` (#DCFCE7 / #166534, best-option card); `--delta-negative` #D32F2F (proposal dearer); `--delta-positive` #000000 (proposal cheaper). The black text on the dark-mode `section-highlight` blue has low contrast, but it matches BmApp.
+- Android Toasts become an inline `role="status"` `aria-live="polite"` pill fixed above the bottom safe area that hides after 2.5 s (first used by "Precios copiados desde …" on Current Conditions). No toast library. Android `ModalBottomSheet` becomes the shadcn `Sheet` with `side="bottom"`.
 
 ## Core Screens
 Login, Access pending, Fetch Consumption (CUPS / camera / PDF / photo), Current Conditions, Proposals/Comparator, Configuration.
