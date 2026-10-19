@@ -7,14 +7,28 @@
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: `collected-prices-submit` (`feature-spec`)
+- Current next ready feature: `comparator-calculation` (`feature-spec`)
 - `../BmBackend` is checked out on `feature/backend-bill-photo-extraction` (uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (current-conditions-form implemented: vitest 308, full E2E 124 passed)
+- Last verified at: 2026-10-19 (collected-prices-submit implemented: vitest 329, full E2E 65 passed on android-chromium)
 
 ## Session Log
+
+### Validation: collected-prices-submit (2026-10-19)
+
+- Verdict: accept. `./init.sh` green (329 vitest); `npm run test:e2e -- e2e/collected-prices.spec.ts` 4/4 (android-chromium). Full suite not rerun (recorded 65 passed for the same code).
+- Live QA check (iOS simulator on :9003, 3.0TD REPSOL bill PDF): backend `POST /api/v1/collected-prices -> 201`, `bm_qa.collected_prices` row id=1 (Iberdrola, 3.0TD, 13:21:49 UTC). An earlier 2.0TD study correctly sent nothing.
+- Note: QA test account device binding can block `e2e/auth.setup.ts` when the same account is signed in elsewhere.
+- Next: `feature-spec` for `comparator-calculation`.
+
+### Implementation: collected-prices-submit (2026-10-19)
+
+- Spec: `docs/specs/collected-prices-submit.md`. New `src/lib/conditions/collected-prices.ts` (port of BmApp TariffCanonicalForm / ShouldCollectPrices / BuildCollectedPrices / mapper); `onGoToProposals` fires it without awaiting, then navigates. Order mark → should → build → send. Once-per-job guard in sessionStorage `bm.collectedPricesJobIds`, cleared by `clearStudyStorage()` (new study and logout).
+- Evidence: `./init.sh` green (329 vitest); `e2e/collected-prices.spec.ts` + `current-conditions.spec.ts` 5/5; full `npm run test:e2e` 65 passed (android-chromium). E2E mocks the POST.
+- Open: live "QA DB shows entry" check not done (run a 3.0TD study on :9003 against local QA, confirm 201 / new `collected_prices` row).
+- Next: `feature-validator` for `collected-prices-submit`.
 
 ### Validation: current-conditions-form (2026-10-19)
 

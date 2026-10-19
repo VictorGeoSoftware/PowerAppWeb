@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   ACTIVE_JOB_KEY,
   clearStudyStorage,
+  COLLECTED_PRICES_JOBS_KEY,
   CONDITIONS_KEY,
   LAST_JOB_ID_KEY,
   loadActiveJob,
@@ -38,7 +39,9 @@ describe("gate storage", () => {
     saveActiveJob({ jobId: "a", source: "cups", cups: "C", attempts: 2 });
     localStorage.setItem(LAST_JOB_ID_KEY, "j");
     localStorage.setItem("bm.deviceId", "web-1");
+    sessionStorage.setItem(COLLECTED_PRICES_JOBS_KEY, '["j"]');
     clearStudyStorage();
+    expect(sessionStorage.getItem(COLLECTED_PRICES_JOBS_KEY)).toBeNull();
     expect(localStorage.getItem(CONDITIONS_KEY)).toBeNull();
     expect(localStorage.getItem(LAST_JOB_ID_KEY)).toBeNull();
     expect(sessionStorage.getItem(ACTIVE_JOB_KEY)).toBeNull();

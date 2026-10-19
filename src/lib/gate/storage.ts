@@ -6,6 +6,8 @@ export const CONDITIONS_KEY = "bm.currentConditions";
 export const LAST_JOB_ID_KEY = "bm.lastCompletedJobId";
 /** sessionStorage `{jobId, source, cups?, attempts}` of the job being polled; resumed on reload. */
 export const ACTIVE_JOB_KEY = "bm.activeJob";
+/** sessionStorage job ids whose Collected Prices were already sent (see conditions/collected-prices). */
+export const COLLECTED_PRICES_JOBS_KEY = "bm.collectedPricesJobIds";
 export const LAST_JOB_ID_EXPIRY_MS = 60 * 60 * 1000;
 
 export type JobSource = "cups" | "pdf" | "photo";
@@ -80,4 +82,9 @@ export function clearStudyStorage() {
   localStorage.removeItem(CONDITIONS_KEY);
   localStorage.removeItem(LAST_JOB_ID_KEY);
   saveActiveJob(null);
+  try {
+    sessionStorage.removeItem(COLLECTED_PRICES_JOBS_KEY);
+  } catch {
+    // storage unavailable
+  }
 }

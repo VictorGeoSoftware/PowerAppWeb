@@ -379,11 +379,16 @@
     "depends_on": [
       "current-conditions-form"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Proxy log/QA DB shows entry"
     ],
-    "evidence": [],
+    "evidence": [
+      "2026-10-19: ./init.sh green (lint, typecheck, vitest 329; new src/lib/conditions/collected-prices.test.ts covers tariff canonical form/2.0TD exclusion, parsing, build/null cases, once-per-job guard + clearStudyStorage reset, silent 500/network failures).",
+      "2026-10-19: new e2e/collected-prices.spec.ts (POST mocked, nothing written to QA): 3.0TD posts exact BmApp body once per job incl. after back + edit + reload; 2.0TD posts nothing; 500 stays on /proposals with no error. Full npm run test:e2e 65 passed (android-chromium).",
+      "2026-10-19: live check on local QA (iOS simulator, :9003, 3.0TD REPSOL bill PDF): backend log `POST /api/v1/collected-prices -> 201` + `AUDIT: Collected prices stored id=1 tariff=3.0TD company=iberdrola`; bm_qa.collected_prices row id=1 (Iberdrola, 3.0TD, P1..P6 = 1, extra_services 1, 13:21:49 UTC). Earlier 2.0TD study correctly sent nothing.",
+      "2026-10-19 validator: accept. ./init.sh green (vitest 329); npm run test:e2e -- e2e/collected-prices.spec.ts 4 passed (android-chromium); payload/order/exclusion/guard reviewed against spec; no security findings."
+    ],
     "notes": "Port CollectedPricesMapper. Hook: onGoToProposals in src/components/conditions/current-conditions-form.tsx."
   },
   {

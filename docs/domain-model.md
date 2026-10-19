@@ -8,7 +8,7 @@ Mirrors BmApp (`../BmApp/domain`). PowerAppWeb adds no new domain concepts.
 - Current Conditions
 - Proposal (from backend `price-table-results`), visibility configured per Broker
 - Comparison → Comparator PDF
-- Collected Prices (submitted to backend when Broker enters Current Conditions)
+- Collected Prices (supplier, tariff, power/energy prices, extra services; no CUPS/holder/address). Sent in the background when the Broker leaves Current Conditions for the proposals, once per consumption job; 2.0TD and blank tariffs are excluded; failures are silent.
 
 ## Relationships
 - A Broker has exactly one Bound Device (Android phone OR browser).

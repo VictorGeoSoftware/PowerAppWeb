@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useId } from "react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { collectPricesOnNavigate } from "@/lib/conditions/collected-prices";
 import { isValidDecimalInput } from "@/lib/conditions/decimal-input";
 import {
   ADDRESS_LABEL,
@@ -95,6 +97,7 @@ function DecimalInput({ id, ariaLabel, value, placeholder, onChange }: DecimalPr
 /** Port of BmApp `CurrentUserConditionsMainView`; every valid change is saved immediately. */
 export function CurrentConditionsForm() {
   const { session, conditions, setSession, setConditions, stage } = useFeeFirstGate();
+  const { user } = useAuth();
   const router = useRouter();
   if (!session) return null;
 
@@ -102,7 +105,7 @@ export function CurrentConditionsForm() {
   const update = (patch: Partial<CurrentConditions>) => setConditions({ ...current, ...patch });
 
   const onGoToProposals = () => {
-    // collected-prices-submit hooks here
+    if (user) collectPricesOnNavigate(user, session, conditions);
     router.push(ROUTES.proposals);
   };
 
