@@ -2,7 +2,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/proposals", useRouter: () => ({ replace: vi.fn() }) }));
-vi.mock("@/components/auth/auth-provider", () => ({ FullScreenSpinner: () => <div role="status" /> }));
+vi.mock("@/components/auth/auth-provider", () => ({
+  FullScreenSpinner: () => <div role="status" />,
+  useAuth: () => ({ user: null, reportApiError: vi.fn() }),
+}));
 
 import { FeeFirstGateProvider } from "@/components/gate/fee-first-gate-provider";
 import { calculateComparatorSummary } from "@/lib/comparator/calculate";

@@ -19,3 +19,10 @@ export const bestOptionMessage = (saving: string) =>
   `Ahorro estimado de ${saving}\u00A0€ al año frente a sus condiciones actuales.`;
 export const VISIBLE_PROPOSALS_TITLE = "Propuestas visibles";
 export const VISIBLE_PROPOSALS_HINT = "Usa el botón a la izquierda de la propuesta para ocultarla/mostrarla";
+export const CREATE_REPORT = "Crear informe";
+export const PDF_EXPORT_ERROR = "No se pudo generar el informe PDF.";
+export const PDF_READY = "Informe listo";
+export const SHARE_PDF = "Compartir PDF";
+export const DOWNLOAD_PDF = "Descargar";
+export const CLOSE_PDF_PANEL = "Cerrar";
+export const PDF_SHARE_TITLE = "Comparador de propuestas";

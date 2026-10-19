@@ -12,9 +12,23 @@
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (proposals-configuration accepted: vitest 546, E2E 70/70 android-chromium)
+- Last verified at: 2026-10-19 (comparator-pdf-share implemented: vitest 562, E2E 73/73 android-chromium)
 
 ## Session Log
+
+### Validation: comparator-pdf-share (2026-10-19)
+
+- Verdict: accept. `./init.sh` rerun green (562 vitest); `npm run test:e2e -- e2e/comparator-pdf.spec.ts e2e/proposals.spec.ts` 6/6 incl. setup (android-chromium). Full suite not rerun (recorded 73 passed). Request body checked against BmApp `buildComparatorReportModel` (placeholders, kWh trunc, labels, raw/blank fixed amount, null delta, visible-only); table and PDF share `useComparator()`; non-2xx/empty PDF → BmApp error text; 401/403 via `useBmFetch`.
+- Notes (non-blocking): real Android Chrome / iPhone Safari share (incl. "Informe listo" fallback) deferred to `qa-real-device-checks`; keep `docs/archive/opencode-agents/*` deletions out of this feature's commit.
+- Next: pick the next dependency-ready feature in `feature_list.json`.
+
+### Implementation: comparator-pdf-share (2026-10-19)
+
+- Spec: `docs/specs/comparator-pdf-share.md`. New `src/lib/pdf/comparator-report.ts` (BmApp `buildComparatorReportModel` + `ComparatorReportPdfMapper`, `comparatorPdfFileName`) and `src/lib/pdf/share-file.ts` (Web Share files → AbortError cancel / NotAllowedError needs-gesture → download fallback). `useComparator()` now feeds both the table and the PDF. `create-report-action.tsx`: "Crear informe" top-bar button (spinner, in-flight guard), "Informe listo" panel, error alert "No se pudo generar el informe PDF.".
+- Evidence: `./init.sh` green (562 vitest); `e2e/comparator-pdf.spec.ts` 3/3 + setup; full `npm run test:e2e` 73 passed (android-chromium). Live local QA backend returned a 167 KB PDF for the request body; opened and checked. Screenshot `test-results/comparator-pdf-android-chromium.png`.
+- Open: real-device share on Android Chrome and iPhone Safari (including whether iOS needs the "Informe listo" fresh tap) → `qa-real-device-checks`.
+- Docs: `docs/domain-model.md`, `docs/technical-discovery.md`, `DESIGN.md`.
+- Next: `feature-validator` for `comparator-pdf-share`.
 
 ### Validation: proposals-configuration (2026-10-19)
 

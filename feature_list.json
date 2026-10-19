@@ -486,12 +486,19 @@
     "depends_on": [
       "proposals-table"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Share on iPhone and Android; download on desktop"
     ],
-    "evidence": [],
-    "notes": "Port ComparatorReportPdfMapper."
+    "evidence": [
+      "Validator accept (2026-10-19): ./init.sh rerun green (562 vitest); npm run test:e2e -- e2e/comparator-pdf.spec.ts e2e/proposals.spec.ts 6/6 incl. setup (android-chromium); request body parity, shared useComparator, share/cancel/needs-gesture/download paths reviewed",
+      "./init.sh green (562 vitest): comparator-report builder (placeholders, kWh trunc, labels, empty customer column, raw/blank fixed amount, null delta, visible-only), file name, share-file (shared/cancelled/needs-gesture/download), Crear informe RTL (visibility, double tap = 1 request, spinner, 500 and empty PDF alert, ready panel share/download)",
+      "npm run test:e2e:quick -- e2e/comparator-pdf.spec.ts: 4 passed incl. setup (android-chromium): request body + Accept header, stubbed navigator.share gets one comparador_*.pdf, download fallback, 500 error, action hidden on /current-conditions, /configuration and with all proposals hidden",
+      "Full npm run test:e2e: 73 passed (android-chromium), 2026-10-19",
+      "Live local QA backend (localhost:9081): POST /api/v1/reports/comparator-pdf with the E2E-shaped body -> 200 application/pdf 167 KB; PDF opened and shows the expected holder/CUPS placeholders, columns, 12,5 € fixed amount, totals and AHORRO ANUAL 289.73 € 29% / -72.77 € -7%",
+      "Mobile screenshot: test-results/comparator-pdf-android-chromium.png (390px, reviewed)"
+    ],
+    "notes": "Spec: docs/specs/comparator-pdf-share.md. Table and PDF share useComparator(). Real Android Chrome / iPhone Safari share-sheet checks (incl. the NotAllowedError 'Informe listo' fallback) deferred to qa-real-device-checks. Top-bar label uses text-foreground (BmApp yellow unreadable on light background)."
   },
   {
     "id": "premium-comprehensive-pdf",
