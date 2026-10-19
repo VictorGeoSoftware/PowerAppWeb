@@ -597,12 +597,19 @@
     "depends_on": [
       "web-push-registration"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Trigger from BmWeb; receive on installed iPhone and Android Chrome"
     ],
-    "evidence": [],
-    "notes": "Final stage."
+    "evidence": [
+      "2026-10-19 feature-validator: accept. ./init.sh rerun green (647 vitest); BmBackend ./gradlew test rerun exit 0; npm run test:e2e -- e2e/push-price-updates.spec.ts e2e/push-registration.spec.ts 6/6 incl. setup (android-chromium); backend reviewed (composite isolation, data-only multicast, chunks 500, prune codes, masked logs); full suite and live FCM not rerun (recorded 84 passed, live sent=1/pruned=1)",
+      "2026-10-19 BmBackend feature/web-push-price-updates from qa (uncommitted): ./gradlew test 180/180 (new WebPushPriceUpdatesNotifierTest 5, CompositePriceUpdatesNotifierTest 2, WebPushTokensRepositoryTest +1 Postgres); local QA rebuilt (bm-local-qa rebuild-backend, healthy)",
+      "2026-10-19 ./init.sh green (647 vitest, incl. src/lib/pwa/sw.test.ts 8 and 4 new provider tests); e2e/push-price-updates.spec.ts 2/2 + setup; full npm run test:e2e 84 passed (android-chromium)",
+      "2026-10-19 live local QA (temporary headed persistent-profile Chromium spec, removed): real FCM token row (android, eI1eMaFrN1aS…); PATCH price-table-tax-settings (unchanged values) → after 5 s debounce Android topic sent unchanged and web multicast sent=1; /sw.js received {data:{type:price_updates,payload},priority:high,from,fcmMessageId}; notification 'Tarifas actualizadas' tag price_updates data.url /proposals shown; open /proposals refreshed (consumption-report-refresh) right after publish; logout removed the row",
+      "2026-10-19 live prune: fake token row → failed=1 pruned=1 prunedTokens=[fake-e2e-tok…], row gone; with no rows no web send logged",
+      "Trigger from BmWeb on installed iPhone and Android Chrome deferred to qa-real-device-checks (docs/after-qa-release-tasks.md §6)"
+    ],
+    "notes": "Final stage. Spec: docs/specs/web-push-price-updates.md. Accepted by feature-validator 2026-10-19. Backend on feature/web-push-price-updates (from qa), uncommitted."
   },
   {
     "id": "device-binding-hardening",

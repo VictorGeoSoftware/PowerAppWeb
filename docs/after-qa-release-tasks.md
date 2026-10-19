@@ -11,7 +11,7 @@ Devices: **iPhone** = Safari and Home Screen (standalone) once `pwa-installable`
 - [ ] BmBackend `qa` with bill photo extraction (merged, #64) deployed. Without it, photo uploads return 400 ("No se pudo iniciar el estudio") (`consumption-by-photo`).
 - [ ] QA web origin added to the Firebase authorized domains and to the Google Cloud API-key HTTP referrers (`login-google`, `docs/technical-discovery.md`).
 - [ ] Live proxy call from outside the corporate network: `Bearer x` returns the backend's 401 (`backend-proxy`).
-- [ ] BmBackend `qa` with `V14__web_push_tokens` (`web-push-registration`) deployed; `NEXT_PUBLIC_FIREBASE_VAPID_KEY` set in the QA web deployment env (empty = no notifications UI).
+- [ ] BmBackend `qa` with `V14__web_push_tokens` (`web-push-registration`) and the web multicast sender (`web-push-price-updates`) deployed; `NEXT_PUBLIC_FIREBASE_VAPID_KEY` set in the QA web deployment env (empty = no notifications UI).
 - [ ] Docling time on the real QA VPS stays within the ~3 min poll budget, for a 2.0TD and a 3.0TD bill PDF (`consumption-by-pdf`; the local baseline is 54 s / 37 s).
 - [ ] CUPS job end to end with real n8n/Datadis on a real customer CUPS (`consumption-by-cups-manual` Scenario 8).
 
@@ -46,6 +46,6 @@ Devices: **iPhone** = Safari and Home Screen (standalone) once `pwa-installable`
 
 - [ ] `pwa-installable`: install on Android Chrome (Chrome prompt or menu "Instalar aplicación") and iPhone Safari (banner/menu hint → Share → Añadir a pantalla de inicio); check the icon (maskable on Android, opaque on iOS), the standalone launch at `/` with the session kept, the status bar colour, and that no install entry or banner shows once installed.
 - [ ] `web-push-registration`: on Android Chrome and on an installed iPhone PWA (iOS 16.4+), "Activar notificaciones" shows the system prompt, the pill "Notificaciones activadas" appears, and a row with the right `platform` is in QA `web_push_tokens`; logout removes it. In an iPhone Safari tab the entry opens the install sheet with "En iPhone, las notificaciones requieren instalar la app" and never prompts.
-- [ ] `web-push-price-updates`: notification received on Android Chrome and on the installed iPhone PWA.
+- [ ] `web-push-price-updates`: trigger a price change from BmWeb (e.g. save tax settings unchanged); within ~5 s the notification "Tarifas actualizadas" (brand icon) arrives on Android Chrome and on the installed iPhone PWA, with the app closed and in the background. Tapping it opens/focuses PowerApp on Propuestas (or the gate redirect) and the study refreshes. Several changes in a row leave one notification (tag). After logout no notification arrives.
 - [ ] `device-binding-hardening`: the second-device rejection, phone vs browser.
 - [ ] `analytics-events` (proposed, not yet in `feature_list.json`; depends on `analytics-screen-tracking`): track the BmApp action events with the same names, params and failure reasons (`login_*`, `cups_scan_*`, `consumption_fetch_*`, `proposals_generated`, `proposal_pdf_*`, `proposal_visibility_changed`; see BmApp `AnalyticsEvent.kt` / `AnalyticsFailureReason.kt`), using `track()` from `src/lib/analytics/tracker.ts`. Check them in Firebase DebugView from a real iPhone and Android next to the BmApp events.

@@ -16,6 +16,7 @@ import {
   saveActiveJob,
   saveLastCompletedJobId,
 } from "@/lib/gate/storage";
+import { PRICE_UPDATES_MESSAGE, onServiceWorkerMessage } from "@/lib/pwa/sw-messages";
 
 export type StudyState =
   | { kind: "idle" }
@@ -36,8 +37,8 @@ type StudyContextValue = {
   startPhoto: (file: File) => void;
   /** Starts a new job with the failed study's input; no-op unless `canRetry`. */
   retry: () => void;
-  /** Silent, throttled refresh of the published study's proposals and taxes. */
-  refreshStudy: () => void;
+  /** Silent refresh of the published study's proposals and taxes; throttled unless `force`. */
+  refreshStudy: (options?: { force?: boolean }) => void;
 };
 
 export const REFRESH_THROTTLE_MS = 60_000;
@@ -152,12 +153,18 @@ export function ConsumptionStudyProvider({ children, sleep = visibleSleep, refre
     [publish],
   );
 
-  const refreshStudy = useCallback(() => {
-    const jobId = sessionJobId.current;
-    if (!jobId || controller.current || refreshCtrl.current) return;
-    if (Date.now() - lastRefreshAt.current < refreshThrottleMs) return;
-    void doRefresh(jobId);
-  }, [doRefresh, refreshThrottleMs]);
+  /** `force` skips only the throttle (price-update push, BmApp parity: the backend already debounces). */
+  const refreshStudy = useCallback(
+    (options?: { force?: boolean }) => {
+      const jobId = sessionJobId.current;
+      if (!jobId || controller.current || refreshCtrl.current) return;
+      if (!options?.force && Date.now() - lastRefreshAt.current < refreshThrottleMs) return;
+      void doRefresh(jobId);
+    },
+    [doRefresh, refreshThrottleMs],
+  );
+
+  useEffect(() => onServiceWorkerMessage(PRICE_UPDATES_MESSAGE, () => refreshStudy({ force: true })), [refreshStudy]);
 
   const run = useCallback(
     async (input: RunInput) => {

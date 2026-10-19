@@ -8,15 +8,27 @@
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
 - Current next ready feature: next dependency-ready feature in `feature_list.json`
-- `../BmBackend` is checked out on `feature/web-push-registration` (from `qa`, which already includes bill photo extraction #64; push changes uncommitted; local QA builds this checkout)
+- `../BmBackend` is checked out on `feature/web-push-price-updates` (from `qa`, which includes web-push-registration #65; changes uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
 - Current blocker: none
-- Last verified at: 2026-10-19 (web-push-registration implemented: vitest 635, push E2E 4/4, full E2E 82 passed, live FCM token row in local QA DB)
-- BmBackend `feature/web-push-registration` has uncommitted `web-push-registration` changes (V14 `web_push_tokens`, `push/web-tokens` routes); local QA runs them
+- Last verified at: 2026-10-19 (web-push-price-updates implemented: gradle 180/180, vitest 647, full E2E 84 passed, live real-FCM push → notification + refresh)
+- BmBackend `feature/web-push-price-updates` has uncommitted changes (web multicast sender, composite notifier, token pruning); local QA runs them
 
 ## Session Log
 
+### Implementation: web-push-price-updates (2026-10-19)
+
+- Spec: `docs/specs/web-push-price-updates.md` (Implementation Notes added). BmBackend (`feature/web-push-price-updates` from `qa`, uncommitted): `WebPushSender` + `FirebaseWebPushSender` (data-only `sendEachForMulticast`, `Urgency: high`, `TTL: 86400`), `WebPushPriceUpdatesNotifier` (all tokens, chunks of 500, prunes `UNREGISTERED`/`SENDER_ID_MISMATCH`/`INVALID_ARGUMENT`, masked logs, never throws), `CompositePriceUpdatesNotifier` (Android topic + web, isolated), wiring in `Application.kt` behind the existing debouncer, port `allTokens`/`deleteByTokens`, `docs/WEB_PUSH.md` "Delivery". Web: `public/sw.js` `push` (always shows a notification; posts `bm:price_updates`) and `notificationclick` (focus+navigate or open); `src/lib/pwa/sw-messages.ts`; `ConsumptionStudyProvider.refreshStudy({ force })` subscribed to the SW message; strings in `messages.ts`.
+- Evidence: `./gradlew test` 180/180; local QA rebuilt. `./init.sh` green (647 vitest: `sw.test.ts` 8, provider +4). `e2e/push-price-updates.spec.ts` 2/2 (synthetic message + CDP `deliverPushMessage` to the real `/sw.js`); full `npm run test:e2e` 84 passed (android-chromium). Live (temporary headed persistent-profile spec, removed): real FCM token → tax-settings PATCH → Android topic unchanged + web `sent=1` → raw payload `{data:{type,payload},priority,from,fcmMessageId}` → notification "Tarifas actualizadas" shown → open `/proposals` refreshed without throttle → logout removed the row. Fake token pruned (`pruned=1`, masked); no tokens → no web send.
+- Open: real iPhone/Android delivery from BmWeb → `qa-real-device-checks` (`docs/after-qa-release-tasks.md` §6); QA deploy needs this BmBackend change. The live trigger also pinged Android QA devices (topic).
+- Docs: `docs/technical-discovery.md`, `docs/domain-model.md`, `docs/risks-and-open-questions.md`, `DESIGN.md`, `docs/after-qa-release-tasks.md`, BmBackend `docs/WEB_PUSH.md`.
+- Next: `feature-validator` for `web-push-price-updates`.
+
+### Validation: web-push-price-updates (2026-10-19)
+
+- Verdict: accept. `./init.sh` rerun green (647 vitest); BmBackend `./gradlew test` rerun exit 0; `npm run test:e2e -- e2e/push-price-updates.spec.ts e2e/push-registration.spec.ts` 6/6 incl. setup (android-chromium). Full suite and live FCM not rerun (recorded 84 passed, live `sent=1`, `pruned=1`). Android topic unchanged; web multicast data-only, chunked, pruned on the spec codes; every push shows a notification; forced refresh keeps the no-study/running-job/in-flight guards; no force-logout push, no topics, no BmApp change.
+- Notes: pruning on `INVALID_ARGUMENT` could wipe all tokens if a message itself is invalid (recorded in risks). BmBackend change must be merged to `qa` before QA deploy. Real-device delivery → `qa-real-device-checks`.
 ### Validation: web-push-registration (2026-10-19)
 
 - Verdict: accept. `./init.sh` rerun green (635 vitest); `npm run test:e2e -- e2e/push-registration.spec.ts e2e/app-shell.spec.ts` 8/8 incl. setup (android-chromium). Full suite, BmBackend gradle and live psql not rerun (recorded 82 passed, 172/172, token row). Permission only on tap; refresh only on token/uid change; DELETE before `auth/logout`, forced logout local only; backend granted-only, owner-checked delete, grant wipe in the same transaction, masked token logs; no topic subscription/sending.

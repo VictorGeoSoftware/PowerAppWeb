@@ -20,3 +20,8 @@ export const PUSH_CARD_ACTION = "Activar";
 export const PUSH_CARD_CLOSE = "Cerrar aviso de notificaciones";
 export const PUSH_ENABLED = "Notificaciones activadas";
 export const PUSH_ERROR = "No se pudieron activar las notificaciones.";
+
+/** Copied into `public/sw.js` (it can't import); `sw.test.ts` keeps them equal. */
+export const PRICE_UPDATES_TITLE = "Tarifas actualizadas";
+export const PRICE_UPDATES_BODY = "Hay nuevos precios. Toca para ver tus propuestas.";
+export const PUSH_FALLBACK_TITLE = "PowerApp";

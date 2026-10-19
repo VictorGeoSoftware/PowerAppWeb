@@ -421,6 +421,62 @@ describe("ConsumptionStudyProvider + /fetch-consumption", () => {
     expect(gate.session).toBeNull();
     expect(loadLastCompletedJobId()).toBeNull();
   });
+
+  describe("price-update message from the service worker", () => {
+    let sw: EventTarget;
+    beforeEach(() => {
+      sw = new EventTarget();
+      Object.defineProperty(navigator, "serviceWorker", { value: sw, configurable: true });
+    });
+    afterEach(() => {
+      delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+    });
+    const pushMessage = (type = "bm:price_updates") =>
+      act(() => void sw.dispatchEvent(new MessageEvent("message", { data: { type } })));
+
+    it("refreshes inside the throttle window", async () => {
+      saveLastCompletedJobId("job-1");
+      const calls = stubBackend();
+      renderPage();
+      await waitFor(() => expect(gate.session?.iva).toBe(10));
+      const refreshes = () => calls.filter((c) => c.includes("refresh")).length;
+      expect(refreshes()).toBe(1);
+      pushMessage("other");
+      expect(refreshes()).toBe(1);
+      pushMessage();
+      await waitFor(() => expect(refreshes()).toBe(2));
+    });
+
+    it("does nothing without a study", async () => {
+      stubBackend();
+      renderPage();
+      pushMessage();
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it("does nothing while a job is running", async () => {
+      const calls = stubBackend({ statuses: ["PENDING"] });
+      renderPage(() => new Promise(() => {}));
+      await userEvent.type(screen.getByLabelText("Introducir código CUPS"), "ES0031607515707001RC");
+      await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+      await waitFor(() => expect(loadActiveJob()).not.toBeNull());
+      pushMessage();
+      expect(calls.some((c) => c.includes("refresh"))).toBe(false);
+    });
+
+    it("does not duplicate an in-flight refresh", async () => {
+      saveLastCompletedJobId("job-1");
+      const releases: (() => void)[] = [];
+      const calls = stubBackend({ holdRefresh: (r) => releases.push(r) });
+      renderPage();
+      await waitFor(() => expect(releases).toHaveLength(1));
+      pushMessage();
+      pushMessage();
+      expect(calls.filter((c) => c.includes("refresh"))).toHaveLength(1);
+      await act(async () => releases[0]());
+      await waitFor(() => expect(gate.session?.iva).toBe(10));
+    });
+  });
 });
 
 describe("visibleSleep", () => {
