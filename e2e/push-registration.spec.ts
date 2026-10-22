@@ -7,6 +7,9 @@ import { expect, openSignedIn, test, useSignedInSession } from "./fixtures";
  */
 useSignedInSession();
 
+// An iPhone Safari tab never prompts: the entry opens the install sheet (unit-tested; checked on a real iPhone).
+test.skip(({ browserName }) => browserName === "webkit", "Android permission flow");
+
 const TOKEN = "e2e-fcm-token-0123456789";
 
 async function recordPushCalls(page: Page) {

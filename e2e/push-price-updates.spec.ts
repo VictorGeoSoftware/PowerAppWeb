@@ -100,7 +100,8 @@ test("a bm:price_updates message refreshes the study right after publishing (no 
   expect(refreshes).toHaveLength(2);
 });
 
-test("a push delivered to /sw.js (CDP) refreshes the open page", async ({ page, context }) => {
+test("a push delivered to /sw.js (CDP) refreshes the open page", async ({ page, context, browserName }) => {
+  test.skip(browserName !== "chromium", "CDP is Chromium only");
   const refreshes = await openProposals(page);
   await context.grantPermissions(["notifications"]);
   const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);

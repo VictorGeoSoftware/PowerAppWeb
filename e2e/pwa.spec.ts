@@ -4,7 +4,10 @@ const IPHONE_UA =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
 
 test.describe("installability (public)", () => {
-  test("manifest, icons, theme color and service worker", async ({ page, request }) => {
+  // The iphone-webkit project blocks service workers (see playwright.config.ts); this test checks /sw.js itself.
+  test.use({ serviceWorkers: "allow" });
+
+  test("manifest, icons, theme color and service worker", async ({ page, request, browserName }) => {
     await page.goto("/login");
 
     const href = await page.locator('link[rel="manifest"]').getAttribute("href");
@@ -38,7 +41,8 @@ test.describe("installability (public)", () => {
     expect(sw.headers()["cache-control"]).toBe("no-cache");
     expect(await sw.text()).not.toContain('"fetch"');
 
-    // Same check as DevTools → Application → Manifest (Lighthouse 12 has no PWA audit).
+    // Same check as DevTools → Application → Manifest (Lighthouse 12 has no PWA audit). Chromium only (CDP).
+    if (browserName !== "chromium") return;
     const cdp = await page.context().newCDPSession(page);
     const { installabilityErrors } = await cdp.send("Page.getInstallabilityErrors");
     expect(installabilityErrors).toEqual([]);
@@ -48,7 +52,8 @@ test.describe("installability (public)", () => {
 test.describe("install entry (signed in)", () => {
   useSignedInSession();
 
-  test("Android: a captured beforeinstallprompt shows the menu entry", async ({ page }) => {
+  test("Android: a captured beforeinstallprompt shows the menu entry", async ({ page, browserName }) => {
+    test.skip(browserName === "webkit", "an iPhone shows the iOS install entry instead");
     await openSignedIn(page);
     await page.evaluate(() => {
       const e = Object.assign(new Event("beforeinstallprompt", { cancelable: true }), {

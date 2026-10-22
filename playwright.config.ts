@@ -5,8 +5,10 @@ import { defineConfig, devices } from "@playwright/test";
 // 9004 is an allowed referrer of the QA Firebase API key. Run via scripts/e2e.sh.
 const PORT = 9004;
 
+// WebKit sends requests of a service-worker-controlled page past page.route() mocks,
+// so the iPhone project blocks the SW (specs that test /sw.js opt back in).
 const browsers = [
-  { name: "iphone-webkit", device: devices["iPhone 13"] },
+  { name: "iphone-webkit", device: { ...devices["iPhone 13"], serviceWorkers: "block" as const } },
   { name: "android-chromium", device: devices["Pixel 7"] },
 ];
 

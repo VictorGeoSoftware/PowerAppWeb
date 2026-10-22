@@ -19,33 +19,33 @@ Devices: **iPhone** = Safari and Home Screen (standalone) once `pwa-installable`
 
 - [x] Google sign-in completes on iPhone and Android (`login-google`). Check that the redirect flow works where Safari blocks the popup. — done 2026-10-22 (power-app-web.vercel.app) iOS needed the auth handler served from the app origin: `next.config.ts` rewrites `/__/auth/*` and `/__/firebase/*` to Firebase, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=power-app-web.vercel.app` (Vercel, type Config), redirect URI `https://power-app-web.vercel.app/__/auth/handler` on the OAuth web client.
 - [x] iPhone with a notch, portrait and landscape, in Safari and standalone: the top bar sits below the status bar, and the menu and content are not hidden by the notch or home indicator (`app-shell-navigation` Scenario 7). — done 2026-10-22 (power-app-web.vercel.app).
-- [ ] `iphone-webkit` E2E (`npm run test:e2e:all`) on a Mac running macOS 13 or later. This Mac is on macOS 12, where Playwright WebKit is frozen.
+- [x] `iphone-webkit` E2E (`npm run test:e2e:all`) on a Mac running macOS 13 or later. This Mac is now on macOS 26.6 (WebKit installed 2026-10-22); needs the local QA stack running (`../BmInfra/bm-local-qa start`). — done 2026-10-22: `npm run test:e2e:all` 163 passed, 5 skipped (iPhone project blocks service workers; Android-only/CDP tests skipped on WebKit).
 
 ## 3. Consumption study
 
-- [ ] iOS Safari CUPS camera OCR spike, with the same rules as the Android gate: at least 5 real paper bills from at least 2 retailers, including one 22-character CUPS; at least 80% detected within 10 s; zero false-valid codes. If it fails, reopen `cups-camera-ocr` (`cups-camera-ocr`).
-- [ ] iPhone: the Files picker accepts a bill PDF even when the provider reports an empty MIME type (`consumption-by-pdf`).
-- [ ] iPhone: camera photo of a paper bill reaches the report, and the upload is JPEG, not HEIC, in the network log (`consumption-by-photo`).
-- [ ] Silent refresh returns 200 against a real completed job after a reload, the 60 s tab-return refresh works in a real browser, and "Reintentar" works after a backend restart (`consumption-job-refresh-errors`).
-- [ ] iOS keyboard: no autocorrect or capitalisation on the CUPS field (`consumption-by-cups-manual`).
+- [x] iOS Safari CUPS camera OCR spike, with the same rules as the Android gate: at least 5 real paper bills from at least 2 retailers, including one 22-character CUPS; at least 80% detected within 10 s; zero false-valid codes. If it fails, reopen `cups-camera-ocr` (`cups-camera-ocr`). — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
+- [x] iPhone: the Files picker accepts a bill PDF even when the provider reports an empty MIME type (`consumption-by-pdf`). — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
+- [x] iPhone: camera photo of a paper bill reaches the report, and the upload is JPEG, not HEIC, in the network log (`consumption-by-photo`). — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
+- [x] Silent refresh returns 200 against a real completed job after a reload, the 60 s tab-return refresh works in a real browser, and "Reintentar" works after a backend restart (`consumption-job-refresh-errors`). — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
+- [x] iOS keyboard: no autocorrect or capitalisation on the CUPS field (`consumption-by-cups-manual`). — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
 
 ## 4. Current conditions and comparator
 
-- [ ] iPhone: price fields open the decimal keypad and accept a comma (`current-conditions-form`).
-- [ ] Side-by-side parity with BmApp on the same CUPS and prices: the customer total, each proposal total, each difference and percentage, and the "Mejor opción" card (`proposals-table`, `comparator-calculation`).
-- [ ] Same study in BmApp and on the web: the same proposals are auto-hidden as uncompetitive (`proposals-configuration`).
-- [ ] The copy-prices sheet fits on a small iPhone, with Cancelar and Copiar visible (`conditions-copy-from-proposal`).
+- [x] iPhone: price fields open the decimal keypad and accept a comma (`current-conditions-form`). — done 2026-10-22, passed (power-app-web.vercel.app).
+- [x] Side-by-side parity with BmApp on the same CUPS and prices: the customer total, each proposal total, each difference and percentage, and the "Mejor opción" card (`proposals-table`, `comparator-calculation`). — done 2026-10-22, passed (power-app-web.vercel.app).
+- [x] Same study in BmApp and on the web: the same proposals are auto-hidden as uncompetitive (`proposals-configuration`). — done 2026-10-22, passed (power-app-web.vercel.app).
+- [x] The copy-prices sheet fits on a small iPhone, with Cancelar and Copiar visible (`conditions-copy-from-proposal`). — done 2026-10-22, passed (power-app-web.vercel.app).
 
 ## 5. Comparator PDF
 
-- [ ] Android Chrome: "Crear informe" opens the native share sheet with `comparador_*.pdf`, and sharing to WhatsApp or mail works (`comparator-pdf-share`).
-- [ ] iPhone Safari: same check. If Safari blocks the share after the network wait, the "Informe listo" panel's "Compartir PDF" must work on the second tap (`comparator-pdf-share` Scenario 4).
-- [ ] Desktop: the PDF downloads and opens with the same values as the table (`comparator-pdf-share`).
+- [x] Android Chrome: "Crear informe" opens the native share sheet with `comparador_*.pdf`, and sharing to WhatsApp or mail works (`comparator-pdf-share`). — done 2026-10-22, passed (power-app-web.vercel.app).
+- [x] iPhone Safari: same check. If Safari blocks the share after the network wait, the "Informe listo" panel's "Compartir PDF" must work on the second tap (`comparator-pdf-share` Scenario 4). — done 2026-10-22, passed (power-app-web.vercel.app).
+- [x] Desktop: the PDF downloads and opens with the same values as the table (`comparator-pdf-share`). — done 2026-10-22, passed (power-app-web.vercel.app).
 
 ## 6. Later features (add as they are specced)
 
-- [ ] `pwa-installable`: install on Android Chrome (Chrome prompt or menu "Instalar aplicación") and iPhone Safari (banner/menu hint → Share → Añadir a pantalla de inicio); check the icon (maskable on Android, opaque on iOS), the standalone launch at `/` with the session kept, the status bar colour, and that no install entry or banner shows once installed.
-- [ ] `web-push-registration`: on Android Chrome and on an installed iPhone PWA (iOS 16.4+), "Activar notificaciones" shows the system prompt, the pill "Notificaciones activadas" appears, and a row with the right `platform` is in QA `web_push_tokens`; logout removes it. In an iPhone Safari tab the entry opens the install sheet with "En iPhone, las notificaciones requieren instalar la app" and never prompts.
-- [ ] `web-push-price-updates`: trigger a price change from BmWeb (e.g. save tax settings unchanged); within ~5 s the notification "Tarifas actualizadas" (brand icon) arrives on Android Chrome and on the installed iPhone PWA, with the app closed and in the background. Tapping it opens/focuses PowerApp on Propuestas (or the gate redirect) and the study refreshes. Several changes in a row leave one notification (tag). After logout no notification arrives.
+- [x] `pwa-installable`: install on Android Chrome (Chrome prompt or menu "Instalar aplicación") and iPhone Safari (banner/menu hint → Share → Añadir a pantalla de inicio); check the icon (maskable on Android, opaque on iOS), the standalone launch at `/` with the session kept, the status bar colour, and that no install entry or banner shows once installed. — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
+- [x] `web-push-registration`: on Android Chrome and on an installed iPhone PWA (iOS 16.4+), "Activar notificaciones" shows the system prompt, the pill "Notificaciones activadas" appears, and a row with the right `platform` is in QA `web_push_tokens`; logout removes it. In an iPhone Safari tab the entry opens the install sheet with "En iPhone, las notificaciones requieren instalar la app" and never prompts. — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
+- [x] `web-push-price-updates`: trigger a price change from BmWeb (e.g. save tax settings unchanged); within ~5 s the notification "Tarifas actualizadas" (brand icon) arrives on Android Chrome and on the installed iPhone PWA, with the app closed and in the background. Tapping it opens/focuses PowerApp on Propuestas (or the gate redirect) and the study refreshes. Several changes in a row leave one notification (tag). After logout no notification arrives. — done 2026-10-22, passed on Android Chrome and iPhone (power-app-web.vercel.app).
 - [ ] `device-binding-hardening`: the second-device rejection, phone vs browser.
 - [ ] `analytics-events` (proposed, not yet in `feature_list.json`; depends on `analytics-screen-tracking`): track the BmApp action events with the same names, params and failure reasons (`login_*`, `cups_scan_*`, `consumption_fetch_*`, `proposals_generated`, `proposal_pdf_*`, `proposal_visibility_changed`; see BmApp `AnalyticsEvent.kt` / `AnalyticsFailureReason.kt`), using `track()` from `src/lib/analytics/tracker.ts`. Check them in Firebase DebugView from a real iPhone and Android next to the BmApp events.

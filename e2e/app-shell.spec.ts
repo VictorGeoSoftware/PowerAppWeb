@@ -20,7 +20,9 @@ test.describe("signed in", () => {
 
   const menuButton = (page: Page) => page.getByRole("button", { name: "Abrir menú" });
 
-  test("menu shows BmApp entries; at the consumption step only 'Nuevo estudio' is enabled", async ({ page }) => {
+  test("menu shows BmApp entries; at the consumption step only 'Nuevo estudio' is enabled", async ({ page, browserName }) => {
+    // An iPhone Safari tab adds the push row (opens the install sheet) and the iOS install hint.
+    const iosRows = browserName === "webkit" ? ["Activar notificaciones", "Instalar aplicación"] : [];
     // The push row depends on the browser (headless Chromium reports "denied"); covered by push-registration.spec.
     await page.addInitScript(() => delete (window as { PushManager?: unknown }).PushManager);
     await openSignedIn(page);
@@ -31,6 +33,7 @@ test.describe("signed in", () => {
     await expect(nav.locator("a, button, span[aria-disabled]")).toHaveText([
       "Nuevo estudio de propuestas",
       ...ENTRIES.filter((e) => e.path !== "/fetch-consumption").map((e) => e.label),
+      ...iosRows,
       "Cerrar sesión",
     ]);
     // Fee-First Gate: no Consumption Report yet -> three padlocks (sections covered by component tests).
