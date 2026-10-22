@@ -101,7 +101,7 @@ function DecimalInput({ id, ariaLabel, value, placeholder, onChange }: DecimalPr
 
 /** Port of BmApp `CurrentUserConditionsMainView`; every valid change is saved immediately. */
 export function CurrentConditionsForm() {
-  const { session, conditions, setSession, setConditions, stage } = useFeeFirstGate();
+  const { session, conditions, setCustomerData, setConditions, stage } = useFeeFirstGate();
   const { user } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setSheetOpen] = useState(false);
@@ -146,7 +146,8 @@ export function CurrentConditionsForm() {
               id={id}
               value={session.holderName ?? ""}
               placeholder={CUSTOMER_DATA_PLACEHOLDER}
-              onChange={(e) => setSession({ ...session, holderName: e.target.value })}
+              autoComplete="off"
+              onChange={(e) => setCustomerData({ holderName: e.target.value })}
               className={INPUT}
             />
           )}
@@ -157,7 +158,8 @@ export function CurrentConditionsForm() {
               id={id}
               value={session.address ?? ""}
               placeholder={CUSTOMER_DATA_PLACEHOLDER}
-              onChange={(e) => setSession({ ...session, address: e.target.value })}
+              autoComplete="off"
+              onChange={(e) => setCustomerData({ address: e.target.value })}
               className={INPUT}
             />
           )}
@@ -174,6 +176,7 @@ export function CurrentConditionsForm() {
               id={id}
               value={current.companyName ?? ""}
               placeholder={COMPANY_NAME_PLACEHOLDER}
+              autoComplete="off"
               onChange={(e) => update({ companyName: e.target.value })}
               className={INPUT}
             />

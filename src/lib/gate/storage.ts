@@ -16,7 +16,33 @@ export const PROPOSAL_VISIBILITY_KEY = "bm.proposalVisibility";
 export const PROPOSAL_AUTO_HIDE_SIGNATURE_KEY = "bm.proposalAutoHideSignature";
 /** jobId already counted as a `proposals-response` (once per job, when the table is first shown). */
 export const PROPOSALS_RESPONSE_JOB_ID_KEY = "bm.proposalsResponseJobId";
+/** Holder/address as edited by the Broker; applied over every published report of the study. */
+export const CUSTOMER_DATA_KEY = "bm.customerData";
 export const LAST_JOB_ID_EXPIRY_MS = 60 * 60 * 1000;
+
+export type CustomerData = { holderName?: string; address?: string };
+
+export function loadCustomerData(): CustomerData {
+  try {
+    const v = JSON.parse(localStorage.getItem(CUSTOMER_DATA_KEY) ?? "null");
+    if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+    const data: CustomerData = {};
+    if (typeof v.holderName === "string") data.holderName = v.holderName;
+    if (typeof v.address === "string") data.address = v.address;
+    return data;
+  } catch {
+    return {};
+  }
+}
+
+export function saveCustomerData(data: CustomerData) {
+  try {
+    if (Object.keys(data).length > 0) localStorage.setItem(CUSTOMER_DATA_KEY, JSON.stringify(data));
+    else localStorage.removeItem(CUSTOMER_DATA_KEY);
+  } catch {
+    // storage unavailable: edits live in memory only
+  }
+}
 
 export type JobSource = "cups" | "pdf" | "photo";
 export type ActiveJob = { jobId: string; source: JobSource; cups?: string; attempts: number };
@@ -159,6 +185,7 @@ export function saveProposalsResponseJobId(jobId: string) {
 /** Clears the study's local data (BmApp `resetActiveStudy`). */
 export function clearStudyStorage() {
   localStorage.removeItem(CONDITIONS_KEY);
+  localStorage.removeItem(CUSTOMER_DATA_KEY);
   localStorage.removeItem(PROPOSALS_RESPONSE_JOB_ID_KEY);
   localStorage.removeItem(PROPOSAL_FIXED_AMOUNTS_KEY);
   localStorage.removeItem(PROPOSAL_VISIBILITY_KEY);

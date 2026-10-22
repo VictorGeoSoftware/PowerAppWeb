@@ -111,6 +111,21 @@ describe("FeeFirstGateGuard", () => {
     expect(gate.stage).toBe("CURRENT_CONDITIONS_REQUIRED");
     expect(replace).toHaveBeenCalledWith("/current-conditions");
   });
+
+  it("edited holder/address persist across reloads and win over republished reports", () => {
+    pathname = "/current-conditions";
+    const { unmount } = renderGuarded(session);
+    act(() => gate.setCustomerData({ holderName: "Ana" }));
+    act(() => gate.setCustomerData({ address: "Calle 1" }));
+    unmount();
+    renderGuarded(null);
+    act(() => gate.setSession({ ...session, holderName: "Bill", address: "Bill st" }));
+    expect(gate.session).toMatchObject({ holderName: "Ana", address: "Calle 1" });
+    act(() => gate.startNewStudy());
+    act(() => gate.setSession({ ...session, holderName: "Bill" }));
+    expect(gate.session?.holderName).toBe("Bill");
+    expect(gate.session?.address).toBeUndefined();
+  });
 });
 
 describe("proposal fixed amounts", () => {

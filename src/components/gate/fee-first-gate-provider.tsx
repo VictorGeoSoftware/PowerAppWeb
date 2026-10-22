@@ -15,12 +15,15 @@ import {
 } from "@/lib/gate/fee-first";
 import {
   clearStudyStorage,
+  type CustomerData,
   loadAutoHideSignature,
   loadConditions,
+  loadCustomerData,
   loadProposalFixedAmounts,
   loadProposalVisibility,
   saveAutoHideSignature,
   saveConditions,
+  saveCustomerData,
   saveProposalFixedAmounts,
   saveProposalVisibility,
 } from "@/lib/gate/storage";
@@ -35,6 +38,8 @@ type GateContextValue = {
   setSession: (session: ConsumptionSession | null) => void;
   /** Saved by the Current Conditions form; persisted in localStorage. */
   setConditions: (conditions: CurrentConditions | null) => void;
+  /** Broker edits of holder/address; persisted in localStorage and kept over report refreshes. */
+  setCustomerData: (patch: CustomerData) => void;
   /** BmApp `startNewStudy` / R6: drop the study; the guard routes to the fetch step. */
   startNewStudy: () => void;
   /** Comparator fixed amount per proposal title, as typed; persisted for the study. */
@@ -66,7 +71,21 @@ type Props = { children: React.ReactNode; initialSession?: ConsumptionSession | 
  * outlives the Broker's session (deliberate fix of a BmApp gap).
  */
 export function FeeFirstGateProvider({ children, initialSession = null }: Props) {
-  const [session, setSession] = useState<ConsumptionSession | null>(initialSession);
+  const [reportSession, setSession] = useState<ConsumptionSession | null>(initialSession);
+  const [customerData, setCustomerDataState] = useState<CustomerData>(() =>
+    typeof window === "undefined" ? {} : loadCustomerData(),
+  );
+  const session = useMemo(
+    () => (reportSession ? { ...reportSession, ...customerData } : null),
+    [reportSession, customerData],
+  );
+  const setCustomerData = useCallback((patch: CustomerData) => {
+    setCustomerDataState((current) => {
+      const next = { ...current, ...patch };
+      saveCustomerData(next);
+      return next;
+    });
+  }, []);
   const [conditions, setConditionsState] = useState<CurrentConditions | null>(() =>
     typeof window === "undefined" ? null : loadConditions(),
   );
@@ -176,6 +195,7 @@ export function FeeFirstGateProvider({ children, initialSession = null }: Props)
     setResetCount((n) => n + 1);
     setSession(null);
     setConditionsState(null);
+    setCustomerDataState({});
     setStoredFixedAmounts({});
     setStoredVisibility({});
     autoHideSignature.current = null;
@@ -190,6 +210,7 @@ export function FeeFirstGateProvider({ children, initialSession = null }: Props)
       conditions,
       setSession,
       setConditions,
+      setCustomerData,
       startNewStudy,
       resetCount,
       proposalFixedAmounts,
@@ -202,6 +223,7 @@ export function FeeFirstGateProvider({ children, initialSession = null }: Props)
     session,
     conditions,
     setConditions,
+    setCustomerData,
     startNewStudy,
     resetCount,
     proposalFixedAmounts,
