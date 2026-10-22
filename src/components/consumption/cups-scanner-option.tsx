@@ -1,12 +1,27 @@
 "use client";
 
 import { ChevronRightIcon, ScanLineIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { useScreenOverride } from "@/components/analytics/screen-tracking";
 import { CupsScanner } from "@/components/consumption/cups-scanner";
 
 export const SCAN_ROW_TITLE = "Escanear código CUPS";
 export const SCAN_ROW_SUBTITLE = "Usa la cámara para leer el código";
+
+const COARSE_POINTER = "(pointer: coarse)";
+
+/** True on phones/tablets; also true when matchMedia is unavailable (e.g. tests). */
+function isTouchDevice(): boolean {
+  if (typeof window.matchMedia !== "function") return true;
+  return window.matchMedia(COARSE_POINTER)?.matches ?? true;
+}
+
+function subscribePointer(onChange: () => void): () => void {
+  if (typeof window.matchMedia !== "function") return () => {};
+  const mql = window.matchMedia(COARSE_POINTER);
+  mql?.addEventListener?.("change", onChange);
+  return () => mql?.removeEventListener?.("change", onChange);
+}
 
 type Props = {
   /** Receives the corrected CUPS confirmed in the scanner. */
@@ -17,7 +32,10 @@ type Props = {
 export function CupsScannerOption({ onConfirm }: Props) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+  const touchDevice = useSyncExternalStore(subscribePointer, isTouchDevice, () => false);
   useScreenOverride(open ? "cups_scanner" : null);
+  // Camera OCR is a phone feature; hide it on desktops (mouse as primary pointer).
+  if (!touchDevice) return null;
   return (
     <>
       <button
