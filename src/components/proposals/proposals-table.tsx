@@ -97,7 +97,7 @@ export function ProposalsComparator() {
       {notices}
       <div className="-mx-4 overflow-x-auto overscroll-x-contain pb-2" data-testid="comparator-scroll">
         <div className="flex w-max pr-4">
-          <div className="sticky left-0 z-10 bg-background pr-3 pl-4" data-testid="labels-column">
+          <div className="pr-3 pl-4" data-testid="labels-column">
             <ConsumptionLabelsColumn
               tariffName={session.feeType ?? ""}
               powerRows={powerRows}
@@ -109,11 +109,14 @@ export function ProposalsComparator() {
             />
           </div>
           <div className="flex gap-3">
-            <CustomerConditionsColumn
-              column={summary.customerConditions}
-              powerRowCount={powerRowCount}
-              energyRowCount={energyRowCount}
-            />
+            {/* Scrolls with the table until it reaches the left edge, then stays pinned for comparison. */}
+            <div className="sticky left-0 z-10 -ml-4 bg-background pl-4" data-testid="customer-sticky">
+              <CustomerConditionsColumn
+                column={summary.customerConditions}
+                powerRowCount={powerRowCount}
+                energyRowCount={energyRowCount}
+              />
+            </div>
             {visible.map((proposal) => (
               <ProposalColumn
                 key={proposal.proposalTitle}
