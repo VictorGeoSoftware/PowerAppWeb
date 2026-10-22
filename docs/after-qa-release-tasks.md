@@ -8,17 +8,17 @@ Devices: **iPhone** = Safari and Home Screen (standalone) once `pwa-installable`
 
 ## 1. Environment and backend
 
-- [ ] BmBackend `qa` with bill photo extraction (merged, #64) deployed. Without it, photo uploads return 400 ("No se pudo iniciar el estudio") (`consumption-by-photo`).
-- [ ] QA web origin added to the Firebase authorized domains and to the Google Cloud API-key HTTP referrers (`login-google`, `docs/technical-discovery.md`).
-- [ ] Live proxy call from outside the corporate network: `Bearer x` returns the backend's 401 (`backend-proxy`).
-- [ ] BmBackend `qa` with `V14__web_push_tokens` (`web-push-registration`) and the web multicast sender (`web-push-price-updates`) deployed; `NEXT_PUBLIC_FIREBASE_VAPID_KEY` set in the QA web deployment env (empty = no notifications UI).
-- [ ] Docling time on the real QA VPS stays within the ~3 min poll budget, for a 2.0TD and a 3.0TD bill PDF (`consumption-by-pdf`; the local baseline is 54 s / 37 s).
-- [ ] CUPS job end to end with real n8n/Datadis on a real customer CUPS (`consumption-by-cups-manual` Scenario 8).
+- [x] BmBackend `qa` with bill photo extraction (merged, #64) deployed. Without it, photo uploads return 400 ("No se pudo iniciar el estudio") (`consumption-by-photo`). — done 2026-10-22 (power-app-web.vercel.app).
+- [x] QA web origin added to the Firebase authorized domains and to the Google Cloud API-key HTTP referrers (`login-google`, `docs/technical-discovery.md`). — done 2026-10-22 (power-app-web.vercel.app).
+- [x] Live proxy call from outside the corporate network: `Bearer x` returns the backend's 401 (`backend-proxy`). — done 2026-10-22 (power-app-web.vercel.app).
+- [x] BmBackend `qa` with `V14__web_push_tokens` (`web-push-registration`) and the web multicast sender (`web-push-price-updates`) deployed; `NEXT_PUBLIC_FIREBASE_VAPID_KEY` set in the QA web deployment env (empty = no notifications UI). — done 2026-10-22 (power-app-web.vercel.app).
+- [x] Docling time on the real QA VPS stays within the ~3 min poll budget, for a 2.0TD and a 3.0TD bill PDF (`consumption-by-pdf`; the local baseline is 54 s / 37 s). — done 2026-10-22 (power-app-web.vercel.app).
+- [x] CUPS job end to end with real n8n/Datadis on a real customer CUPS (`consumption-by-cups-manual` Scenario 8). — done 2026-10-22 (power-app-web.vercel.app).
 
 ## 2. Auth and shell
 
-- [ ] Google sign-in completes on iPhone and Android (`login-google`). Check that the redirect flow works where Safari blocks the popup.
-- [ ] iPhone with a notch, portrait and landscape, in Safari and standalone: the top bar sits below the status bar, and the menu and content are not hidden by the notch or home indicator (`app-shell-navigation` Scenario 7).
+- [x] Google sign-in completes on iPhone and Android (`login-google`). Check that the redirect flow works where Safari blocks the popup. — done 2026-10-22 (power-app-web.vercel.app) iOS needed the auth handler served from the app origin: `next.config.ts` rewrites `/__/auth/*` and `/__/firebase/*` to Firebase, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=power-app-web.vercel.app` (Vercel, type Config), redirect URI `https://power-app-web.vercel.app/__/auth/handler` on the OAuth web client.
+- [x] iPhone with a notch, portrait and landscape, in Safari and standalone: the top bar sits below the status bar, and the menu and content are not hidden by the notch or home indicator (`app-shell-navigation` Scenario 7). — done 2026-10-22 (power-app-web.vercel.app).
 - [ ] `iphone-webkit` E2E (`npm run test:e2e:all`) on a Mac running macOS 13 or later. This Mac is on macOS 12, where Playwright WebKit is frozen.
 
 ## 3. Consumption study

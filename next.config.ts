@@ -14,6 +14,16 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || buildVersion(),
   },
+  // Serve the Firebase auth handler from our own origin so Google sign-in works where
+  // Safari blocks third-party storage (set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN to this origin).
+  async rewrites() {
+    const project = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+    if (!project) return [];
+    return [
+      { source: "/__/auth/:path*", destination: `https://${project}.firebaseapp.com/__/auth/:path*` },
+      { source: "/__/firebase/:path*", destination: `https://${project}.firebaseapp.com/__/firebase/:path*` },
+    ];
+  },
   async headers() {
     return [
       {
