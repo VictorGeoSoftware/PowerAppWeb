@@ -97,7 +97,7 @@ export function ProposalsComparator() {
       {notices}
       <div className="-mx-4 overflow-x-auto overscroll-x-contain pb-2" data-testid="comparator-scroll">
         <div className="flex w-max pr-4">
-          <div className="pr-3 pl-4" data-testid="labels-column">
+          <div className="pr-4 pl-4" data-testid="labels-column">
             <ConsumptionLabelsColumn
               tariffName={session.feeType ?? ""}
               powerRows={powerRows}
