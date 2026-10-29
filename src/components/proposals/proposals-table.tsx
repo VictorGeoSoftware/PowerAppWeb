@@ -13,6 +13,7 @@ import {
 import { BestProposalCard } from "@/components/proposals/best-proposal-card";
 import { ConsumptionLabelsColumn } from "@/components/proposals/consumption-labels-column";
 import { CustomerConditionsColumn } from "@/components/proposals/customer-conditions-column";
+import { PremiumReportAlert, usePremiumReport } from "@/components/proposals/premium-report-action";
 import { PremiumReportButton } from "@/components/proposals/premium-report-button";
 import { ProposalColumn } from "@/components/proposals/proposal-column";
 import { useComparator } from "@/components/proposals/use-comparator";
@@ -55,6 +56,8 @@ export function ProposalsComparator() {
   );
   const report = useCreateReport(buildRequest);
   const { generating, generate } = report;
+  const premium = usePremiumReport(buildRequest, jobId);
+  const { generating: premiumGenerating, generate: generatePremium } = premium;
   const canReport = session != null && visible.length > 0;
   // Entering Propuestas re-checks the comprehensive-report capability (throttled).
   const { comprehensiveReport, refresh: refreshReportAccess } = useReportAccess();
@@ -67,10 +70,10 @@ export function ProposalsComparator() {
     return (
       <div className="flex items-center">
         {create}
-        <PremiumReportButton />
+        <PremiumReportButton generating={premiumGenerating} onClick={() => void generatePremium()} />
       </div>
     );
-  }, [canReport, generating, generate, comprehensiveReport]);
+  }, [canReport, generating, generate, comprehensiveReport, premiumGenerating, generatePremium]);
   useTopBarAction(action);
 
   const notices = (
@@ -81,6 +84,19 @@ export function ProposalsComparator() {
           onShare={() => void report.share()}
           onDownload={report.download}
           onDismiss={report.dismiss}
+        />
+      )}
+      {premium.error && (
+        <PremiumReportAlert
+          message={premium.error.message}
+          onRetry={premium.error.retry ? () => void premium.retry() : undefined}
+        />
+      )}
+      {premium.ready && (
+        <ReportReadyPanel
+          onShare={() => void premium.share()}
+          onDownload={premium.download}
+          onDismiss={premium.dismiss}
         />
       )}
     </>

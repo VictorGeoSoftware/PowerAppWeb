@@ -176,3 +176,60 @@ describe("ReportAccessProvider", () => {
     expect(flag()).toBe("false");
   });
 });
+
+describe("ReportAccessProvider.invalidate (premium_required)", () => {
+  function InvalidateProbe() {
+    const { comprehensiveReport, invalidate } = useReportAccess();
+    return (
+      <>
+        <span data-testid="flag">{String(comprehensiveReport)}</span>
+        <button onClick={invalidate}>invalidate</button>
+      </>
+    );
+  }
+  beforeEach(() => {
+    state.user = { uid: "A" };
+    state.bmFetch.mockReset();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(1_000_000);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("hides immediately and forces a re-check, ignoring the throttle", async () => {
+    state.bmFetch.mockResolvedValueOnce(ok(premium));
+    render(
+      <ReportAccessProvider>
+        <InvalidateProbe />
+      </ReportAccessProvider>,
+    );
+    await flush();
+    expect(flag()).toBe("true");
+    let resolve!: (r: Response) => void;
+    state.bmFetch.mockReturnValueOnce(new Promise<Response>((r) => (resolve = r)));
+    act(() => screen.getByText("invalidate").click());
+    expect(flag()).toBe("false"); // before the re-check answers
+    expect(state.bmFetch).toHaveBeenCalledTimes(2); // not throttled
+    await act(async () => resolve(ok(basic)));
+    expect(flag()).toBe("false");
+  });
+
+  it("restores the action if the forced re-check still grants it", async () => {
+    state.bmFetch.mockImplementation(async () => ok(premium));
+    render(
+      <ReportAccessProvider>
+        <InvalidateProbe />
+      </ReportAccessProvider>,
+    );
+    await flush();
+    await act(async () => screen.getByText("invalidate").click());
+    await flush();
+    expect(state.bmFetch).toHaveBeenCalledTimes(2);
+    expect(flag()).toBe("true");
+  });
+
+  it("is a no-op outside a provider", () => {
+    render(<InvalidateProbe />);
+    act(() => screen.getByText("invalidate").click());
+    expect(flag()).toBe("false");
+  });
+});

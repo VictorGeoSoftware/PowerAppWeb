@@ -675,5 +675,26 @@
       "2026-10-29 final: base rebased by the orchestrator to PowerAppWeb feature/premium-report @ e2b0ad0 (chore/e2e-stale-specs on top of 54c5c96); diff base for validation is e2b0ad0; feature work uncommitted on feature/report-web-capability (HEAD e2b0ad0). `../BmInfra/bm-local-qa ready` -> healthy, exit 0. Full `npm run test:e2e` (android-chromium, wrapper, Node 22, local QA backend, BM test account PREMIUM in local bm_qa) exit 0: 93 passed (4.6m). Then ./init.sh exit 0, 54 files/689 tests; npm run build exit 0; git diff --check clean; workspace ./init.sh exit 0. Screenshots: /tmp/opencode/report-web-capability/report-access-premium-android-chromium.png, report-access-premium-360-android-chromium.png."
     ],
     "notes": "Workspace initiative feature (Premium report). The action is disabled until report-web-export. Capability only; never tier alone or admin status; in memory per uid. Backend is the security boundary."
+  },
+  {
+    "id": "report-web-export",
+    "area": "proposals",
+    "title": "Premium web broker shares a comprehensive report",
+    "user_visible_behavior": "Premium Brokers tap \"Informe completo\" on Propuestas: POST reports/premium-pdf {jobId, comparison} and the PDF is shared/downloaded like \"Crear informe\"; every outcome shows the approved Spanish message (Retry where allowed); inputs are kept; premium_required hides the action and re-checks access without signing out.",
+    "depends_on": [
+      "report-web-capability"
+    ],
+    "status": "passing",
+    "verification": [
+      "./init.sh and npm run build; git diff --check",
+      "../BmInfra/bm-local-qa ready; npm run test:e2e:quick -- e2e/report-export.spec.ts, then comparator-pdf and report-access, then npm run test:e2e once",
+      "Android and 360 px screenshots of the alert/Retry/ready panel"
+    ],
+    "evidence": [
+      "2026-10-29 branch feature/report-web-export (no-track) from fetched origin/feature/premium-report = local = 034308e (clean worktree), uncommitted. Spec: BM/docs/specs/report-web-export.md.",
+      "Node 22: baseline ./init.sh 689 passed; red run 7 failed / 2 suites unresolved; final ./init.sh exit 0, 56 files / 761 tests; npm run build exit 0; git diff --check clean.",
+      "E2E (wrapper, android-chromium, local QA): report-export.spec.ts first run 6 passed / 1 failed (real premium-pdf returned 406 with Accept: application/pdf) -> Accept: application/pdf, application/json -> 9 passed incl. the real unmocked 404 study_not_found; comparator-pdf + report-access 13 passed; full npm run test:e2e exit 0, 101 passed (5.1m). Screenshots /tmp/opencode/report-web-export/*.png reviewed (360 px: no overlap, Retry 44 px above the table)."
+    ],
+    "notes": "Workspace initiative feature. premium-pdf 200 only mocked (live in report-live-qa). Basic create-report-action.tsx/comparator-report.ts unchanged; no proxy change."
   }
 ]

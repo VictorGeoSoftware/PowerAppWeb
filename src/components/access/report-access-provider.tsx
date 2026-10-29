@@ -13,9 +13,15 @@ type ReportAccessValue = {
   comprehensiveReport: boolean;
   /** Re-check `me/access` (throttled). Called when entering Propuestas. */
   refresh: () => void;
+  /** Backend answered `premium_required`: hide the action now and force a `me/access` re-check. */
+  invalidate: () => void;
 };
 
-const ReportAccessContext = createContext<ReportAccessValue>({ comprehensiveReport: false, refresh: () => {} });
+const ReportAccessContext = createContext<ReportAccessValue>({
+  comprehensiveReport: false,
+  refresh: () => {},
+  invalidate: () => {},
+});
 
 /**
  * Comprehensive-report capability of the signed-in Broker, read from `GET /me/access`.
@@ -78,8 +84,16 @@ export function ReportAccessProvider({
   }, [uid, check]);
 
   const refresh = useCallback(() => void check(false), [check]);
+  const invalidate = useCallback(() => {
+    if (!uid) return;
+    setGranted({ uid, value: false });
+    void check(true);
+  }, [uid, check]);
   const comprehensiveReport = uid !== null && granted?.uid === uid && granted.value;
-  const value = useMemo(() => ({ comprehensiveReport, refresh }), [comprehensiveReport, refresh]);
+  const value = useMemo(
+    () => ({ comprehensiveReport, refresh, invalidate }),
+    [comprehensiveReport, refresh, invalidate],
+  );
   return <ReportAccessContext.Provider value={value}>{children}</ReportAccessContext.Provider>;
 }
 
