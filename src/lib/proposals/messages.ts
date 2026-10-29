@@ -20,6 +20,8 @@ export const bestOptionMessage = (saving: string) =>
 export const VISIBLE_PROPOSALS_TITLE = "Propuestas visibles";
 export const VISIBLE_PROPOSALS_HINT = "Usa el botón a la izquierda de la propuesta para ocultarla/mostrarla";
 export const CREATE_REPORT = "Crear informe";
+/** Premium comprehensive report action; disabled until the export feature enables it. */
+export const COMPREHENSIVE_REPORT = "Informe completo";
 export const PDF_EXPORT_ERROR = "No se pudo generar el informe PDF.";
 export const PDF_READY = "Informe listo";
 export const SHARE_PDF = "Compartir PDF";

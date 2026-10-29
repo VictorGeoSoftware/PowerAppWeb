@@ -17,6 +17,17 @@
 
 ## Session Log
 
+### Implementation: report-web-capability (2026-10-29, passing)
+
+- Workspace Premium-report initiative; spec `BM/docs/specs/report-web-capability.md`. Branch `feature/report-web-capability` (no upstream) from new integration branch `feature/premium-report` = `origin/main` `54c5c96`. Uncommitted.
+- Proxy allows `me` (`GET /me/access`); `parseReportAccess` (capabilities only, fails closed); `ReportAccessProvider` in `(app)/layout.tsx` (uid-keyed, in memory, 60 s throttle, out-of-order/late-user responses dropped, 401/403 via `useBmFetch`); disabled "Informe completo" right of "Crear informe" for capability holders only. Docs: `CONTEXT.md`, `DESIGN.md`, `docs/domain-model.md`, `docs/technical-discovery.md`.
+- Evidence: baseline `./init.sh` 648; final `./init.sh` 689 (54 files); `npm run build` OK; `git diff --check` clean. Node 22 required (`~/.nvm` v22; default shell Node 18 breaks vitest/jsdom and skipped the tailwind oxide Linux binding, fixed by `npm ci` with Node 22, lock unchanged).
+- Pending: `e2e/report-access.spec.ts` written, not run (needs BmInfra `local-qa.env`, `.env.local`, E2E credentials, Playwright Chromium); then `comparator-pdf.spec.ts` regression and full `npm run test:e2e`.
+- E2E attempt (2026-10-29): local `bm_qa` PREMIUM grant added for the E2E account; focused run exit 1 at `auth.setup.ts` (Firebase "Correo o contraseña incorrectos"). Blocked on valid Firebase E2E credentials.
+- E2E attempt 2 (2026-10-29): sign-in passes Firebase, but the local backend `POST /user-data` returns 500 (service-account mount is a directory). Environment blocker.
+- E2E attempt 3 (2026-10-29): `report-access.spec.ts` 10 passed (after two spec-only fixes), `comparator-pdf.spec.ts` 4 passed; full `npm run test:e2e` 91 passed / 2 failed in `current-conditions.spec.ts:110` and `proposals.spec.ts:143`. Both are stale specs left behind by base commits 54c5c96 and 2d0ecfe, not this feature. init 689, build OK. Status stays `in_progress` pending a decision on those two specs.
+- Final (2026-10-29): base `feature/premium-report` @ `e2b0ad0` (stale-spec chore). Full `npm run test:e2e` 93 passed; `./init.sh` 689/689; build OK; diff check clean. Status `passing`, awaiting independent validation (diff base `e2b0ad0`).
+
 ### Implementation: web-push-price-updates (2026-10-19)
 
 - Spec: `docs/specs/web-push-price-updates.md` (Implementation Notes added). BmBackend (`feature/web-push-price-updates` from `qa`, uncommitted): `WebPushSender` + `FirebaseWebPushSender` (data-only `sendEachForMulticast`, `Urgency: high`, `TTL: 86400`), `WebPushPriceUpdatesNotifier` (all tokens, chunks of 500, prunes `UNREGISTERED`/`SENDER_ID_MISMATCH`/`INVALID_ARGUMENT`, masked logs, never throws), `CompositePriceUpdatesNotifier` (Android topic + web, isolated), wiring in `Application.kt` behind the existing debouncer, port `allTokens`/`deleteByTokens`, `docs/WEB_PUSH.md` "Delivery". Web: `public/sw.js` `push` (always shows a notification; posts `bm:price_updates`) and `notificationclick` (focus+navigate or open); `src/lib/pwa/sw-messages.ts`; `ConsumptionStudyProvider.refreshStudy({ force })` subscribed to the SW message; strings in `messages.ts`.

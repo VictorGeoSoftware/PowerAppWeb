@@ -9,6 +9,14 @@ vi.mock("@/components/auth/auth-provider", () => ({
 }));
 const sendUserActivity = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("@/lib/auth/user-activity", () => ({ sendUserActivity }));
+const access = vi.hoisted(() => ({ comprehensiveReport: false, refresh: vi.fn() }));
+vi.mock("@/components/access/report-access-provider", () => ({ useReportAccess: () => access }));
+const topBar = vi.hoisted(() => ({ node: null as React.ReactNode }));
+vi.mock("@/components/shell/app-shell", () => ({
+  useTopBarAction: (node: React.ReactNode) => {
+    topBar.node = node;
+  },
+}));
 
 import { FeeFirstGateProvider } from "@/components/gate/fee-first-gate-provider";
 import { calculateComparatorSummary } from "@/lib/comparator/calculate";
@@ -65,6 +73,9 @@ const renderTable = (s: ConsumptionSession = session) =>
 describe("ProposalsComparator", () => {
   beforeEach(() => {
     auth.user = null;
+    access.comprehensiveReport = false;
+    access.refresh.mockClear();
+    topBar.node = null;
     sendUserActivity.mockClear();
     localStorage.clear();
     saveConditions(conditions);
@@ -186,6 +197,43 @@ describe("ProposalsComparator", () => {
     it("is not sent for the empty state", () => {
       renderTable({ ...session, proposals: [] });
       expect(responses()).toHaveLength(0);
+    });
+  });
+
+  describe("Informe completo (comprehensive report action)", () => {
+    const renderTopBar = () => render(<header data-testid="top-bar">{topBar.node}</header>);
+
+    it("Premium: shown disabled to the right of Crear informe; Crear informe unchanged", () => {
+      access.comprehensiveReport = true;
+      renderTable();
+      const { getByTestId } = renderTopBar();
+      const buttons = within(getByTestId("top-bar")).getAllByRole("button");
+      expect(buttons.map((b) => b.getAttribute("aria-label"))).toEqual(["Crear informe", "Informe completo"]);
+      expect(buttons[0].hasAttribute("disabled")).toBe(false);
+      expect(buttons[1].hasAttribute("disabled")).toBe(true);
+      expect(buttons[1].textContent).toBe("Informe completo");
+    });
+
+    it("Basic: only Crear informe, exactly as before", () => {
+      renderTable();
+      const { getByTestId } = renderTopBar();
+      const buttons = within(getByTestId("top-bar")).getAllByRole("button");
+      expect(buttons).toHaveLength(1);
+      expect(buttons[0].getAttribute("aria-label")).toBe("Crear informe");
+      expect(screen.queryByText("Informe completo")).toBeNull();
+    });
+
+    it("hidden with no visible proposals even for Premium", () => {
+      access.comprehensiveReport = true;
+      renderTable({ ...session, proposals: [] });
+      renderTopBar();
+      expect(screen.queryByRole("button", { name: "Informe completo" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Crear informe" })).toBeNull();
+    });
+
+    it("re-checks access on entering Propuestas", () => {
+      renderTable();
+      expect(access.refresh).toHaveBeenCalledTimes(1);
     });
   });
 });

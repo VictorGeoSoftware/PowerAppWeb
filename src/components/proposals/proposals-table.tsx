@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo } from "react";
+import { useReportAccess } from "@/components/access/report-access-provider";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import {
@@ -12,6 +13,7 @@ import {
 import { BestProposalCard } from "@/components/proposals/best-proposal-card";
 import { ConsumptionLabelsColumn } from "@/components/proposals/consumption-labels-column";
 import { CustomerConditionsColumn } from "@/components/proposals/customer-conditions-column";
+import { PremiumReportButton } from "@/components/proposals/premium-report-button";
 import { ProposalColumn } from "@/components/proposals/proposal-column";
 import { useComparator } from "@/components/proposals/use-comparator";
 import { useTopBarAction } from "@/components/shell/app-shell";
@@ -54,11 +56,21 @@ export function ProposalsComparator() {
   const report = useCreateReport(buildRequest);
   const { generating, generate } = report;
   const canReport = session != null && visible.length > 0;
+  // Entering Propuestas re-checks the comprehensive-report capability (throttled).
+  const { comprehensiveReport, refresh: refreshReportAccess } = useReportAccess();
+  useEffect(() => refreshReportAccess(), [refreshReportAccess]);
   // BmApp TopActionBar: `currentRoute == Proposals && hasProposals`.
-  const action = useMemo(
-    () => (canReport ? <CreateReportButton generating={generating} onClick={() => void generate()} /> : null),
-    [canReport, generating, generate],
-  );
+  const action = useMemo(() => {
+    if (!canReport) return null;
+    const create = <CreateReportButton generating={generating} onClick={() => void generate()} />;
+    if (!comprehensiveReport) return create;
+    return (
+      <div className="flex items-center">
+        {create}
+        <PremiumReportButton />
+      </div>
+    );
+  }, [canReport, generating, generate, comprehensiveReport]);
   useTopBarAction(action);
 
   const notices = (

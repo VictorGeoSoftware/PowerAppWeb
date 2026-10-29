@@ -50,7 +50,15 @@ describe("proxyToBackend", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it.each([[["admin", "users"]], [[]], [["reports", ".."]], [["auth", ""]]])(
+  it("forwards me/access to /api/v1/me/access", async () => {
+    fetchMock.mockResolvedValue(new Response('{"tier":"BASIC","capabilities":[]}', { status: 200 }));
+    const res = await proxyToBackend(req("me/access", { headers: auth }), ["me", "access"]);
+    expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/api/v1/me/access`);
+    expect(fetchMock.mock.calls[0][1].method).toBe("GET");
+    expect(res.status).toBe(200);
+  });
+
+  it.each([[["admin", "users"]], [["admin", "user-access"]], [["admin"]], [["me", ".."]], [[]], [["reports", ".."]], [["auth", ""]]])(
     "returns 404 for non-allowlisted or unsafe path %j",
     async (segments) => {
       const res = await proxyToBackend(req("x", { headers: auth }), segments);
