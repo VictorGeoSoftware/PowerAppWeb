@@ -29,3 +29,22 @@ describe("bmFetch", () => {
     expect(error).toMatchObject({ status: 403, message });
   });
 });
+
+describe("BmApiError code", () => {
+  it("parses the ReportErrorResponse code", async () => {
+    fetchMock.mockResolvedValue(
+      new Response('{"success":false,"code":"premium_required","message":"x"}', { status: 403 }),
+    );
+    const error = await bmFetch(user, "reports/premium-pdf").catch((e) => e);
+    expect(error).toMatchObject({ status: 403, code: "premium_required", message: "x" });
+  });
+  it.each(['{"message":"no"}', "plain", '{"code":5}'])("has no code for %s", async (body) => {
+    fetchMock.mockResolvedValue(new Response(body, { status: 403 }));
+    const error = await bmFetch(user, "x").catch((e) => e);
+    expect(error.code).toBeUndefined();
+  });
+  it("constructor stays compatible", () => {
+    expect(new BmApiError(404, "m")).toMatchObject({ status: 404, message: "m", code: undefined });
+    expect(new BmApiError(404, "m", "study_not_found").code).toBe("study_not_found");
+  });
+});

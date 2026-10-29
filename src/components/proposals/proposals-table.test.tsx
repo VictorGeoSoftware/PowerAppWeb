@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/proposals", useRouter: () => ({ replace: vi.fn() }) }));
@@ -9,7 +9,7 @@ vi.mock("@/components/auth/auth-provider", () => ({
 }));
 const sendUserActivity = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("@/lib/auth/user-activity", () => ({ sendUserActivity }));
-const access = vi.hoisted(() => ({ comprehensiveReport: false, refresh: vi.fn() }));
+const access = vi.hoisted(() => ({ comprehensiveReport: false, refresh: vi.fn(), invalidate: vi.fn() }));
 vi.mock("@/components/access/report-access-provider", () => ({ useReportAccess: () => access }));
 const topBar = vi.hoisted(() => ({ node: null as React.ReactNode }));
 vi.mock("@/components/shell/app-shell", () => ({
@@ -203,15 +203,44 @@ describe("ProposalsComparator", () => {
   describe("Informe completo (comprehensive report action)", () => {
     const renderTopBar = () => render(<header data-testid="top-bar">{topBar.node}</header>);
 
-    it("Premium: shown disabled to the right of Crear informe; Crear informe unchanged", () => {
+    it("Premium: shown enabled to the right of Crear informe; Crear informe unchanged", () => {
       access.comprehensiveReport = true;
       renderTable();
       const { getByTestId } = renderTopBar();
       const buttons = within(getByTestId("top-bar")).getAllByRole("button");
       expect(buttons.map((b) => b.getAttribute("aria-label"))).toEqual(["Crear informe", "Informe completo"]);
       expect(buttons[0].hasAttribute("disabled")).toBe(false);
-      expect(buttons[1].hasAttribute("disabled")).toBe(true);
+      expect(buttons[1].hasAttribute("disabled")).toBe(false);
       expect(buttons[1].textContent).toBe("Informe completo");
+    });
+
+    it("tapping it posts {jobId, comparison} and shows the mapped message in the notices; Basic stays usable", async () => {
+      access.comprehensiveReport = true;
+      access.invalidate.mockClear();
+      auth.user = { uid: "U", email: "b@x.es", getIdToken: async () => "T" };
+      const fetchMock = vi.fn(async () =>
+        new Response('{"success":false,"code":"study_not_found","message":"x"}', { status: 404 }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      try {
+        renderTable({ ...session, holderName: "Ana", address: "C/ Mayor 1" });
+        const { getByTestId } = renderTopBar();
+        await act(async () =>
+          fireEvent.click(within(getByTestId("top-bar")).getByRole("button", { name: "Informe completo" })),
+        );
+        const premium = fetchMock.mock.calls.filter((c) => String((c as unknown[])[0]).endsWith("reports/premium-pdf"));
+        expect(premium).toHaveLength(1);
+        const body = JSON.parse(((premium[0] as unknown[])[1] as RequestInit).body as string);
+        expect(body.jobId).toBe("job-1");
+        expect(body.comparison.supplyHolder).toBe("Ana");
+        expect(body.comparison.proposals.length).toBeGreaterThan(0);
+        expect(screen.getByRole("alert").textContent).toBe(
+          "El estudio no está disponible o ha caducado. Vuelve a consultar el suministro.",
+        );
+        expect(access.invalidate).not.toHaveBeenCalled();
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it("Basic: only Crear informe, exactly as before", () => {

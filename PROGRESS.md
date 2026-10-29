@@ -17,6 +17,13 @@
 
 ## Session Log
 
+### Implementation: report-web-export (2026-10-29, passing)
+
+- Workspace spec `BM/docs/specs/report-web-export.md` (user answers Q1–Q4 (a), S1–S11 verbatim). Branch `feature/report-web-export` (no upstream) from fetched `origin/feature/premium-report` = local = `034308e`, clean worktree. Uncommitted.
+- "Informe completo" enabled: `usePremiumReport` (`premium-report-action.tsx`) POSTs `reports/premium-pdf` `{jobId, comparison}` (comparison = "Crear informe" body), client Titular/Dirección check, one request at a time, server file name (fallback `informe_completo_<ms>.pdf`), same share/download/"Informe listo" flow, `PremiumReportAlert` with Retry per truth table (`src/lib/pdf/premium-report-errors.ts`). `BmApiError.code`; `ReportAccessProvider.invalidate()`. 403 `premium_required` → S1, action hidden, forced `me/access`, no sign-out; 401/other 403 keep the forced logout. `Accept: application/pdf, application/json` (pdf-only made the backend answer 406 to coded errors — found by the real E2E call). Basic files unchanged.
+- Evidence (Node 22): baseline `./init.sh` 689; red run 7 failed (missing modules, disabled button, no code/invalidate); final `./init.sh` 56 files / 761 tests exit 0; `npm run build` exit 0; `git diff --check` clean; `../BmInfra/bm-local-qa ready` healthy; `test:e2e:quick -- e2e/report-export.spec.ts` 9 passed (first run 406 instead of 404 → Accept fix); `comparator-pdf` + `report-access` 13 passed; full `npm run test:e2e` 101 passed (5.1m). Screenshots `/tmp/opencode/report-web-export/` reviewed.
+- Limitations: no live 200 PDF (report-live-qa); iOS not run.
+
 ### Implementation: report-web-capability (2026-10-29, passing)
 
 - Workspace Premium-report initiative; spec `BM/docs/specs/report-web-capability.md`. Branch `feature/report-web-capability` (no upstream) from new integration branch `feature/premium-report` = `origin/main` `54c5c96`. Uncommitted.

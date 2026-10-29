@@ -5,7 +5,8 @@ import { expect, openSignedIn, test, useSignedInSession } from "./fixtures";
  * Comprehensive-report access (`report-web-capability`). `GET /api/bm/me/access` is
  * mocked per test (tier states are synthetic) except in the first test, which proves the
  * proxy + QA route with the real backend. Job endpoints are mocked as in comparator-pdf.
- * The action is shown disabled until `report-web-export`; no PDF endpoint is called.
+ * The action is enabled since `report-web-export` (covered by report-export.spec); here it is
+ * never tapped, so no PDF endpoint is called.
  */
 useSignedInSession();
 
@@ -123,11 +124,11 @@ test("real QA backend answers /api/bm/me/access through the proxy", async ({ pag
   expect(Array.isArray(body.capabilities)).toBe(true);
 });
 
-test("Premium: Informe completo shown disabled to the right of Crear informe; no PDF call", async ({ page }) => {
+test("Premium: Informe completo shown enabled to the right of Crear informe; no PDF call without a tap", async ({ page }) => {
   await mockAccess(page, PREMIUM);
   const premiumPdf = await openProposals(page);
   await expect(fullReport(page)).toBeVisible();
-  await expect(fullReport(page)).toBeDisabled();
+  await expect(fullReport(page)).toBeEnabled();
   const create = await createReport(page).boundingBox();
   const full = await fullReport(page).boundingBox();
   expect(create && full && full.x >= create.x + create.width - 1).toBe(true);
