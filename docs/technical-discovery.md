@@ -10,7 +10,7 @@ Pinned at bootstrap: Next 15.5, React 19.1, Tailwind 4, shadcn (base-nova), Vite
 ### Backend proxy convention
 - Browser code calls only same-origin `/api/bm/<path>`; `src/app/api/bm/[...path]/route.ts` forwards to `${BM_BACKEND_URL}/api/v1/<path>` with the caller's Bearer token (status/body/content-type passed through).
 - Server-only env `BM_BACKEND_URL` (see `.env.example`; dev defaults to QA). Never `NEXT_PUBLIC_`.
-- Allowlist `ALLOWED_ROOTS` in `src/lib/server/backend-proxy.ts`; extend it when a feature needs a new Broker endpoint. Admin endpoints stay out.
+- Allowlist `ALLOWED_ROOTS` in `src/lib/server/backend-proxy.ts`; extend it when a feature needs a new Broker endpoint. Admin endpoints stay out. `me` is allowed for `GET /me/access` (tier + capabilities, read by `ReportAccessProvider`).
 - Preferred dev backend: local Docker QA stack from `../BmInfra` (`../BmInfra/bm-local-qa up`) → `BM_BACKEND_URL=http://localhost:9081` in `.env.local`. It runs the BmBackend source with the same Firebase project, so real Broker tokens work. Also exposes Postgres (127.0.0.1:15433), n8n (6678), Docling (5000), price-agent (5002).
 - Remote QA VPS (`217.154.181.175:9081`) is blocked from the Volvo corporate network.
 
