@@ -107,7 +107,8 @@ test("fills the form, unlocks Propuestas, re-locks on zero and survives a reload
   await expect(field(page, "Comercializadora actual")).toHaveValue("Endesa");
   await expect(field(page, "Potencia P2")).toHaveValue("0,1");
   await expect(field(page, "Importe total anual")).toHaveValue("15,50");
-  await expect(field(page, "Titular")).not.toHaveValue("Cliente editado");
+  // Customer data persists across reload (commit 54c5c96).
+  await expect(field(page, "Titular")).toHaveValue("Cliente editado");
 
   await cta(page).click();
   await expect(page).toHaveURL(/\/proposals$/);
