@@ -100,7 +100,7 @@ async function openProposals(page: Page, proposals: unknown[] = PROPOSALS) {
   await expect(page).toHaveURL(/\/proposals$/);
 }
 
-test("comparator shows BmApp numbers, sticky labels, best option and persisted fixed amounts", async ({ page }) => {
+test("comparator shows BmApp numbers, sticky current tariff, best option and persisted fixed amounts", async ({ page }) => {
   await openProposals(page);
   const summary = expected();
   const d = summary.annualPriceDeltaByTitle;
@@ -133,15 +133,23 @@ test("comparator shows BmApp numbers, sticky labels, best option and persisted f
   await shot(page, "table-dark");
   await page.emulateMedia({ colorScheme: "light" });
 
-  // Sticky first column; the page itself never scrolls sideways.
+  // Labels scroll away; the "Tarifa actual" column scrolls until the left edge and then stays
+  // pinned for comparison (commit 2d0ecfe). The page itself never scrolls sideways.
+  const scroller = page.getByTestId("comparator-scroll");
   const labels = page.getByTestId("labels-column");
-  const before = await labels.boundingBox();
-  await page.getByTestId("comparator-scroll").evaluate((el) => el.scrollTo({ left: 300 }));
-  await expect
-    .poll(() => page.getByTestId("comparator-scroll").evaluate((el) => el.scrollLeft))
-    .toBeGreaterThan(100);
-  expect((await labels.boundingBox())?.x).toBe(before?.x);
-  await expect(labels.getByText("COSTE ANUAL FACTURA ELÉCTRICA")).toBeVisible();
+  const customer = page.getByTestId("customer-sticky");
+  const labelsBefore = (await labels.boundingBox())!;
+  const customerBefore = (await customer.boundingBox())!;
+  const scrollerBox = (await scroller.boundingBox())!;
+  expect(customerBefore.x).toBeGreaterThan(scrollerBox.x);
+  await scroller.evaluate((el) => el.scrollTo({ left: 300 }));
+  await expect.poll(() => scroller.evaluate((el) => el.scrollLeft)).toBeGreaterThan(100);
+  const scrollLeft = await scroller.evaluate((el) => el.scrollLeft);
+  expect((await labels.boundingBox())!.x).toBeCloseTo(labelsBefore.x - scrollLeft, 0);
+  expect((await customer.boundingBox())!.x).toBeCloseTo(scrollerBox.x, 0);
+  await expect(customer.getByText("Tarifa actual")).toBeInViewport();
+  // Proposal columns keep scrolling underneath the pinned column.
+  await expect(columns(page).nth(0)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await shot(page, "scrolled");
 
