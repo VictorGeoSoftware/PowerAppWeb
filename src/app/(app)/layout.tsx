@@ -1,5 +1,6 @@
 "use client";
 
+import { ReportAccessProvider } from "@/components/access/report-access-provider";
 import { RequireAuth } from "@/components/auth/guards";
 import { UserActivityReporter } from "@/components/auth/user-activity-reporter";
 import { ConsumptionStudyProvider } from "@/components/consumption/consumption-study-provider";
@@ -12,15 +13,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <RequireAuth>
       <UserActivityReporter />
-      <PushProvider>
-        <FeeFirstGateProvider>
-          <ConsumptionStudyProvider>
-            <AppShell>
-              <FeeFirstGateGuard>{children}</FeeFirstGateGuard>
-            </AppShell>
-          </ConsumptionStudyProvider>
-        </FeeFirstGateProvider>
-      </PushProvider>
+      <ReportAccessProvider>
+        <PushProvider>
+          <FeeFirstGateProvider>
+            <ConsumptionStudyProvider>
+              <AppShell>
+                <FeeFirstGateGuard>{children}</FeeFirstGateGuard>
+              </AppShell>
+            </ConsumptionStudyProvider>
+          </FeeFirstGateProvider>
+        </PushProvider>
+      </ReportAccessProvider>
     </RequireAuth>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo } from "react";
+import { useReportAccess } from "@/components/access/report-access-provider";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
 import {
@@ -12,6 +13,8 @@ import {
 import { BestProposalCard } from "@/components/proposals/best-proposal-card";
 import { ConsumptionLabelsColumn } from "@/components/proposals/consumption-labels-column";
 import { CustomerConditionsColumn } from "@/components/proposals/customer-conditions-column";
+import { PremiumReportAlert, usePremiumReport } from "@/components/proposals/premium-report-action";
+import { PremiumReportButton } from "@/components/proposals/premium-report-button";
 import { ProposalColumn } from "@/components/proposals/proposal-column";
 import { useComparator } from "@/components/proposals/use-comparator";
 import { useTopBarAction } from "@/components/shell/app-shell";
@@ -53,12 +56,24 @@ export function ProposalsComparator() {
   );
   const report = useCreateReport(buildRequest);
   const { generating, generate } = report;
+  const premium = usePremiumReport(buildRequest, jobId);
+  const { generating: premiumGenerating, generate: generatePremium } = premium;
   const canReport = session != null && visible.length > 0;
+  // Entering Propuestas re-checks the comprehensive-report capability (throttled).
+  const { comprehensiveReport, refresh: refreshReportAccess } = useReportAccess();
+  useEffect(() => refreshReportAccess(), [refreshReportAccess]);
   // BmApp TopActionBar: `currentRoute == Proposals && hasProposals`.
-  const action = useMemo(
-    () => (canReport ? <CreateReportButton generating={generating} onClick={() => void generate()} /> : null),
-    [canReport, generating, generate],
-  );
+  const action = useMemo(() => {
+    if (!canReport) return null;
+    const create = <CreateReportButton generating={generating} onClick={() => void generate()} />;
+    if (!comprehensiveReport) return create;
+    return (
+      <div className="flex items-center">
+        {create}
+        <PremiumReportButton generating={premiumGenerating} onClick={() => void generatePremium()} />
+      </div>
+    );
+  }, [canReport, generating, generate, comprehensiveReport, premiumGenerating, generatePremium]);
   useTopBarAction(action);
 
   const notices = (
@@ -69,6 +84,19 @@ export function ProposalsComparator() {
           onShare={() => void report.share()}
           onDownload={report.download}
           onDismiss={report.dismiss}
+        />
+      )}
+      {premium.error && (
+        <PremiumReportAlert
+          message={premium.error.message}
+          onRetry={premium.error.retry ? () => void premium.retry() : undefined}
+        />
+      )}
+      {premium.ready && (
+        <ReportReadyPanel
+          onShare={() => void premium.share()}
+          onDownload={premium.download}
+          onDismiss={premium.dismiss}
         />
       )}
     </>

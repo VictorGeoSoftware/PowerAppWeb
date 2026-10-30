@@ -20,9 +20,30 @@ export const bestOptionMessage = (saving: string) =>
 export const VISIBLE_PROPOSALS_TITLE = "Propuestas visibles";
 export const VISIBLE_PROPOSALS_HINT = "Usa el botón a la izquierda de la propuesta para ocultarla/mostrarla";
 export const CREATE_REPORT = "Crear informe";
+/** Premium comprehensive report action (report-web-export). */
+export const COMPREHENSIVE_REPORT = "Informe completo";
 export const PDF_EXPORT_ERROR = "No se pudo generar el informe PDF.";
 export const PDF_READY = "Informe listo";
 export const SHARE_PDF = "Compartir PDF";
 export const DOWNLOAD_PDF = "Descargar";
 export const CLOSE_PDF_PANEL = "Cerrar";
 export const PDF_SHARE_TITLE = "Comparador de propuestas";
+/** Premium "Informe completo" outcomes (report-web-export, approved 2026-10-29). */
+export const PREMIUM_REQUIRED_MESSAGE = "El informe completo requiere el plan Premium.";
+export const PREMIUM_STUDY_EXPIRED =
+  "El estudio no está disponible o ha caducado. Vuelve a consultar el suministro.";
+export const PREMIUM_STUDY_NOT_READY =
+  "El estudio todavía no ha terminado. Inténtalo de nuevo en unos minutos.";
+export const PREMIUM_HOLDER_MISSING =
+  "Indica el titular del suministro en Condiciones actuales para crear el informe completo.";
+export const PREMIUM_ADDRESS_MISSING =
+  "Indica la dirección del suministro en Condiciones actuales para crear el informe completo.";
+export const PREMIUM_CONDITIONS_MISSING =
+  "Completa las condiciones actuales antes de crear el informe completo.";
+export const PREMIUM_DATA_MISMATCH =
+  "Los datos de la comparativa no coinciden con el estudio. Revisa las propuestas y vuelve a intentarlo.";
+export const PREMIUM_GENERATION_FAILED =
+  "No se ha podido generar el informe completo. Inténtalo de nuevo.";
+export const PREMIUM_UNAVAILABLE = "El informe completo todavía no está disponible.";
+export const RETRY = "Reintentar";
+export const PREMIUM_SHARE_TITLE = "Informe completo";

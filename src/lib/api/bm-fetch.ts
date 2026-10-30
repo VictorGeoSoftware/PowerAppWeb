@@ -4,20 +4,23 @@ export class BmApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** Machine-readable `code` of a `ReportErrorResponse`, when the backend sent one. */
+    readonly code?: string,
   ) {
     super(message);
     this.name = "BmApiError";
   }
 }
 
-/** Backend errors arrive as {"message": ...} or {"error": ...}. */
-async function errorMessage(response: Response): Promise<string> {
+/** Backend errors arrive as {"message": ...}, {"error": ...} or {"code", "message"} (reports). */
+async function apiError(response: Response): Promise<BmApiError> {
   const text = await response.text().catch(() => "");
   try {
-    const body = JSON.parse(text) as { message?: string; error?: string };
-    return body.message || body.error || text || `HTTP ${response.status}`;
+    const body = JSON.parse(text) as { message?: string; error?: string; code?: unknown };
+    const code = typeof body?.code === "string" ? body.code : undefined;
+    return new BmApiError(response.status, body?.message || body?.error || text || `HTTP ${response.status}`, code);
   } catch {
-    return text || `HTTP ${response.status}`;
+    return new BmApiError(response.status, text || `HTTP ${response.status}`);
   }
 }
 
@@ -35,6 +38,6 @@ export async function bmFetch(
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(`/api/bm/${path.replace(/^\/+/, "")}`, { ...init, headers });
-  if (!response.ok) throw new BmApiError(response.status, await errorMessage(response));
+  if (!response.ok) throw await apiError(response);
   return response;
 }

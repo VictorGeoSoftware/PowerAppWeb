@@ -10,7 +10,7 @@ Pinned at bootstrap: Next 15.5, React 19.1, Tailwind 4, shadcn (base-nova), Vite
 ### Backend proxy convention
 - Browser code calls only same-origin `/api/bm/<path>`; `src/app/api/bm/[...path]/route.ts` forwards to `${BM_BACKEND_URL}/api/v1/<path>` with the caller's Bearer token (status/body/content-type passed through).
 - Server-only env `BM_BACKEND_URL` (see `.env.example`; dev defaults to QA). Never `NEXT_PUBLIC_`.
-- Allowlist `ALLOWED_ROOTS` in `src/lib/server/backend-proxy.ts`; extend it when a feature needs a new Broker endpoint. Admin endpoints stay out.
+- Allowlist `ALLOWED_ROOTS` in `src/lib/server/backend-proxy.ts`; extend it when a feature needs a new Broker endpoint. Admin endpoints stay out. `me` is allowed for `GET /me/access` (tier + capabilities, read by `ReportAccessProvider`).
 - Preferred dev backend: local Docker QA stack from `../BmInfra` (`../BmInfra/bm-local-qa up`) → `BM_BACKEND_URL=http://localhost:9081` in `.env.local`. It runs the BmBackend source with the same Firebase project, so real Broker tokens work. Also exposes Postgres (127.0.0.1:15433), n8n (6678), Docling (5000), price-agent (5002).
 - Remote QA VPS (`217.154.181.175:9081`) is blocked from the Volvo corporate network.
 
@@ -33,6 +33,7 @@ Session end (`logout-force-logout`):
 - Forced logout (local sign-out + notice on `/login`, no `/auth/logout`): 403 → backend message; 401 → "Tu sesión ha caducado…"; revoked Firebase session (`auth/user-token-expired`, `user-disabled`, `user-not-found`, `invalid-user-token`; BmWeb grant deletion revokes refresh tokens) → "Tu acceso ha sido revocado…". Network/5xx never sign out.
 - No force-logout push channel on web: access is re-checked via `/user-data` when the tab becomes visible (throttled to 60 s). Grant deletion wipes the account's web push tokens before the `force_logout` send, so there is nothing to deliver to.
 - User activity (`src/components/auth/user-activity-reporter.tsx`, mounted in `src/app/(app)/layout.tsx`): BmApp `onResume`/`onStop` map to `visibilitychange` (`visible`/`hidden`) and `pagehide`; events use `bmFetch` directly with `keepalive: true` (not `useBmFetch`, so a 401/403 there never forces logout). Headless browser closes and some mobile kills may not deliver `offline`; iOS `pagehide` delivery is checked in `qa-real-device-checks`.
+- Exception (report-web-export): `POST reports/premium-pdf` uses `bmFetch` directly so a 403 with `code: "premium_required"` (Premium capability lost) does not sign out: it shows "El informe completo requiere el plan Premium.", hides "Informe completo" and forces a `me/access` re-check. 401, 403 without that code and revoked Firebase sessions are passed to `reportApiError` (forced logout as before). `BmApiError.code` carries the backend `ReportErrorResponse.code`; the client maps by status/code and never shows the backend message. Requests send `Accept: application/pdf, application/json` (with only `application/pdf` the backend answers its JSON errors with 406).
 - Signed-in features MUST call the backend through `useBmFetch()` (`src/lib/api/use-bm-fetch.ts`) so 401/403 from any call ends the session; per-session local data must be cleared in `clearLocalSessionData()` (`src/lib/auth/logout.ts`).
 
 ## Deployment and Operations

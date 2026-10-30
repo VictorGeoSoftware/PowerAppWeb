@@ -12,7 +12,7 @@ Energy broker/sales agent using the app to prepare tariff comparisons for a cust
 A Broker present in the backend `granted_users` allowlist. Only Granted Users can use any client.
 
 ### Tier
-BASIC or PREMIUM, stored on the grant record (PostgreSQL is authoritative). PowerAppWeb has no tier-specific features (the comprehensive PDF is out of scope).
+BASIC or PREMIUM, stored on the grant record (PostgreSQL is authoritative). PowerAppWeb reads the Broker's capabilities from `GET /me/access`; Brokers whose capabilities include `COMPREHENSIVE_COMPARATOR_PDF` (PREMIUM) see the "Informe completo" action on Propuestas, which generates and shares the comprehensive PDF of the current study. The decision uses capabilities only (never tier alone or admin status) and the backend enforces it.
 
 ### Bound Device
 The single client (an Android phone OR a browser) an account is bound to. Switching requires an admin reset.

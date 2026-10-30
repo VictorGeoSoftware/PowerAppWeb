@@ -17,6 +17,8 @@ export const ALLOWED_ROOTS = new Set([
   "user-activity",
   "auth",
   "push",
+  // GET /me/access: tier and capabilities of the signed-in Broker (comprehensive report).
+  "me",
 ]);
 
 const FORWARDED_REQUEST_HEADERS = ["authorization", "content-type", "accept", "x-request-id"];
