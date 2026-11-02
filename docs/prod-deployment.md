@@ -14,7 +14,8 @@ Accepted risks at release (2026-11-02): `npm audit --omit=dev` reports `@grpc/gr
 
 ## 1. Vercel project
 
-- [ ] In the Vercel team that hosts BmWeb: create the PROD project for PowerAppWeb (or add a Production environment to the QA project), Git branch `main`, framework Next.js.
+- [ ] In the Vercel team that hosts BmWeb: create the PROD project for PowerAppWeb (or add a Production environment to the QA project), framework Next.js. Compare with BmWeb's project to keep the same convention.
+- [ ] Settings → Git → Production Branch: `main` (only pushes/merges to `main` create PROD deployments; other branches get Preview URLs). If the QA site must stay on the existing project, keep PROD in a separate project so the two never share env vars.
 - [ ] Settings → General → Node.js version: **22.x** (the test toolchain needs Node ≥ 20.19).
 - [ ] Settings → Domains: add `powerweb.poweredbyadvisors.com`. Note the CNAME target Vercel shows: `________`.
 
