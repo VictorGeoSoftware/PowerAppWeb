@@ -17,6 +17,14 @@
 
 ## Session Log
 
+### Chore: prod-security-hardening (2026-11-02)
+
+- Branch `chore/prod-security-hardening` from fetched `origin/main` @ `ce4afd5`; user commit `7ed9c19`, pushed.
+- `next` and `eslint-config-next` 15.5.27 → 15.5.28 (critical Image Optimization RCE advisory; the login page uses `next/image`). `shadcn` moved to devDependencies (build-time CSS import only). Security headers on all routes in `next.config.ts` (`X-Frame-Options: SAMEORIGIN` because the Firebase auth iframe is same-origin, `frame-ancestors 'self'`, `nosniff`, `Referrer-Policy`, HSTS, `Permissions-Policy` with `camera=(self)`). New runbook `docs/prod-deployment.md` (Vercel + IONOS DNS, `powerweb.poweredbyadvisors.com`).
+- Evidence (Node 22): `./init.sh` 56 files / 761 tests exit 0 (also on the untouched `main` lockfile); `npm run build` exit 0; `git diff --check` clean; headers present in `.next/` and `.next-e2e/` `routes-manifest.json`. `npm audit --omit=dev` 18 (1 critical) → 6 (0 critical): `@grpc/grpc-js` via unused Firestore, `postcss` bundled in Next (build-time). Full `npm run test:e2e` (user-run) 100 passed / 1 failed: `consumption-photo.spec.ts` "too large" timed out on the signed-in "Cargando" screen before the test body; rerun `--repeat-each=3` of that spec 43 passed (transient local QA slowness).
+- Environment notes: default shell Node 18 breaks vitest/jsdom (pre-existing; use Node 22). E2E setup first hit "vinculada a otro dispositivo": local `bm_qa` account bound to a personal browser id; `phone_uuid` reset in the local DB only (user-approved). A first lockfile regeneration pulled an incompatible jsdom sub-dependency; redone from the original lockfile with targeted installs.
+- Next: PR to `main` (merge = release, user only), then `docs/prod-deployment.md`.
+
 ### Implementation: report-web-export (2026-10-29, passing)
 
 - Workspace spec `BM/docs/specs/report-web-export.md` (user answers Q1–Q4 (a), S1–S11 verbatim). Branch `feature/report-web-export` (no upstream) from fetched `origin/feature/premium-report` = local = `034308e`, clean worktree. Uncommitted.
