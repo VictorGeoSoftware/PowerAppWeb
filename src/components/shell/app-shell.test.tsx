@@ -93,13 +93,13 @@ describe("AppShell", () => {
   it("new study clears conditions and job id and locks the menu again", async () => {
     saveConditions(complete);
     localStorage.setItem("bm.lastCompletedJobId", "job-1");
-    localStorage.setItem("bm.deviceId", "web-1");
+    localStorage.setItem("bm.installHintDismissed", "1");
     renderShell();
     let menu = await openMenu();
     await userEvent.click(within(menu).getByRole("button", { name: "Nuevo estudio de propuestas" }));
     expect(localStorage.getItem("bm.currentConditions")).toBeNull();
     expect(localStorage.getItem("bm.lastCompletedJobId")).toBeNull();
-    expect(localStorage.getItem("bm.deviceId")).toBe("web-1");
+    expect(localStorage.getItem("bm.installHintDismissed")).toBe("1");
     menu = await openMenu();
     expect(within(menu).getAllByLabelText("Bloqueado")).toHaveLength(3);
   });

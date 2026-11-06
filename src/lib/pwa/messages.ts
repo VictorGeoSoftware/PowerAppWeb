@@ -8,7 +8,7 @@ export const IOS_BANNER_TEXT = "Instala PowerApp en tu pantalla de inicio";
 export const IOS_BANNER_HOW = "Cómo";
 export const IOS_BANNER_CLOSE = "Cerrar aviso";
 
-/** Survives logout, like `bm.deviceId`. */
+/** Survives logout. */
 export const INSTALL_HINT_DISMISSED_KEY = "bm.installHintDismissed";
 
 export const PUSH_ENTRY = "Activar notificaciones";

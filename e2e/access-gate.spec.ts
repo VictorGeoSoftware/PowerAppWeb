@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { E2E_DEVICE_ID, authFile, expect, setDeviceId, test, useSignedInSession } from "./fixtures";
+import { authFile, expect, test, useSignedInSession } from "./fixtures";
 
 useSignedInSession();
 
@@ -48,23 +48,18 @@ test("backend unavailable shows retry screen, retry recovers", async ({ page }) 
   await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 });
 
-test("browser sends its device id and a second browser is rejected by the real backend", async ({
-  page,
-  browser,
-}, testInfo) => {
-  // Browser A (fixed E2E device id) binds / matches the binding.
+test("same account is accepted from a second browser (no device binding)", async ({ page, browser }, testInfo) => {
   const sync = page.waitForRequest((r) => r.url().endsWith("/api/bm/user-data"));
   await openApp(page);
-  expect((await sync).postDataJSON().phoneUuid).toBe(E2E_DEVICE_ID);
+  expect((await sync).postDataJSON()).not.toHaveProperty("phoneUuid");
   await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
 
-  // Browser B with another device id: same account must be rejected.
-  // Same saved Firebase session (no extra sign-in), different device id.
+  // Same saved Firebase session in a separate browser context: must also pass.
   const other = await browser.newContext({ storageState: authFile(testInfo.project.name) });
-  await setDeviceId(other, "web-e2e-other-device");
   const pageB = await other.newPage();
+  const syncB = pageB.waitForResponse((r) => r.url().endsWith("/api/bm/user-data"));
   await openApp(pageB);
-  await expect(pageB.getByRole("alert").filter({ hasText: "vinculada a otro dispositivo" })).toBeVisible();
-  await expect(pageB).toHaveURL(/\/login$/);
+  expect((await syncB).status()).toBe(200);
+  await expect(pageB.getByRole("button", { name: "Abrir menú" })).toBeVisible();
   await other.close();
 });
