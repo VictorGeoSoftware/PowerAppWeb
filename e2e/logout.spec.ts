@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { E2E_DEVICE_ID, expect, openSignedIn, test, useSignedInSession } from "./fixtures";
+import { expect, openSignedIn, test, useSignedInSession } from "./fixtures";
 
 useSignedInSession();
 
@@ -13,7 +13,7 @@ async function returnToTab(page: Page) {
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
 }
 
-test("manual logout calls /auth/logout and keeps the device id", async ({ page }) => {
+test("manual logout calls /auth/logout", async ({ page }) => {
   await openSignedIn(page);
   const logout = page.waitForRequest((r) => r.url().endsWith("/api/bm/auth/logout"));
   const logoutResponse = page.waitForResponse((r) => r.url().endsWith("/api/bm/auth/logout"));
@@ -27,7 +27,6 @@ test("manual logout calls /auth/logout and keeps the device id", async ({ page }
   await expect(page).toHaveURL(/\/login$/);
   // Scoped to <main>: Next.js adds an empty route-announcer alert to the body.
   await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
-  expect(await page.evaluate(() => localStorage.getItem("bm.deviceId"))).toBe(E2E_DEVICE_ID);
 
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);

@@ -33,12 +33,6 @@ describe("logoutFromBackend", () => {
 });
 
 describe("clearLocalSessionData", () => {
-  it("keeps the Bound Device id", () => {
-    localStorage.setItem("bm.deviceId", "web-abc");
-    clearLocalSessionData();
-    expect(localStorage.getItem("bm.deviceId")).toBe("web-abc");
-  });
-
   it("keeps the dismissed install hint", () => {
     localStorage.setItem("bm.installHintDismissed", "1");
     clearLocalSessionData();

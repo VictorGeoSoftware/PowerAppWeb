@@ -17,6 +17,13 @@
 
 ## Session Log
 
+### Chore: remove device binding (2026-11-06)
+
+- Product decision: drop the one-device-per-account rule (more disruptive than useful).
+- BmBackend `qa` (uncommitted): enforcement, `DeviceMismatchException`, exempt-email list, `POST /admin/reset-device-binding` and `AdminAuthService` removed; `phoneUuid` still accepted on `POST /user-data` but ignored; `user_data.phone_uuid` column kept, no longer written. BmInfra: `BM_DEVICE_BINDING_EXEMPT_EMAILS` removed from compose.
+- Web: `src/lib/auth/device-id.ts` (+test) deleted; `/user-data` payload no longer carries `phoneUuid`; e2e device-id fixture removed; access-gate e2e now asserts a second browser on the same account is accepted. `device-binding-hardening` marked `cancelled`.
+- Evidence: vitest 55 files / 756 tests passed; eslint clean; `tsc` only reports the pre-existing missing local `tesseract.js` install. E2E not run (needs QA backend rebuilt with the change).
+
 ### Chore: prod-security-hardening (2026-11-02)
 
 - Branch `chore/prod-security-hardening` from fetched `origin/main` @ `ce4afd5`; user commit `7ed9c19`, pushed.
