@@ -58,7 +58,7 @@ describe("gate storage", () => {
     saveConditions(c);
     saveActiveJob({ jobId: "a", source: "cups", cups: "C", attempts: 2 });
     localStorage.setItem(LAST_JOB_ID_KEY, "j");
-    localStorage.setItem("bm.deviceId", "web-1");
+    localStorage.setItem("bm.installHintDismissed", "1");
     sessionStorage.setItem(COLLECTED_PRICES_JOBS_KEY, '["j"]');
     saveProposalFixedAmounts({ A: "12,5" });
     saveProposalVisibility({ A: false, B: true });
@@ -76,7 +76,7 @@ describe("gate storage", () => {
     expect(localStorage.getItem(CONDITIONS_KEY)).toBeNull();
     expect(localStorage.getItem(LAST_JOB_ID_KEY)).toBeNull();
     expect(sessionStorage.getItem(ACTIVE_JOB_KEY)).toBeNull();
-    expect(localStorage.getItem("bm.deviceId")).toBe("web-1");
+    expect(localStorage.getItem("bm.installHintDismissed")).toBe("1");
   });
 
   it("round-trips the active job; corrupt or missing is null", () => {

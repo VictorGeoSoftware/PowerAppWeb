@@ -14,8 +14,8 @@ A Broker present in the backend `granted_users` allowlist. Only Granted Users ca
 ### Tier
 BASIC or PREMIUM, stored on the grant record (PostgreSQL is authoritative). PowerAppWeb reads the Broker's capabilities from `GET /me/access`; Brokers whose capabilities include `COMPREHENSIVE_COMPARATOR_PDF` (PREMIUM) see the "Informe completo" action on Propuestas, which generates and shares the comprehensive PDF of the current study. The decision uses capabilities only (never tier alone or admin status) and the backend enforces it.
 
-### Bound Device
-The single client (an Android phone OR a browser) an account is bound to. Switching requires an admin reset.
+### Bound Device (removed)
+Formerly the single client an account was bound to. Removed 2026-11-06: an account can sign in from any number of devices and browsers.
 
 ### CUPS
 Spanish electricity supply point code identifying a customer's supply.

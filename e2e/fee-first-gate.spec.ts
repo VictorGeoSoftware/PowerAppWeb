@@ -1,4 +1,4 @@
-import { E2E_DEVICE_ID, expect, openSignedIn, test, useSignedInSession, FETCH_HEADING } from "./fixtures";
+import { expect, openSignedIn, test, useSignedInSession, FETCH_HEADING } from "./fixtures";
 
 useSignedInSession();
 
@@ -19,7 +19,7 @@ test("without a Consumption Report, direct URLs go back to the fetch step withou
   }
 });
 
-test("conditions and job id are cleared on logout; the device id is kept", async ({ page }) => {
+test("conditions and job id are cleared on logout", async ({ page }) => {
   await openSignedIn(page);
   await page.evaluate(() => {
     localStorage.setItem(
@@ -34,7 +34,6 @@ test("conditions and job id are cleared on logout; the device id is kept", async
   const stored = await page.evaluate(() => ({
     conditions: localStorage.getItem("bm.currentConditions"),
     job: localStorage.getItem("bm.lastCompletedJobId"),
-    device: localStorage.getItem("bm.deviceId"),
   }));
-  expect(stored).toEqual({ conditions: null, job: null, device: E2E_DEVICE_ID });
+  expect(stored).toEqual({ conditions: null, job: null });
 });

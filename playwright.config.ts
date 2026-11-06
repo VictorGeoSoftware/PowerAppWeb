@@ -22,8 +22,8 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
   retries: 0,
-  // All signed-in tests share one QA account (one bound device, one session):
-  // run serially so a logout or second-device test can't disturb another.
+  // All signed-in tests share one QA account and session:
+  // run serially so a logout test can't disturb another.
   workers: 1,
   reporter: "line",
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },

@@ -1,8 +1,5 @@
-import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
+import { test as base, expect, type Page } from "@playwright/test";
 import path from "node:path";
-
-/** Fixed browser device id so E2E runs don't bind the QA account to a new id each time. */
-export const E2E_DEVICE_ID = process.env.E2E_DEVICE_ID ?? "web-e2e-playwright";
 
 export const E2E_EMAIL = process.env.E2E_EMAIL;
 export const E2E_PASSWORD = process.env.E2E_PASSWORD;
@@ -17,16 +14,7 @@ export function authFile(projectName: string) {
   return path.join(__dirname, "..", "playwright", ".auth", `${projectName.replace(/^setup-/, "")}.json`);
 }
 
-export async function setDeviceId(context: BrowserContext, id: string) {
-  await context.addInitScript((value) => window.localStorage.setItem("bm.deviceId", value), id);
-}
-
-export const test = base.extend({
-  context: async ({ context }, use) => {
-    await setDeviceId(context, E2E_DEVICE_ID);
-    await use(context);
-  },
-});
+export const test = base;
 
 /** Call at file or describe level: tests start with the saved QA session. */
 export function useSignedInSession() {
