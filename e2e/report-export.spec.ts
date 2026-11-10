@@ -246,6 +246,28 @@ test("downloads when the browser cannot share files", async ({ page }) => {
   expect(readFileSync(await file.path(), "utf8")).toBe(PDF);
 });
 
+test("desktop Windows signals download the Premium PDF without opening a working share chooser", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" });
+    Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: 0 });
+  });
+  await stubShare(page);
+  const { premiumRequests, acquisition } = await openProposals(page);
+  const download = page.waitForEvent("download");
+  await fullReport(page).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("informe_completo_1761750000000.pdf");
+  const { readFileSync } = await import("node:fs");
+  expect(readFileSync(await file.path(), "utf8")).toBe(PDF);
+  expect(await shareCalls(page)).toEqual([]);
+  expect(premiumRequests).toHaveLength(1);
+  expect(acquisition).toEqual([]);
+  await expect(page.getByRole("region", { name: "Informe listo" })).toHaveCount(0);
+  await expect(fullReport(page)).toBeEnabled();
+  await page.screenshot({ path: "test-results/premium-pdf-desktop.png" });
+});
+
 test("T1: blank Titular shows S4 and sends no request", async ({ page }) => {
   await stubShare(page);
   const { premiumRequests } = await openProposals(page, { holder: "" });

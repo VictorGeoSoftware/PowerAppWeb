@@ -230,6 +230,28 @@ test("downloads the PDF when the browser cannot share files", async ({
   expect(readFileSync(path, "utf8")).toBe(PDF);
 });
 
+test("desktop Windows signals download directly even when file sharing is available", async ({ page }) => {
+  // Keep the repository's Android Chromium project; override only delivery-policy signals.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" });
+    Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: 10 });
+  });
+  await stubShare(page, true);
+  const requests = await openProposals(page);
+  const download = page.waitForEvent("download");
+  await createReport(page).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(/^comparador_\d{8}_\d{6}\.pdf$/);
+  const { readFileSync } = await import("node:fs");
+  expect(readFileSync(await file.path(), "utf8")).toBe(PDF);
+  expect(requests).toHaveLength(1);
+  expect(await page.evaluate(() => (window as unknown as { __shareCalls: unknown[] }).__shareCalls)).toEqual([]);
+  await expect(page.getByRole("region", { name: "Informe listo" })).toHaveCount(0);
+  await expect(createReport(page)).toBeEnabled();
+  await page.screenshot({ path: "test-results/comparator-pdf-desktop.png" });
+});
+
 test("shows the BmApp error on a backend failure; hidden when every proposal is hidden", async ({
   page,
 }) => {

@@ -2,20 +2,30 @@
 
 ## Current Verified State
 
-- Repository root: `BM/PowerAppWeb` (git: https://github.com/VictorGeoSoftware/PowerAppWeb, branch `main`)
+- Repository root: `BM/PowerAppWeb` (git: https://github.com/VictorGeoSoftware/PowerAppWeb, current branch `feature/desktop-pdf-download`)
 - New machine setup: `README.md`
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current next ready feature: next dependency-ready feature in `feature_list.json`
+- Current maintenance feature: `desktop-pdf-download` implemented, blocked on signed-in E2E/viewport verification; do not mark passing until required browser gates run.
 - `../BmBackend` is checked out on `feature/web-push-price-updates` (from `qa`, which includes web-push-registration #65; changes uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
-- Current blocker: none
-- Last verified at: 2026-10-19 (web-push-price-updates implemented: gradle 180/180, vitest 647, full E2E 84 passed, live real-FCM push → notification + refresh)
+- Current blocker: local QA is stopped and Docker daemon unavailable; export E2E cannot complete sign-in.
+- Last verified at: 2026-11-10 (`desktop-pdf-download`: ./init.sh lint/typecheck + 777 unit tests and production build pass; focused/full Android E2E blocked at setup, not passing)
 - BmBackend `feature/web-push-price-updates` has uncommitted changes (web multicast sender, composite notifier, token pruning); local QA runs them
 
 ## Session Log
+
+### Maintenance: desktop-pdf-download (2026-11-10, verification blocked)
+
+- User feedback: Windows Web Share offers many options but no straightforward save. Both report buttons now download directly on desktop, even with working file-sharing support. Android/iPhone/iPad retain native sharing, cancellation, fresh-gesture panel and download fallback. `isMobileDevice` reuses existing iPadOS recognition; Windows touch laptops remain desktop. No viewport breakpoint, new UI, dependencies, auth/API or report generation changes. Destination remains the browser's download folder / Save As choice, not a silently selected OS Desktop.
+- Workspace spec `BM/docs/specs/desktop-pdf-download.md`; new independent maintenance feature depends on accepted `comparator-pdf-share`. Existing feature entries/statuses preserved. User explicitly approved preparing a PR with QA verification blocked; no acceptance waiver or deployment authorization.
+- Initial `main` at `9e5d990` had no tracked changes; untracked `content.hmtl` preserved. Fetched origin; new `feature/desktop-pdf-download` from `origin/qa` `4f408e1d0fae7b8c6da2f2ab7ac7c1546b032274`, content identical to origin/main. Target PR `qa`.
+- Baseline dependency bootstrap hit a stale custom npm CA bundle (`UNABLE_TO_GET_ISSUER_CERT_LOCALLY`). System-CA/extra-CA attempts did not fix npm's explicit cafile. Invocation-local `npm_config_cafile=/etc/ssl/cert.pem npm_config_fetch_retries=0 ./init.sh` passed baseline (55 files, 756 tests), preserving TLS verification, lockfile and persistent config. No application edits before green baseline. Existing install audit: 29 findings incl. 2 critical; separate triage needed, no automated audit fixes in this scope.
+- Red run: 16 expected platform/desktop regressions failed. Final focused `npm test -- src/lib/pdf/share-file.test.ts src/lib/pwa/platform.test.ts` 30 passed; `./init.sh` lint/typecheck clean, 55 files/777 tests passed. Existing React act/Vite warnings remain. `npm run build` passed; `git diff --check` clean. Updated the existing ready-panel test to explicitly emulate Android and added a desktop component integration test using the real shared helper.
+- `../BmInfra/bm-local-qa ready` failed (9081 stopped); prescribed `up` failed (Docker daemon socket missing). No Docker Desktop launch/reconfiguration, backend rebuild, dev server or deployment. Focused `npm run test:e2e:quick -- e2e/comparator-pdf.spec.ts e2e/report-export.spec.ts` built production E2E successfully, then 1 setup failure/13 not run; full `npm run test:e2e` attempted once, 1 setup failure/102 not run. Sign-in stayed at `/` instead of `/fetch-consumption`. No iOS run. Export download events and mobile/desktop viewport screenshots remain unverified; feature stays `blocked`.
+- Added desktop-signal regressions for both PDFs with canShare=true, filename/byte checks and no ready panel. They run under the approved Android Chromium project with navigator/viewport overrides; they are not a native Windows shell test. Updated DESIGN/domain/technical docs. Next: start Docker + local QA, run focused exports and full Android E2E, inspect screenshots, then independent validation. No merge/deployment.
 
 ### Chore: remove device binding (2026-11-06)
 

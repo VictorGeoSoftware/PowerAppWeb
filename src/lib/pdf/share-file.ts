@@ -1,11 +1,14 @@
 /**
  * Web adaptation of BmApp `ComparatorPdfShareManager`: native share sheet (Web Share API with
- * files) when available, otherwise a file download.
+ * files) on phones/tablets when available, otherwise a file download. Desktop
+ * always downloads: its native share chooser may not offer a save action.
  */
+import { isMobileDevice } from "@/lib/pwa/platform";
+
 export type ShareOutcome =
   "shared" | "cancelled" | "needs-gesture" | "downloaded";
 
-type ShareNavigator = Pick<Navigator, "share" | "canShare">;
+type ShareNavigator = Pick<Navigator, "share" | "canShare" | "userAgent" | "maxTouchPoints">;
 
 const REVOKE_DELAY_MS = 1000;
 
@@ -60,13 +63,11 @@ export async function shareOrDownload(
   title: string,
   env: { navigator?: Partial<ShareNavigator>; document?: Document } = {},
 ): Promise<ShareOutcome> {
-  const outcome = await sharePdf(
-    blob,
-    fileName,
-    title,
-    env.navigator ?? navigator,
-  );
-  if (outcome) return outcome;
+  const nav = env.navigator ?? navigator;
+  if (isMobileDevice({ userAgent: nav.userAgent ?? "", maxTouchPoints: nav.maxTouchPoints ?? 0 })) {
+    const outcome = await sharePdf(blob, fileName, title, nav);
+    if (outcome) return outcome;
+  }
   downloadBlob(blob, fileName, env.document ?? document);
   return "downloaded";
 }
