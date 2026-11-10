@@ -696,5 +696,28 @@
       "E2E (wrapper, android-chromium, local QA): report-export.spec.ts first run 6 passed / 1 failed (real premium-pdf returned 406 with Accept: application/pdf) -> Accept: application/pdf, application/json -> 9 passed incl. the real unmocked 404 study_not_found; comparator-pdf + report-access 13 passed; full npm run test:e2e exit 0, 101 passed (5.1m). Screenshots /tmp/opencode/report-web-export/*.png reviewed (360 px: no overlap, Retry 44 px above the table)."
     ],
     "notes": "Workspace initiative feature. premium-pdf 200 only mocked (live in report-live-qa). Basic create-report-action.tsx/comparator-report.ts unchanged; no proxy change."
+  },
+  {
+    "id": "desktop-pdf-download",
+    "area": "proposals",
+    "title": "Desktop report exports download directly instead of opening the share chooser",
+    "user_visible_behavior": "Crear informe and Informe completo download the PDF directly on desktop, even when Web Share is supported. Android/iPhone/iPad retain native sharing and its existing cancellation, fresh-gesture and download fallbacks.",
+    "depends_on": ["comparator-pdf-share"],
+    "status": "blocked",
+    "verification": [
+      "./init.sh and npm run build",
+      "Unit tests: Windows including touch devices, macOS and Linux bypass share/canShare; Android phones/tablets and iPhone/iPad retain sharing; filenames, bytes and object-URL cleanup unchanged",
+      "Wrapper-only focused E2E for comparator-pdf.spec.ts and report-export.spec.ts, desktop signals with share enabled plus Android regression and mobile/desktop viewport checks",
+      "Full npm run test:e2e once at completion; record exact result or environment blocker without weakening requirements"
+    ],
+    "evidence": [
+      "2026-11-10: branch feature/desktop-pdf-download from freshly fetched origin/qa 4f408e1d0fae7b8c6da2f2ab7ac7c1546b032274 (content identical to origin/main 9e5d990). Initial tracked tree clean; unrelated content.hmtl preserved untracked. User approved preparing a PR with the Docker/QA blocker noted.",
+      "Baseline ./init.sh initially failed in npm ci with UNABLE_TO_GET_ISSUER_CERT_LOCALLY (custom local npm cafile). Invocation-local npm_config_cafile=/etc/ssl/cert.pem npm_config_fetch_retries=0 ./init.sh succeeded: lint, typecheck, 55 files/756 tests. TLS verification remained enabled; no lockfile/config/dependency changes committed.",
+      "Red regression run: 16 failures (new platform policy missing plus five desktop cases still shared). Final focused platform/delivery suite: 30/30 passed. Final ./init.sh: lint/typecheck clean, 55 files/777 tests passed, including existing mobile fresh-gesture panel and new real-helper desktop component integration. npm run build passed.",
+      "QA checks: ../BmInfra/bm-local-qa ready failed (no listener on 9081); prescribed up failed (Docker daemon socket missing). No Docker Desktop launch/reconfiguration, backend rebuild or deployment performed.",
+      "Focused wrapper E2E npm run test:e2e:quick -- e2e/comparator-pdf.spec.ts e2e/report-export.spec.ts: E2E production build passed, then 1 setup failure and 13 did not run (sign-in did not reach /fetch-consumption). Full npm run test:e2e attempted once: 1 setup failure, 102 did not run. No iOS run. Desktop/mobile screenshots and download events remain unverified; status blocked, not passing.",
+      "git diff --check passed. Existing baseline React act/Vite warnings remain; dependency bootstrap reported 29 audit findings (2 critical) with the unchanged lockfile, not triaged in this focused delivery change. Component docs describe behavior and browser-controlled destination."
+    ],
+    "notes": "User-selected maintenance, 2026-11-10; workspace spec BM/docs/specs/desktop-pdf-download.md. Implemented; blocked only on required signed-in E2E/viewport verification. Start Docker Desktop and local QA, rerun the focused export specs and full Android suite, inspect mobile/desktop screenshots, then consider passing/independent validation. Both report actions share the same delivery helper; no generation/auth/API changes. Existing Premium feature acceptance statuses unchanged. Browser controls download destination."
   }
 ]

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isIos, isStandalone } from "./platform";
+import { isIos, isMobileDevice, isStandalone } from "./platform";
 
 const IPHONE =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
@@ -32,5 +32,28 @@ describe("isStandalone", () => {
     expect(isStandalone(nav, () => ({ matches: true }))).toBe(true);
     expect(isStandalone(nav, () => ({ matches: false }))).toBe(false);
     expect(isStandalone(nav)).toBe(false);
+  });
+});
+
+describe("isMobileDevice", () => {
+  it.each([
+    ["iPhone", IPHONE, 5],
+    ["Chrome on iPhone", CRIOS, 5],
+    ["iPad", "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X)", 5],
+    ["iPadOS desktop user agent", MAC, 5],
+    ["Android phone", ANDROID, 5],
+    ["Android tablet without Mobile token", "Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 Chrome/130.0 Safari/537.36", 5],
+  ])("recognizes %s as mobile/tablet", (_, userAgent, maxTouchPoints) => {
+    expect(isMobileDevice({ userAgent, maxTouchPoints })).toBe(true);
+  });
+
+  it.each([
+    ["Windows", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", 0],
+    ["touch Windows laptop", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", 10],
+    ["Mac", MAC, 0],
+    ["Linux", "Mozilla/5.0 (X11; Linux x86_64)", 0],
+    ["unknown", "", 0],
+  ])("does not mistake %s for a phone or tablet", (_, userAgent, maxTouchPoints) => {
+    expect(isMobileDevice({ userAgent, maxTouchPoints })).toBe(false);
   });
 });
