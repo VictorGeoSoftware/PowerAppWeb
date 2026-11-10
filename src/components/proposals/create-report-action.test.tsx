@@ -153,6 +153,7 @@ describe("Crear informe", () => {
   });
 
   it("lost user activation shows the ready panel; share and download run on a fresh tap", async () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (Linux; Android 14; Pixel 7)");
     const share = vi
       .fn()
       .mockRejectedValueOnce(
@@ -186,5 +187,22 @@ describe("Crear informe", () => {
     expect(click).toHaveBeenCalledOnce();
     expect(screen.queryByRole("region", { name: "Informe listo" })).toBeNull();
     click.mockRestore();
+  });
+
+  it("a desktop export downloads even when its native share chooser supports files", async () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+    const share = vi.fn().mockResolvedValue(undefined);
+    const canShare = vi.fn(() => true);
+    Object.assign(navigator, { share, canShare });
+    bmFetch.mockImplementation(async () => pdfResponse());
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    renderScreen();
+    fireEvent.click(createButton());
+    await waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(share).not.toHaveBeenCalled();
+    expect(canShare).not.toHaveBeenCalled();
+    expect(bmFetch).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("region", { name: "Informe listo" })).toBeNull();
+    await waitFor(() => expect(createButton()).toBeEnabled());
   });
 });

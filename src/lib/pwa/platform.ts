@@ -7,6 +7,11 @@ export function isIos(nav: NavLike): boolean {
   return /Macintosh/.test(nav.userAgent) && (nav.maxTouchPoints ?? 0) > 1;
 }
 
+/** Platform policy, not screen size or touch alone: Windows touch laptops are still desktop. */
+export function isMobileDevice(nav: Pick<Navigator, "userAgent" | "maxTouchPoints">): boolean {
+  return isIos(nav) || /Android/i.test(nav.userAgent);
+}
+
 /** Launched from the home screen (iOS `navigator.standalone` or display-mode). */
 export function isStandalone(nav: NavLike, matchMedia?: MatchMedia): boolean {
   if (nav.standalone === true) return true;
