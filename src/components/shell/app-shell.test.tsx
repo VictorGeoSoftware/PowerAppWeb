@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -118,6 +118,71 @@ describe("AppShell", () => {
     }
     renderShell(session, <Screen />);
     expect(within(screen.getByRole("banner")).getByRole("button", { name: "Crear informe" })).toBeInTheDocument();
+  });
+});
+
+describe("AppShell desktop sidebar", () => {
+  beforeEach(() => {
+    pathname = "/current-conditions";
+    signOutUser.mockReset();
+    localStorage.clear();
+  });
+
+  const sidebar = () => screen.getByTestId("app-sidebar");
+
+  it("renders the shared menu in a sidebar shown only from lg, hamburger hidden from lg", () => {
+    saveConditions(complete);
+    renderShell();
+    expect(sidebar()).toHaveClass("hidden", "lg:flex");
+    expect(screen.getByRole("button", { name: "Abrir menú" })).toHaveClass("lg:hidden");
+    const nav = within(sidebar()).getByRole("navigation", { name: "Menú principal" });
+    expect([...nav.querySelectorAll("a, button")].map((e) => e.textContent)).toEqual([
+      "Nuevo estudio de propuestas",
+      "Condiciones actuales",
+      "Propuestas",
+      "Configuración",
+      "Cerrar sesión",
+    ]);
+    expect(within(sidebar()).getByText("Menú")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("sidebar applies the same Fee-First locks and hint as the drawer", () => {
+    pathname = "/fetch-consumption";
+    renderShell(null);
+    expect(within(sidebar()).getAllByLabelText("Bloqueado")).toHaveLength(3);
+    expect(within(sidebar()).getByText(LOCKED_HINT_CONSUMPTION)).toBeInTheDocument();
+  });
+
+  it("sidebar new study and logout work without opening a dialog", async () => {
+    saveConditions(complete);
+    renderShell();
+    await userEvent.click(within(sidebar()).getByRole("button", { name: "Nuevo estudio de propuestas" }));
+    expect(localStorage.getItem("bm.currentConditions")).toBeNull();
+    expect(within(sidebar()).getAllByLabelText("Bloqueado")).toHaveLength(3);
+    await userEvent.click(within(sidebar()).getByRole("button", { name: "Cerrar sesión" }));
+    expect(signOutUser).toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("closes an open drawer when the viewport reaches lg", async () => {
+    let listener: (() => void) | undefined;
+    const mql = {
+      matches: false,
+      addEventListener: (_: string, cb: () => void) => (listener = cb),
+      removeEventListener: vi.fn(),
+    };
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue(mql) as unknown as typeof window.matchMedia;
+    try {
+      renderShell();
+      await openMenu();
+      mql.matches = true;
+      act(() => listener?.());
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    } finally {
+      window.matchMedia = original;
+    }
   });
 });
 

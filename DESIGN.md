@@ -61,8 +61,14 @@ Mirror BmApp visually; adapt to mobile web conventions. Spanish UI.
 - PWA icons (`public/icons/`, `src/app/favicon.ico`) are generated from `../BmApp/launcher_icon_export/hIYe8.png` by `scripts/generate-pwa-icons.sh`: `icon-192/512` keep the rounded transparent corners (`any`); `icon-maskable-512` and `apple-touch-icon` (180) are full-bleed and opaque (corners filled with the icon gradient; iOS rounds corners itself and shows transparency as black). The glyph already sits inside the maskable 80% safe zone.
 
 ## Layout
-- Designed for 360–430px width first; content max-width ~640px centered on larger screens.
-- Android drawer → hamburger menu with same entries; sticky top bar.
+- Responsive: phone, tablet and desktop share one implementation. Each view is a single component adapted with Tailwind breakpoints (`md:` 768px, `lg:` 1024px); never create device-specific copies of a view, and never decide layout by user agent or JS (`matchMedia` only for behavior, e.g. closing the drawer).
+  | Name | Width | Shell |
+  |---|---|---|
+  | phone | < 768px | sticky top bar + hamburger drawer |
+  | tablet (`md`) | 768–1023px | sticky top bar + hamburger drawer; pages may widen |
+  | desktop (`lg`) | ≥ 1024px | permanent 280px left sidebar + top bar (actions only, no hamburger) |
+- Page width: every signed-in page renders inside `PageContainer` (`src/components/shell/page-container.tsx`) and declares `narrow` (640px, centered; default) or `wide` (1280px). Page-specific widening is `responsive-views`.
+- Android drawer → hamburger menu with same entries; sticky top bar. From `lg` the same `MenuPanel` (`src/components/shell/menu-panel.tsx`) is a permanent sidebar (`border-r section-border`, no overlay/shadow); the iOS install banner starts right of it.
 - Respect safe areas (`env(safe-area-inset-*)`) for iOS notch/home indicator in standalone mode.
 - Comparator table: horizontal scroll with sticky first column on phones.
 - Comparator (`src/components/proposals/`, port of BmApp `ComparatorProposalsView`). Deliberate mobile adaptations: the labels column is 176px instead of 400dp and sticks to the left (`sticky left-0 bg-background`) while the other columns scroll under it. The value columns are 168px instead of 200dp. Rows have fixed heights (`ROW_H` in `table-cells.tsx`) so the separate column stacks line up. Only the table scrolls sideways; the page never does. Fixed amounts survive a reload (BmApp keeps them in memory only).

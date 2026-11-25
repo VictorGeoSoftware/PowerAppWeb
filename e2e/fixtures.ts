@@ -27,11 +27,18 @@ export function useSignedInSession() {
 /** `/fetch-consumption` page heading (BmApp `fetch_consumption_headline`). */
 export const FETCH_HEADING = "Selecciona primero una factura de luz para proceder al estudio";
 
+/** The signed-in shell: hamburger below lg, permanent sidebar menu from lg (desktop/tablet landscape). */
+export function shellMenu(page: Page) {
+  return page
+    .getByRole("button", { name: "Abrir menú" })
+    .or(page.getByTestId("app-sidebar").getByRole("navigation", { name: "Menú principal" }));
+}
+
 /** Opens the app with the restored session; the access check runs on load. */
 export async function openSignedIn(page: Page) {
   await page.goto("/fetch-consumption");
   await expect(page).toHaveURL(/\/fetch-consumption$/);
-  await expect(page.getByRole("button", { name: "Abrir menú" })).toBeVisible();
+  await expect(shellMenu(page)).toBeVisible();
 }
 
 export { expect };

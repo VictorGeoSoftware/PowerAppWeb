@@ -17,6 +17,17 @@
 
 ## Session Log
 
+### Feature: responsive-shell (2026-11-25, accepted)
+
+- Goal: desktop/tablet usage now dominates. Spec `docs/specs/responsive-shell.md`; follow-up `responsive-views` (page layouts, stretching comparator columns ≥ 768px, phones unchanged).
+- Branch `feature/responsive-shell` from `feature/responsive-views` (`d7f4aab`, spec on top of `origin/qa` `6442ebb`).
+- Done: shared `MenuPanel` for the drawer (< 1024px) and a permanent sidebar (≥ 1024px); `PageContainer` on every page (all `narrow`, so phones are unchanged); drawer closes at `lg`; iOS banner offset; Playwright `tablet-chromium`/`desktop-chromium` + `npm run test:e2e:desktop`; DESIGN/AGENTS/README updated.
+- Verified: lint, typecheck, 56 files/783 unit tests, `npm run build`, `git diff --check`.
+- E2E (local QA ready; `up` failed rebuilding n8n behind corporate TLS but existing containers were healthy): responsive-shell Android 2 passed/2 skipped; `npm run test:e2e:desktop` 8 passed; screenshots reviewed.
+- Full `npm run test:e2e`: 103 passed, 2 skipped, 1 failed — `report-export.spec.ts` T11 (real backend) needs a Premium E2E account; local QA `granted_users.tier` is `BASIC`. Test-data precondition, unrelated to this diff. Set the account to PREMIUM in local QA (or via BmWeb) and rerun T11.
+- E2E account set to PREMIUM in local QA (`granted_users.tier`); T11 rerun passed (2/2 incl. setup).
+- Validation (inline `feature-validator`): accept; status `accepted`. Committed on `feature/responsive-shell`; PR #9 to `qa` (merged `qa` after PR #8 to resolve bookkeeping conflicts). Next: spec `responsive-views`.
+
 ### Production validation: desktop-pdf-download (2026-11-25)
 
 - User confirms the feature is in `qa` and `main`, deployed to PROD and working correctly. Status `accepted` now also records production validation by the user. No code changes; automated E2E gap from 2026-11-10 remains historical.

@@ -8,6 +8,7 @@ import { PdfUploadOption } from "@/components/consumption/pdf-upload-option";
 import { PhotoUploadOption } from "@/components/consumption/photo-upload-option";
 import { StudyProgress } from "@/components/consumption/study-progress";
 import { PushPromptCard } from "@/components/pwa/push-prompt-card";
+import { PageContainer } from "@/components/shell/page-container";
 
 /** BmApp FetchConsumptionScreen: typed CUPS, CUPS camera scan and PDF bill upload. */
 export default function FetchConsumptionPage() {
@@ -18,7 +19,7 @@ export default function FetchConsumptionPage() {
   const studyError = state.kind === "failed" ? state.message : null;
 
   return (
-    <section className="flex flex-col gap-4 py-4">
+    <PageContainer>
       <h1 className="text-[22px] font-semibold">Selecciona primero una factura de luz para proceder al estudio</h1>
       <p className="text-base text-muted-foreground">
         Necesitamos tu consumo real antes de introducir las condiciones actuales.
@@ -61,6 +62,6 @@ export default function FetchConsumptionPage() {
           />
         </>
       )}
-    </section>
+    </PageContainer>
   );
 }

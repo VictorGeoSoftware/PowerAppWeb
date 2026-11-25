@@ -721,5 +721,47 @@
       "2026-11-25 user validation in production: feature merged into qa and main and released to PROD; user confirms report exports work correctly there. Recorded as accepted and validated by user production verification (not a new automated gate)."
     ],
     "notes": "User-selected maintenance, 2026-11-10; workspace spec BM/docs/specs/desktop-pdf-download.md. User-accepted after successful functional confirmation; PR #6 merged into qa (6442ebb). Automated signed-in E2E/viewport evidence remains outstanding due to the documented environment blocker; rerun focused exports and full Android suite when QA/Docker is available, without claiming they already passed. Both report actions share the same delivery helper; no generation/auth/API changes. Existing Premium feature acceptance statuses unchanged. Browser controls download destination."
+  },
+  {
+    "id": "responsive-shell",
+    "area": "ui",
+    "title": "Responsive app shell: permanent sidebar on desktop, shared page width container, tablet/desktop E2E viewports",
+    "user_visible_behavior": "On screens >= 1024px the menu is a permanent left sidebar (no hamburger) with the same entries, padlocks, hint, push/install/logout rows and version; below 1024px the shell is unchanged (sticky top bar, hamburger, left drawer). Pages render inside a shared PageContainer whose width every page declares; in this feature all pages stay at the current 640px width, so phones see no change.",
+    "depends_on": ["app-shell-navigation", "fee-first-gate"],
+    "status": "accepted",
+    "verification": [
+      "./init.sh (lint, typecheck, vitest) and npm run build",
+      "Unit tests: AppShell renders sidebar nav at lg and drawer trigger below lg (class/structure), menu content shared between both, locked entries and New study action identical in both",
+      "Focused wrapper E2E e2e/responsive-shell.spec.ts on android-chromium (phone unchanged) and the new desktop-chromium and tablet-chromium projects",
+      "Full npm run test:e2e once at completion; record exact result"
+    ],
+    "evidence": [
+      "2026-11-25: branch feature/responsive-shell from feature/responsive-views d7f4aab (spec commit on origin/qa 6442ebb, fetched; qa == origin/qa). Untracked content.hmtl preserved.",
+      "Baseline ./init.sh (invocation-local npm_config_cafile=/etc/ssl/cert.pem): lint/typecheck clean, 55 files/777 tests passed.",
+      "Implementation: shared MenuPanel (drawer + lg sidebar), PageContainer (narrow default) on all 4 pages, sidebar hidden below lg, hamburger lg:hidden, drawer closes at lg, iOS banner offset lg:left-[280px]. Playwright tablet-chromium (Galaxy Tab S4 landscape) and desktop-chromium (1440x900) limited to e2e/responsive-*.spec.ts; npm run test:e2e:desktop; openSignedIn/auth.setup accept hamburger or sidebar.",
+      "After: npm run lint and typecheck clean; vitest 56 files/783 tests passed (new sidebar, lock, new-study/logout, lg auto-close and PageContainer tests). npm run build passed. git diff --check clean. --list confirms new projects pick only responsive-shell.spec.ts.",
+      "E2E not run: ../BmInfra/bm-local-qa ready failed (9081 down) and up failed (Docker daemon not running). Docker Desktop not launched by the agent. Pending: npm run test:e2e:quick -- e2e/responsive-shell.spec.ts, npm run test:e2e:desktop, full npm run test:e2e, screenshots. (resolved below).",
+      "2026-11-25 after user started Docker: bm-local-qa up failed building n8n image (corporate TLS on Alpine apk), but existing containers were already running; bm-local-qa ready OK (database connected). No rebuild needed (no BmBackend changes).",
+      "npm run test:e2e:quick -- e2e/responsive-shell.spec.ts: 2 passed, 2 skipped (desktop-only) on android-chromium. npm run test:e2e:desktop: 8 passed (tablet-chromium + desktop-chromium, incl. setup). Screenshots test-results/responsive-*-{tablet,desktop}-chromium.png reviewed: sidebar with locks/hint, selected entry, Crear informe in top bar, content 640px right of sidebar.",
+      "Full npm run test:e2e (android-chromium): 103 passed, 2 skipped, 1 failed: report-export.spec.ts T11 (real backend, unmocked /me/access) cannot find 'Informe completo' because the E2E account is tier BASIC in local QA DB granted_users (no COMPREHENSIVE_COMPARATOR_PDF). Environmental test-data precondition, unrelated to the shell diff (Premium button rendering is unchanged and passes in the mocked T4/T5/T8/T18 cases).",
+      "T11 rerun after setting the E2E account tier to PREMIUM in local QA (granted_users, local test data only): npm run test:e2e:quick -- e2e/report-export.spec.ts -g T11 -> 2 passed. Full-suite failure confirmed environmental.",
+      "2026-11-25 feature-validator (inline, same session as implementation): accept. All 7 acceptance scenarios covered by unit/E2E; non-goals respected (no page widened, no UA/JS layout, matchMedia only closes the drawer); one menu exposed to assistive tech per width; docs (DESIGN/AGENTS/README) consistent; no security-relevant surface. Notes: lg 1024px duplicated in DESKTOP_QUERY (documented); sidebar has no left safe-area inset (not needed for current devices). User approved validation and commit."
+    ],
+    "notes": "User request 2026-11-25: Brokers use the app more from desktop and tablets than phones. Spec docs/specs/responsive-shell.md. Phone UX must stay identical. Second slice: responsive-views."
+  },
+  {
+    "id": "responsive-views",
+    "area": "ui",
+    "title": "Responsive page layouts: wider forms, two-column layouts and stretching comparator columns on tablet/desktop",
+    "user_visible_behavior": "On tablet/desktop, Fetch consumption shows the methods in a 2-column grid, Current conditions shows the consumption summary next to the form (lg), Proposals uses the full content width and its columns grow (bounded) to fill it, only scrolling sideways when proposals do not fit. Below 768px every screen is unchanged (fixed 176/168px comparator columns with horizontal scroll and sticky customer column). CUPS camera scan remains hidden on mouse-first devices.",
+    "depends_on": ["responsive-shell"],
+    "status": "not_started",
+    "verification": [
+      "./init.sh and npm run build",
+      "Focused wrapper E2E per touched screen on android-chromium, tablet-chromium and desktop-chromium, including comparator column-width and no page-level horizontal scroll checks",
+      "Full npm run test:e2e once at completion; record exact result"
+    ],
+    "evidence": [],
+    "notes": "Spec to be written after responsive-shell is accepted. Rule: one component per view; layout changes only through md:/lg: utilities, never device-specific component copies. No calculation, data or BmApp-parity behavior changes."
   }
 ]
