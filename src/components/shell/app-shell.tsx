@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-dvh flex-col lg:pl-[280px]">
         {/* BmApp TopActionBar: no title, hamburger left (below lg), optional action right. */}
         <header className="sticky top-0 z-40 bg-background pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
-          <div className="mx-auto flex h-14 w-full max-w-[640px] items-center justify-between px-2">
+          <div className="mx-auto flex h-14 w-full max-w-[640px] items-center justify-between px-2 md:max-w-none md:px-4">
             <button
               type="button"
               aria-label="Abrir menú"

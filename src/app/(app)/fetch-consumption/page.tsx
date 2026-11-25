@@ -19,7 +19,7 @@ export default function FetchConsumptionPage() {
   const studyError = state.kind === "failed" ? state.message : null;
 
   return (
-    <PageContainer>
+    <PageContainer className="lg:max-w-[960px]">
       <h1 className="text-[22px] font-semibold">Selecciona primero una factura de luz para proceder al estudio</h1>
       <p className="text-base text-muted-foreground">
         Necesitamos tu consumo real antes de introducir las condiciones actuales.
@@ -30,36 +30,43 @@ export default function FetchConsumptionPage() {
       ) : (
         <>
           <p className="text-xs font-semibold tracking-wider text-muted-foreground">ELIGE UN MÉTODO</p>
-          <CupsForm
-            key={state.kind === "failed" ? `failed-${state.source}-${state.cups}` : "idle"}
-            initialValue={state.kind === "failed" ? state.cups : ""}
-            error={fileError ?? studyError}
-            onRetry={state.kind === "failed" && state.canRetry && !fileError ? retry : undefined}
-            onSubmit={(cups) => {
-              setFileError(null);
-              startCups(cups);
-            }}
-          />
-          <CupsScannerOption
-            onConfirm={(cups) => {
-              setFileError(null);
-              startCups(cups);
-            }}
-          />
-          <PdfUploadOption
-            onError={setFileError}
-            onSelect={(file) => {
-              setFileError(null);
-              startPdf(file);
-            }}
-          />
-          <PhotoUploadOption
-            onError={setFileError}
-            onSelect={(file) => {
-              setFileError(null);
-              startPhoto(file);
-            }}
-          />
+          {/* Desktop: typed CUPS on the left, the other methods on the right (same DOM order). */}
+          <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+            <div data-testid="method-cups">
+              <CupsForm
+                key={state.kind === "failed" ? `failed-${state.source}-${state.cups}` : "idle"}
+                initialValue={state.kind === "failed" ? state.cups : ""}
+                error={fileError ?? studyError}
+                onRetry={state.kind === "failed" && state.canRetry && !fileError ? retry : undefined}
+                onSubmit={(cups) => {
+                  setFileError(null);
+                  startCups(cups);
+                }}
+              />
+            </div>
+            <div data-testid="method-others" className="flex flex-col gap-4">
+              <CupsScannerOption
+                onConfirm={(cups) => {
+                  setFileError(null);
+                  startCups(cups);
+                }}
+              />
+              <PdfUploadOption
+                onError={setFileError}
+                onSelect={(file) => {
+                  setFileError(null);
+                  startPdf(file);
+                }}
+              />
+              <PhotoUploadOption
+                onError={setFileError}
+                onSelect={(file) => {
+                  setFileError(null);
+                  startPhoto(file);
+                }}
+              />
+            </div>
+          </div>
         </>
       )}
     </PageContainer>

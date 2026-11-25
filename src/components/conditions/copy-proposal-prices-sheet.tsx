@@ -29,7 +29,7 @@ export function CopyProposalPricesSheet({ open, proposals, selectedTitle, onSele
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="max-h-[90dvh] gap-0 rounded-t-2xl pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+        className="max-h-[90dvh] gap-0 rounded-t-2xl pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:mx-auto md:max-w-[640px]"
       >
         <SheetTitle className="px-4 text-lg">{COPY_SHEET_TITLE}</SheetTitle>
         <SheetDescription className="px-4 py-1">{COPY_SHEET_SUBTITLE}</SheetDescription>

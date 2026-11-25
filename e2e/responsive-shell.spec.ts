@@ -64,9 +64,10 @@ async function expectNoPageHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
-async function expectNarrowPage(page: Page) {
+/** Pages widen per screen in responsive-views (≤ 1280px); phones keep the 640px column. */
+async function expectPageWidth(page: Page) {
   const box = await page.locator("main section[data-width]").first().boundingBox();
-  expect(box?.width ?? 0).toBeLessThanOrEqual(640);
+  expect(box?.width ?? 0).toBeLessThanOrEqual(isDesktop(page) ? 1280 : 640);
 }
 
 async function reachProposals(page: Page) {
@@ -100,7 +101,7 @@ test.beforeEach(async ({ page }) => {
 
 test("shell matches the viewport: drawer below lg, permanent sidebar from lg", async ({ page }, info) => {
   await openSignedIn(page);
-  await expectNarrowPage(page);
+  await expectPageWidth(page);
   await expectNoPageHorizontalScroll(page);
 
   if (isDesktop(page)) {
@@ -131,7 +132,7 @@ test("sidebar navigates between unlocked sections and keeps the top bar actions"
   await reachProposals(page);
   await expect(page.getByRole("button", { name: "Crear informe" })).toBeVisible();
   await expect(sidebarNav(page).getByRole("link", { name: "Propuestas" })).toHaveAttribute("aria-current", "page");
-  await expectNarrowPage(page);
+  await expectPageWidth(page);
   await expectNoPageHorizontalScroll(page);
   await shot(page, info, "proposals");
 

@@ -30,7 +30,7 @@ so I can compare and fill in data without scrolling sideways or down unnecessari
 | Screen | < 768px (phone) | 768–1023px (`md`) | ≥ 1024px (`lg`, sidebar visible) |
 |---|---|---|---|
 | Proposals | unchanged: labels 176px, columns 168px, horizontal scroll, sticky "Tarifa actual" | page max 1280px; same fixed columns; scroll only when they do not fit | same as `md` |
-| Current conditions | unchanged single column | unchanged single column (narrow) | `wide`: banner full width; grid `[320px_minmax(0,640px)]`, summary left (sticky `top-16`), form right |
+| Current conditions | unchanged single column | unchanged single column (narrow) | page max 984px (= grid width, so heading/banner/grid share edges): banner above; grid `[320px_minmax(0,640px)]`, summary left (sticky `top-16`), form right |
 | Fetch consumption | unchanged | unchanged (narrow) | max 960px: heading/intro/push card full width; grid 2 equal columns: left CUPS form, right "ELIGE UN MÉTODO"-style stack of the other options. `StudyProgress` spans both columns; study errors stay with the CUPS form |
 | Configuration, Login | unchanged | unchanged | unchanged |
 | Top bar | 640px inner box | inner box full content width (hamburger left edge, actions right edge) | same, right of the sidebar |
@@ -100,7 +100,7 @@ Then the sheet is ≤ 640px wide and horizontally centered.
 2. **Proposals page:** `<PageContainer className="md:max-w-[1280px]">`.
    - No changes to `proposals-table.tsx` or the column components. The `w-max` row inside `comparator-scroll` already fits as many fixed columns as the wider container allows and scrolls the rest.
    - Verify that the sticky "Tarifa actual" column still pins when the table overflows on tablet/desktop.
-3. **Current conditions page:** `<PageContainer className="lg:max-w-[1280px]">`; wrap summary + form in `<div className="flex flex-col gap-4 lg:grid lg:grid-cols-[320px_minmax(0,640px)] lg:items-start lg:justify-center lg:gap-6">`, summary wrapper `lg:sticky lg:top-16`. Banner stays above. No change inside `CurrentConditionsForm`.
+3. **Current conditions page:** `<PageContainer className="lg:max-w-[984px]">` (implementation refinement: 1280 left the banner wider than the grid); wrap summary + form in `<div className="flex flex-col gap-4 lg:grid lg:grid-cols-[320px_minmax(0,640px)] lg:items-start lg:justify-center lg:gap-6">`, summary wrapper `lg:sticky lg:top-16`. Banner stays above. No change inside `CurrentConditionsForm`.
 4. **Fetch consumption page:** `<PageContainer className="lg:max-w-[960px]">`; method area `<div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">` with left `CupsForm`, right `div.flex.flex-col.gap-4` containing scanner/PDF/photo options. Keep DOM order CUPS → scanner → PDF → photo (keyboard/screen reader order unchanged). "ELIGE UN MÉTODO" label stays above the grid.
 5. **Top bar:** header inner box `max-w-[640px] md:max-w-none md:px-4`.
 6. **Bottom sheets:** add `md:inset-x-auto md:left-1/2 md:w-full md:max-w-[640px] md:-translate-x-1/2` (or `md:mx-auto md:max-w-[640px]` if `inset-x-0` + `mx-auto` works with the base-ui popup) to both sheets. Check the slide-in animation still works. On `lg`, center within the viewport (acceptable, it is a modal).
