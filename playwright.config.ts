@@ -10,6 +10,13 @@ const PORT = 9004;
 const browsers = [
   { name: "iphone-webkit", device: { ...devices["iPhone 13"], serviceWorkers: "block" as const } },
   { name: "android-chromium", device: devices["Pixel 7"] },
+  // Larger screens (npm run test:e2e:desktop) only run the layout specs: other specs drive the phone drawer.
+  { name: "tablet-chromium", device: devices["Galaxy Tab S4 landscape"], testMatch: /responsive-.*\.spec\.ts/ },
+  {
+    name: "desktop-chromium",
+    device: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+    testMatch: /responsive-.*\.spec\.ts/,
+  },
 ];
 
 // E2E_SKIP_BUILD=1 reuses the last `.next-e2e` build (only when app code is unchanged).
@@ -27,9 +34,15 @@ export default defineConfig({
   workers: 1,
   reporter: "line",
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
-  projects: browsers.flatMap(({ name, device }) => [
+  projects: browsers.flatMap(({ name, device, testMatch }) => [
     { name: `setup-${name}`, testMatch: /auth\.setup\.ts/, use: { ...device } },
-    { name, testIgnore: /auth\.setup\.ts/, dependencies: [`setup-${name}`], use: { ...device } },
+    {
+      name,
+      testIgnore: /auth\.setup\.ts/,
+      ...(testMatch && { testMatch }),
+      dependencies: [`setup-${name}`],
+      use: { ...device },
+    },
   ]),
   webServer: {
     command: `${build}NEXT_DIST_DIR=.next-e2e npx next start -p ${PORT}`,

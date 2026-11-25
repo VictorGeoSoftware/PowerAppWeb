@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "test:e2e": "scripts/e2e.sh --project=android-chromium",
     "test:e2e:all": "scripts/e2e.sh",
-    "test:e2e:quick": "scripts/e2e.sh --project=android-chromium --max-failures=1"
+    "test:e2e:quick": "scripts/e2e.sh --project=android-chromium --max-failures=1",
+    "test:e2e:desktop": "scripts/e2e.sh --project=tablet-chromium --project=desktop-chromium"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

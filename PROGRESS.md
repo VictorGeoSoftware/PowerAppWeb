@@ -17,6 +17,17 @@
 
 ## Session Log
 
+### Feature: responsive-shell (2026-11-25, accepted)
+
+- Goal: desktop/tablet usage now dominates. Spec `docs/specs/responsive-shell.md`; follow-up `responsive-views` (page layouts, stretching comparator columns ≥ 768px, phones unchanged).
+- Branch `feature/responsive-shell` from `feature/responsive-views` (`d7f4aab`, spec on top of `origin/qa` `6442ebb`).
+- Done: shared `MenuPanel` for the drawer (< 1024px) and a permanent sidebar (≥ 1024px); `PageContainer` on every page (all `narrow`, so phones are unchanged); drawer closes at `lg`; iOS banner offset; Playwright `tablet-chromium`/`desktop-chromium` + `npm run test:e2e:desktop`; DESIGN/AGENTS/README updated.
+- Verified: lint, typecheck, 56 files/783 unit tests, `npm run build`, `git diff --check`.
+- E2E (local QA ready; `up` failed rebuilding n8n behind corporate TLS but existing containers were healthy): responsive-shell Android 2 passed/2 skipped; `npm run test:e2e:desktop` 8 passed; screenshots reviewed.
+- Full `npm run test:e2e`: 103 passed, 2 skipped, 1 failed — `report-export.spec.ts` T11 (real backend) needs a Premium E2E account; local QA `granted_users.tier` is `BASIC`. Test-data precondition, unrelated to this diff. Set the account to PREMIUM in local QA (or via BmWeb) and rerun T11.
+- E2E account set to PREMIUM in local QA (`granted_users.tier`); T11 rerun passed (2/2 incl. setup).
+- Validation (inline `feature-validator`): accept; status `accepted`. Committed on `feature/responsive-shell`. Next: PR to `qa`, then spec `responsive-views`.
+
 ### Maintenance: desktop-pdf-download (2026-11-10, verification blocked)
 
 - User feedback: Windows Web Share offers many options but no straightforward save. Both report buttons now download directly on desktop, even with working file-sharing support. Android/iPhone/iPad retain native sharing, cancellation, fresh-gesture panel and download fallback. `isMobileDevice` reuses existing iPadOS recognition; Windows touch laptops remain desktop. No viewport breakpoint, new UI, dependencies, auth/API or report generation changes. Destination remains the browser's download folder / Save As choice, not a silently selected OS Desktop.

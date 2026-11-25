@@ -1,0 +1,139 @@
+"use client";
+
+import { InfoIcon, LockIcon } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-provider";
+import { useFeeFirstGate } from "@/components/gate/fee-first-gate-provider";
+import { useInstall } from "@/components/pwa/install-provider";
+import { PushMenuEntry } from "@/components/pwa/push-menu-entry";
+import { SheetTitle } from "@/components/ui/sheet";
+import { canReach, lockedHint } from "@/lib/gate/fee-first";
+import { INSTALL_ENTRY } from "@/lib/pwa/messages";
+import { cn } from "@/lib/utils";
+import { LOGOUT_LABEL, MENU_ENTRIES } from "./menu-entries";
+
+const entryClass = "flex h-12 w-full items-center gap-2 rounded-full px-4 text-left text-sm font-medium text-foreground";
+const titleClass = "px-4 pb-3 text-base font-semibold";
+
+type EntryProps = {
+  label: string;
+  href: string;
+  selected: boolean;
+  /** Set by `fee-first-gate`: entry stays visible but disabled, with a padlock. */
+  locked?: boolean;
+  onNavigate: () => void;
+  /** Replaces navigation (BmApp "Nuevo estudio": reset, then the gate redirects). */
+  onAction?: () => void;
+};
+
+export function MenuEntryItem({ label, href, selected, locked = false, onNavigate, onAction }: EntryProps) {
+  if (locked) {
+    return (
+      <span aria-disabled="true" className={cn(entryClass, "text-muted-foreground")}>
+        <span className="flex-1">{label}</span>
+        <LockIcon className="size-4" aria-label="Bloqueado" />
+      </span>
+    );
+  }
+  const className = cn(entryClass, selected ? "bg-section-highlight" : "hover:bg-muted");
+  if (onAction) {
+    return (
+      <button type="button" aria-current={selected ? "page" : undefined} className={className} onClick={onAction}>
+        {label}
+      </button>
+    );
+  }
+  return (
+    // replace: sections don't stack in history (BmApp popUpTo start).
+    <Link
+      href={href}
+      replace
+      aria-current={selected ? "page" : undefined}
+      onClick={onNavigate}
+      className={className}
+    >
+      {label}
+    </Link>
+  );
+}
+
+type Props = {
+  /** `drawer` lives inside the Sheet (dialog title); `sidebar` is the permanent desktop menu. */
+  variant: "drawer" | "sidebar";
+  /** Called after any entry action (the drawer closes; the sidebar stays). */
+  onNavigate: () => void;
+};
+
+/** Menu content shared by the phone/tablet drawer and the desktop sidebar. */
+export function MenuPanel({ variant, onNavigate }: Props) {
+  const pathname = usePathname();
+  const { signOutUser } = useAuth();
+  const { stage, startNewStudy } = useFeeFirstGate();
+  const { canPrompt, promptInstall, showIosHint, openIosSheet } = useInstall();
+  const entries = MENU_ENTRIES.map((e) => ({ ...e, locked: e.gated && !canReach(stage, e.href) }));
+  const anyLocked = entries.some((e) => e.locked);
+
+  return (
+    <>
+      {variant === "drawer" ? (
+        <SheetTitle className={titleClass}>Menú</SheetTitle>
+      ) : (
+        <p className={titleClass}>Menú</p>
+      )}
+      <nav aria-label="Menú principal" className="flex flex-col gap-1">
+        {entries.map(({ label, href, locked, newStudy }) => (
+          <MenuEntryItem
+            key={href}
+            label={label}
+            href={href}
+            locked={locked}
+            selected={pathname === href}
+            onNavigate={onNavigate}
+            onAction={
+              newStudy
+                ? () => {
+                    onNavigate();
+                    startNewStudy();
+                  }
+                : undefined
+            }
+          />
+        ))}
+        {anyLocked && (
+          <p className="my-2 flex items-start gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-foreground">
+            <InfoIcon className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+            {lockedHint(stage)}
+          </p>
+        )}
+        <PushMenuEntry className={entryClass} onClose={onNavigate} />
+        {(canPrompt || showIosHint) && (
+          <button
+            type="button"
+            className={cn(entryClass, "hover:bg-muted")}
+            onClick={() => {
+              onNavigate();
+              if (canPrompt) void promptInstall();
+              else openIosSheet();
+            }}
+          >
+            {INSTALL_ENTRY}
+          </button>
+        )}
+        <button
+          type="button"
+          className={cn(entryClass, "hover:bg-muted")}
+          onClick={() => {
+            onNavigate();
+            void signOutUser();
+          }}
+        >
+          {LOGOUT_LABEL}
+        </button>
+      </nav>
+      <p className="mt-auto self-end px-4 pt-4 text-xs font-medium text-muted-foreground">
+        {process.env.NEXT_PUBLIC_APP_VERSION}
+      </p>
+    </>
+  );
+}

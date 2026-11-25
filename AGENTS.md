@@ -1,6 +1,6 @@
 # Project Agent Instructions
 
-This repository contains PowerAppWeb, the mobile-first responsive web client (installable PWA) of BmApp, for Brokers on iOS and Android smartphones. UI in Spanish.
+This repository contains PowerAppWeb, the responsive web client (installable PWA) of BmApp for Brokers on desktop, tablets and phones (iOS/Android). One implementation per view, adapted by breakpoints (see `DESIGN.md` Layout). UI in Spanish.
 
 ## Read First
 
@@ -42,6 +42,7 @@ Before writing code:
 - E2E (Playwright) always goes through `npm run test:e2e` / `npm run test:e2e:quick` (`scripts/e2e.sh`), never raw `npx playwright test`. The script holds a machine-wide lock, reads credentials from the keychain, auto-reuses `.next-e2e` when `src/` and config are unchanged, and serves its own production server on port 9004, stopping any leftover server there before and after:
   - Only one E2E run at a time. If it exits with "another E2E run is active", wait for it to finish; do not kill it and do not start a second one.
   - While implementing: run only the spec(s) you touch on one browser: `npm run test:e2e:quick -- e2e/<spec>.spec.ts`.
+  - Larger screens: `npm run test:e2e:desktop` runs `tablet-chromium` (Galaxy Tab S4 landscape) and `desktop-chromium` (1440×900), which only pick up `e2e/responsive-*.spec.ts`. Features that change layout must add/extend a responsive spec and run it there too.
   - Android only during development: `npm run test:e2e` and `test:e2e:quick` run only `android-chromium`. Do not run `iphone-webkit` (`npm run test:e2e:all`) unless the user asks; iOS is checked by the user after the development phase.
   - At the end of implementation: run the full Android suite once (`npm run test:e2e`) and record the exact result in `feature_list.json` and `PROGRESS.md`.
   - During `feature-validator`: run inline in the current session (never spawn a subagent). If `feature_list.json` / `PROGRESS.md` already records a passing full `npm run test:e2e` for the current commit/diff, rerun only the feature's focused E2E spec (`npm run test:e2e -- e2e/<spec>.spec.ts`) rather than the entire suite again.
