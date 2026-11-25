@@ -17,6 +17,13 @@
 
 ## Session Log
 
+### Feature: responsive-views (2026-11-25, accepted)
+
+- Spec `docs/specs/responsive-views.md`; branch `feature/responsive-views` from `origin/qa` `99a0ebd`. User decision: comparator column widths stay fixed on every screen (product names are internal codes); wider screens only fit more columns.
+- Done: Propuestas up to 1280px; Condiciones actuales 984px with summary beside the form (lg); Obtener consumo 960px with CUPS left / other methods right (lg); top bar spans content from md; bottom sheets centered ≤ 640px from md. Phones unchanged. DESIGN.md updated.
+- Verified: lint, typecheck, 783 unit tests; `npm run test:e2e:desktop` 16 passed; full `npm run test:e2e` 108 passed / 2 skipped / 0 failed. No iOS run.
+- Validation (inline `feature-validator`): accept; status `accepted`. Committed and PR opened to `qa`. iOS check pending (user).
+
 ### Feature: responsive-shell (2026-11-25, accepted)
 
 - Goal: desktop/tablet usage now dominates. Spec `docs/specs/responsive-shell.md`; follow-up `responsive-views` (page layouts, stretching comparator columns ≥ 768px, phones unchanged).

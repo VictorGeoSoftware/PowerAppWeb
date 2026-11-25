@@ -19,7 +19,7 @@ export function IosInstallSheet({ open, onOpenChange, note }: Props) {
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="max-h-[90dvh] gap-0 rounded-t-2xl pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+        className="max-h-[90dvh] gap-0 rounded-t-2xl pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:mx-auto md:max-w-[640px]"
       >
         <SheetTitle className="px-4 pb-2 text-lg">{IOS_SHEET_TITLE}</SheetTitle>
         {note && <p className="px-4 pb-2 text-sm text-muted-foreground">{note}</p>}

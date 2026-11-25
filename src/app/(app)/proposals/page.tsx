@@ -6,7 +6,7 @@ import { PageContainer } from "@/components/shell/page-container";
 
 export default function ProposalsPage() {
   return (
-    <PageContainer>
+    <PageContainer className="md:max-w-[1280px]">
       <h1 className="text-[22px] font-semibold">{PROPOSALS_TITLE}</h1>
       <ProposalsComparator />
     </PageContainer>

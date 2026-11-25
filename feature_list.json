@@ -752,16 +752,23 @@
   {
     "id": "responsive-views",
     "area": "ui",
-    "title": "Responsive page layouts: wider forms, two-column layouts and stretching comparator columns on tablet/desktop",
-    "user_visible_behavior": "On tablet/desktop, Fetch consumption shows the methods in a 2-column grid, Current conditions shows the consumption summary next to the form (lg), Proposals uses the full content width and its columns grow (bounded) to fill it, only scrolling sideways when proposals do not fit. Below 768px every screen is unchanged (fixed 176/168px comparator columns with horizontal scroll and sticky customer column). CUPS camera scan remains hidden on mouse-first devices.",
+    "title": "Responsive page layouts: wider forms, two-column layouts and a full-width comparator (fixed column widths) on tablet/desktop",
+    "user_visible_behavior": "On tablet/desktop, Fetch consumption shows the methods in a 2-column grid, Current conditions shows the consumption summary next to the form (lg), Proposals uses the full content width so more proposals fit before scrolling sideways; comparator column widths stay fixed on every screen. Below 768px every screen is unchanged (fixed 176/168px comparator columns with horizontal scroll and sticky customer column). CUPS camera scan remains hidden on mouse-first devices.",
     "depends_on": ["responsive-shell"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "./init.sh and npm run build",
-      "Focused wrapper E2E per touched screen on android-chromium, tablet-chromium and desktop-chromium, including comparator column-width and no page-level horizontal scroll checks",
+      "Focused wrapper E2E per touched screen on android-chromium, tablet-chromium and desktop-chromium, including fixed comparator column widths, sticky Tarifa actual with many proposals and no page-level horizontal scroll checks",
       "Full npm run test:e2e once at completion; record exact result"
     ],
-    "evidence": [],
-    "notes": "Spec to be written after responsive-shell is accepted. Rule: one component per view; layout changes only through md:/lg: utilities, never device-specific component copies. No calculation, data or BmApp-parity behavior changes."
+    "evidence": [
+      "2026-11-25: branch feature/responsive-views from origin/qa 99a0ebd (PR #9 merged); spec commit c2ae700. Untracked content.hmtl preserved. Local QA ready (E2E account PREMIUM in local granted_users).",
+      "Baseline ./init.sh: lint/typecheck clean, 56 files/783 tests passed.",
+      "Implementation: Propuestas page md:max-w-[1280px] (comparator components untouched, fixed 176/168px columns per user decision); Condiciones actuales lg:max-w-[984px] with summary (320px, sticky) left of the form; Obtener consumo lg:max-w-[960px] with CUPS form left and other methods right (DOM order unchanged); top bar inner box md:max-w-none; copy-prices and iOS install bottom sheets md:mx-auto md:max-w-[640px]. DESIGN.md layout table/comparator rule updated. responsive-shell.spec page-width check updated from 640px to 1280px on lg (pages now widen by design).",
+      "New e2e/responsive-views.spec.ts (4 tests): fetch-consumption columns, current-conditions grid + centered copy sheet, fixed comparator widths with 2 proposals (no scroll from md, actions at right edge), 8 proposals scroll with Tarifa actual pinned; no page horizontal scroll everywhere.",
+      "Final: lint/typecheck clean; vitest 56 files/783 passed; git diff --check clean. npm run test:e2e:desktop: 16 passed (tablet + desktop, both responsive specs). Full npm run test:e2e (android-chromium): 108 passed, 2 skipped (desktop-only shell tests), 0 failed; proposals.spec sticky/scroll assertions unchanged and passing. Screenshots test-results/responsive-views-*-{android,tablet,desktop}-chromium.png reviewed. iOS not run (user check).",
+      "2026-11-25 feature-validator (inline, same session): accept. Scenarios covered; phones unchanged (proposals.spec untouched and passing); comparator components untouched; DOM/focus order kept on Obtener consumo; breakpoint utilities only; DESIGN.md consistent; no security surface. Minor: tablet portrait (768-1023px) Propuestas width not measured separately (same md: rule as landscape). User approved validation, commit and PR."
+    ],
+    "notes": "Spec docs/specs/responsive-views.md (2026-11-25), branch feature/responsive-views from origin/qa 99a0ebd. Rule: one component per view; layout changes only through md:/lg: utilities, never device-specific component copies. No calculation, data or BmApp-parity behavior changes."
   }
 ]
