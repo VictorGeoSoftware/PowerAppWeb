@@ -752,16 +752,16 @@
   {
     "id": "responsive-views",
     "area": "ui",
-    "title": "Responsive page layouts: wider forms, two-column layouts and stretching comparator columns on tablet/desktop",
-    "user_visible_behavior": "On tablet/desktop, Fetch consumption shows the methods in a 2-column grid, Current conditions shows the consumption summary next to the form (lg), Proposals uses the full content width and its columns grow (bounded) to fill it, only scrolling sideways when proposals do not fit. Below 768px every screen is unchanged (fixed 176/168px comparator columns with horizontal scroll and sticky customer column). CUPS camera scan remains hidden on mouse-first devices.",
+    "title": "Responsive page layouts: wider forms, two-column layouts and a full-width comparator (fixed column widths) on tablet/desktop",
+    "user_visible_behavior": "On tablet/desktop, Fetch consumption shows the methods in a 2-column grid, Current conditions shows the consumption summary next to the form (lg), Proposals uses the full content width so more proposals fit before scrolling sideways; comparator column widths stay fixed on every screen. Below 768px every screen is unchanged (fixed 176/168px comparator columns with horizontal scroll and sticky customer column). CUPS camera scan remains hidden on mouse-first devices.",
     "depends_on": ["responsive-shell"],
     "status": "not_started",
     "verification": [
       "./init.sh and npm run build",
-      "Focused wrapper E2E per touched screen on android-chromium, tablet-chromium and desktop-chromium, including comparator column-width and no page-level horizontal scroll checks",
+      "Focused wrapper E2E per touched screen on android-chromium, tablet-chromium and desktop-chromium, including fixed comparator column widths, sticky Tarifa actual with many proposals and no page-level horizontal scroll checks",
       "Full npm run test:e2e once at completion; record exact result"
     ],
     "evidence": [],
-    "notes": "Spec to be written after responsive-shell is accepted. Rule: one component per view; layout changes only through md:/lg: utilities, never device-specific component copies. No calculation, data or BmApp-parity behavior changes."
+    "notes": "Spec docs/specs/responsive-views.md (2026-11-25), branch feature/responsive-views from origin/qa 99a0ebd. Rule: one component per view; layout changes only through md:/lg: utilities, never device-specific component copies. No calculation, data or BmApp-parity behavior changes."
   }
 ]
