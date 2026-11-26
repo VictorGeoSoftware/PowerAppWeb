@@ -16,7 +16,7 @@ export function IosInstallBanner() {
       <div
         role="region"
         aria-label={IOS_BANNER_TEXT}
-        className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] shadow-lg"
+        className="fixed inset-x-0 bottom-0 z-30 lg:left-[280px] border-t bg-card pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] shadow-lg"
       >
         <div className="mx-auto flex min-h-16 w-full max-w-[640px] items-center gap-2 px-4 py-2">
           <p className="flex-1 text-sm font-medium text-card-foreground">{IOS_BANNER_TEXT}</p>

@@ -2,20 +2,49 @@
 
 ## Current Verified State
 
-- Repository root: `BM/PowerAppWeb` (git: https://github.com/VictorGeoSoftware/PowerAppWeb, current branch `feature/desktop-pdf-download`)
+- Repository root: `BM/PowerAppWeb` (git: https://github.com/VictorGeoSoftware/PowerAppWeb, current branch `qa`)
 - New machine setup: `README.md`
 - Standard startup path: `./init.sh`
 - Standard verification path: `./init.sh` (npm ci, lint, typecheck, test); also `npm run build`. Dev: `npm run dev` on :9003
 - Backend target: BmBackend QA (`qa` branch)
-- Current maintenance feature: `desktop-pdf-download` implemented, blocked on signed-in E2E/viewport verification; do not mark passing until required browser gates run.
+- `desktop-pdf-download` accepted and validated: merged into `qa` (`6442ebb`) and `main`, released to PROD and confirmed working there by the user (2026-11-25).
 - `../BmBackend` is checked out on `feature/web-push-price-updates` (from `qa`, which includes web-push-registration #65; changes uncommitted; local QA builds this checkout)
 - E2E: `npm run test:e2e` (needs `E2E_EMAIL`/`E2E_PASSWORD` in shell for signed-in tests; QA session saved once per browser by `e2e/auth.setup.ts`, serial run — see README §6)
 - Dev backend: local Docker QA stack (`../BmInfra/bm-local-qa up`, localhost:9081) via `.env.local`; remote QA VPS blocked from Volvo network
-- Current blocker: local QA is stopped and Docker daemon unavailable; export E2E cannot complete sign-in.
-- Last verified at: 2026-11-10 (`desktop-pdf-download`: ./init.sh lint/typecheck + 777 unit tests and production build pass; focused/full Android E2E blocked at setup, not passing)
+- Current functional blocker: none reported for desktop PDF delivery. Automated E2E evidence gap remains: the last focused/full attempts were blocked at sign-in while local QA/Docker was unavailable; no successful rerun claimed.
+- Last verified at: 2026-11-10 (user confirms desktop PDF fix working and merged into QA; GitHub confirms PR #6 merge. Existing automated evidence: lint/typecheck + 777 unit tests and production build pass; browser E2E remains unverified.)
 - BmBackend `feature/web-push-price-updates` has uncommitted changes (web multicast sender, composite notifier, token pruning); local QA runs them
 
 ## Session Log
+
+### Feature: responsive-views (2026-11-25, accepted)
+
+- Spec `docs/specs/responsive-views.md`; branch `feature/responsive-views` from `origin/qa` `99a0ebd`. User decision: comparator column widths stay fixed on every screen (product names are internal codes); wider screens only fit more columns.
+- Done: Propuestas up to 1280px; Condiciones actuales 984px with summary beside the form (lg); Obtener consumo 960px with CUPS left / other methods right (lg); top bar spans content from md; bottom sheets centered ≤ 640px from md. Phones unchanged. DESIGN.md updated.
+- Verified: lint, typecheck, 783 unit tests; `npm run test:e2e:desktop` 16 passed; full `npm run test:e2e` 108 passed / 2 skipped / 0 failed. No iOS run.
+- Validation (inline `feature-validator`): accept; status `accepted`. Committed and PR opened to `qa`. iOS check pending (user).
+
+### Feature: responsive-shell (2026-11-25, accepted)
+
+- Goal: desktop/tablet usage now dominates. Spec `docs/specs/responsive-shell.md`; follow-up `responsive-views` (page layouts, stretching comparator columns ≥ 768px, phones unchanged).
+- Branch `feature/responsive-shell` from `feature/responsive-views` (`d7f4aab`, spec on top of `origin/qa` `6442ebb`).
+- Done: shared `MenuPanel` for the drawer (< 1024px) and a permanent sidebar (≥ 1024px); `PageContainer` on every page (all `narrow`, so phones are unchanged); drawer closes at `lg`; iOS banner offset; Playwright `tablet-chromium`/`desktop-chromium` + `npm run test:e2e:desktop`; DESIGN/AGENTS/README updated.
+- Verified: lint, typecheck, 56 files/783 unit tests, `npm run build`, `git diff --check`.
+- E2E (local QA ready; `up` failed rebuilding n8n behind corporate TLS but existing containers were healthy): responsive-shell Android 2 passed/2 skipped; `npm run test:e2e:desktop` 8 passed; screenshots reviewed.
+- Full `npm run test:e2e`: 103 passed, 2 skipped, 1 failed — `report-export.spec.ts` T11 (real backend) needs a Premium E2E account; local QA `granted_users.tier` is `BASIC`. Test-data precondition, unrelated to this diff. Set the account to PREMIUM in local QA (or via BmWeb) and rerun T11.
+- E2E account set to PREMIUM in local QA (`granted_users.tier`); T11 rerun passed (2/2 incl. setup).
+- Validation (inline `feature-validator`): accept; status `accepted`. Committed on `feature/responsive-shell`; PR #9 to `qa` (merged `qa` after PR #8 to resolve bookkeeping conflicts). Next: spec `responsive-views`.
+
+### Production validation: desktop-pdf-download (2026-11-25)
+
+- User confirms the feature is in `qa` and `main`, deployed to PROD and working correctly. Status `accepted` now also records production validation by the user. No code changes; automated E2E gap from 2026-11-10 remains historical.
+
+### User acceptance: desktop-pdf-download (2026-11-10)
+
+- User reports: "Fixed and working super good now" and confirms the change is merged into QA. Recorded as user functional acceptance; `desktop-pdf-download` is now `accepted`, superseding the implementation-time blocked status below.
+- GitHub independently confirms PR https://github.com/VictorGeoSoftware/PowerAppWeb/pull/6 merged into `qa` on 2026-11-10 at 15:25:33 UTC; merge commit `6442ebb36bcc82d90455ee40ce260cc6799e0be2` (feature commit `5416bd8`). No production merge/deployment inferred.
+- Acceptance is based on the user's manual functional confirmation, not a successful automated E2E run. The previously recorded focused/full setup failures, pending viewport/device matrix and dependency audit findings remain disclosed; no extra operating systems/mobile devices or screenshots claimed as checked.
+- Documentation/status update only; no application changes, services started, tests rerun, commit or push in this follow-up. Future automated regression verification can run when local QA/Docker is available; it is no longer represented as a user-reported functional defect.
 
 ### Maintenance: desktop-pdf-download (2026-11-10, verification blocked)
 

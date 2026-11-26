@@ -703,7 +703,7 @@
     "title": "Desktop report exports download directly instead of opening the share chooser",
     "user_visible_behavior": "Crear informe and Informe completo download the PDF directly on desktop, even when Web Share is supported. Android/iPhone/iPad retain native sharing and its existing cancellation, fresh-gesture and download fallbacks.",
     "depends_on": ["comparator-pdf-share"],
-    "status": "blocked",
+    "status": "accepted",
     "verification": [
       "./init.sh and npm run build",
       "Unit tests: Windows including touch devices, macOS and Linux bypass share/canShare; Android phones/tablets and iPhone/iPad retain sharing; filenames, bytes and object-URL cleanup unchanged",
@@ -716,8 +716,59 @@
       "Red regression run: 16 failures (new platform policy missing plus five desktop cases still shared). Final focused platform/delivery suite: 30/30 passed. Final ./init.sh: lint/typecheck clean, 55 files/777 tests passed, including existing mobile fresh-gesture panel and new real-helper desktop component integration. npm run build passed.",
       "QA checks: ../BmInfra/bm-local-qa ready failed (no listener on 9081); prescribed up failed (Docker daemon socket missing). No Docker Desktop launch/reconfiguration, backend rebuild or deployment performed.",
       "Focused wrapper E2E npm run test:e2e:quick -- e2e/comparator-pdf.spec.ts e2e/report-export.spec.ts: E2E production build passed, then 1 setup failure and 13 did not run (sign-in did not reach /fetch-consumption). Full npm run test:e2e attempted once: 1 setup failure, 102 did not run. No iOS run. Desktop/mobile screenshots and download events remain unverified; status blocked, not passing.",
-      "git diff --check passed. Existing baseline React act/Vite warnings remain; dependency bootstrap reported 29 audit findings (2 critical) with the unchanged lockfile, not triaged in this focused delivery change. Component docs describe behavior and browser-controlled destination."
+      "git diff --check passed. Existing baseline React act/Vite warnings remain; dependency bootstrap reported 29 audit findings (2 critical) with the unchanged lockfile, not triaged in this focused delivery change. Component docs describe behavior and browser-controlled destination.",
+      "2026-11-10 user functional acceptance: user reports the fix is working successfully and merged into QA. GitHub confirms PR #6 https://github.com/VictorGeoSoftware/PowerAppWeb/pull/6 merged into qa at 2026-11-10T15:25:33Z, merge commit 6442ebb36bcc82d90455ee40ce260cc6799e0be2 (feature commit 5416bd8). Status accepted records user acceptance, not a newly passing automated gate. Earlier E2E setup failures remain historical evidence; no successful browser rerun, broader device matrix or production deployment claimed.",
+      "2026-11-25 user validation in production: feature merged into qa and main and released to PROD; user confirms report exports work correctly there. Recorded as accepted and validated by user production verification (not a new automated gate)."
     ],
-    "notes": "User-selected maintenance, 2026-11-10; workspace spec BM/docs/specs/desktop-pdf-download.md. Implemented; blocked only on required signed-in E2E/viewport verification. Start Docker Desktop and local QA, rerun the focused export specs and full Android suite, inspect mobile/desktop screenshots, then consider passing/independent validation. Both report actions share the same delivery helper; no generation/auth/API changes. Existing Premium feature acceptance statuses unchanged. Browser controls download destination."
+    "notes": "User-selected maintenance, 2026-11-10; workspace spec BM/docs/specs/desktop-pdf-download.md. User-accepted after successful functional confirmation; PR #6 merged into qa (6442ebb). Automated signed-in E2E/viewport evidence remains outstanding due to the documented environment blocker; rerun focused exports and full Android suite when QA/Docker is available, without claiming they already passed. Both report actions share the same delivery helper; no generation/auth/API changes. Existing Premium feature acceptance statuses unchanged. Browser controls download destination."
+  },
+  {
+    "id": "responsive-shell",
+    "area": "ui",
+    "title": "Responsive app shell: permanent sidebar on desktop, shared page width container, tablet/desktop E2E viewports",
+    "user_visible_behavior": "On screens >= 1024px the menu is a permanent left sidebar (no hamburger) with the same entries, padlocks, hint, push/install/logout rows and version; below 1024px the shell is unchanged (sticky top bar, hamburger, left drawer). Pages render inside a shared PageContainer whose width every page declares; in this feature all pages stay at the current 640px width, so phones see no change.",
+    "depends_on": ["app-shell-navigation", "fee-first-gate"],
+    "status": "accepted",
+    "verification": [
+      "./init.sh (lint, typecheck, vitest) and npm run build",
+      "Unit tests: AppShell renders sidebar nav at lg and drawer trigger below lg (class/structure), menu content shared between both, locked entries and New study action identical in both",
+      "Focused wrapper E2E e2e/responsive-shell.spec.ts on android-chromium (phone unchanged) and the new desktop-chromium and tablet-chromium projects",
+      "Full npm run test:e2e once at completion; record exact result"
+    ],
+    "evidence": [
+      "2026-11-25: branch feature/responsive-shell from feature/responsive-views d7f4aab (spec commit on origin/qa 6442ebb, fetched; qa == origin/qa). Untracked content.hmtl preserved.",
+      "Baseline ./init.sh (invocation-local npm_config_cafile=/etc/ssl/cert.pem): lint/typecheck clean, 55 files/777 tests passed.",
+      "Implementation: shared MenuPanel (drawer + lg sidebar), PageContainer (narrow default) on all 4 pages, sidebar hidden below lg, hamburger lg:hidden, drawer closes at lg, iOS banner offset lg:left-[280px]. Playwright tablet-chromium (Galaxy Tab S4 landscape) and desktop-chromium (1440x900) limited to e2e/responsive-*.spec.ts; npm run test:e2e:desktop; openSignedIn/auth.setup accept hamburger or sidebar.",
+      "After: npm run lint and typecheck clean; vitest 56 files/783 tests passed (new sidebar, lock, new-study/logout, lg auto-close and PageContainer tests). npm run build passed. git diff --check clean. --list confirms new projects pick only responsive-shell.spec.ts.",
+      "E2E not run: ../BmInfra/bm-local-qa ready failed (9081 down) and up failed (Docker daemon not running). Docker Desktop not launched by the agent. Pending: npm run test:e2e:quick -- e2e/responsive-shell.spec.ts, npm run test:e2e:desktop, full npm run test:e2e, screenshots. (resolved below).",
+      "2026-11-25 after user started Docker: bm-local-qa up failed building n8n image (corporate TLS on Alpine apk), but existing containers were already running; bm-local-qa ready OK (database connected). No rebuild needed (no BmBackend changes).",
+      "npm run test:e2e:quick -- e2e/responsive-shell.spec.ts: 2 passed, 2 skipped (desktop-only) on android-chromium. npm run test:e2e:desktop: 8 passed (tablet-chromium + desktop-chromium, incl. setup). Screenshots test-results/responsive-*-{tablet,desktop}-chromium.png reviewed: sidebar with locks/hint, selected entry, Crear informe in top bar, content 640px right of sidebar.",
+      "Full npm run test:e2e (android-chromium): 103 passed, 2 skipped, 1 failed: report-export.spec.ts T11 (real backend, unmocked /me/access) cannot find 'Informe completo' because the E2E account is tier BASIC in local QA DB granted_users (no COMPREHENSIVE_COMPARATOR_PDF). Environmental test-data precondition, unrelated to the shell diff (Premium button rendering is unchanged and passes in the mocked T4/T5/T8/T18 cases).",
+      "T11 rerun after setting the E2E account tier to PREMIUM in local QA (granted_users, local test data only): npm run test:e2e:quick -- e2e/report-export.spec.ts -g T11 -> 2 passed. Full-suite failure confirmed environmental.",
+      "2026-11-25 feature-validator (inline, same session as implementation): accept. All 7 acceptance scenarios covered by unit/E2E; non-goals respected (no page widened, no UA/JS layout, matchMedia only closes the drawer); one menu exposed to assistive tech per width; docs (DESIGN/AGENTS/README) consistent; no security-relevant surface. Notes: lg 1024px duplicated in DESKTOP_QUERY (documented); sidebar has no left safe-area inset (not needed for current devices). User approved validation and commit."
+    ],
+    "notes": "User request 2026-11-25: Brokers use the app more from desktop and tablets than phones. Spec docs/specs/responsive-shell.md. Phone UX must stay identical. Second slice: responsive-views."
+  },
+  {
+    "id": "responsive-views",
+    "area": "ui",
+    "title": "Responsive page layouts: wider forms, two-column layouts and a full-width comparator (fixed column widths) on tablet/desktop",
+    "user_visible_behavior": "On tablet/desktop, Fetch consumption shows the methods in a 2-column grid, Current conditions shows the consumption summary next to the form (lg), Proposals uses the full content width so more proposals fit before scrolling sideways; comparator column widths stay fixed on every screen. Below 768px every screen is unchanged (fixed 176/168px comparator columns with horizontal scroll and sticky customer column). CUPS camera scan remains hidden on mouse-first devices.",
+    "depends_on": ["responsive-shell"],
+    "status": "accepted",
+    "verification": [
+      "./init.sh and npm run build",
+      "Focused wrapper E2E per touched screen on android-chromium, tablet-chromium and desktop-chromium, including fixed comparator column widths, sticky Tarifa actual with many proposals and no page-level horizontal scroll checks",
+      "Full npm run test:e2e once at completion; record exact result"
+    ],
+    "evidence": [
+      "2026-11-25: branch feature/responsive-views from origin/qa 99a0ebd (PR #9 merged); spec commit c2ae700. Untracked content.hmtl preserved. Local QA ready (E2E account PREMIUM in local granted_users).",
+      "Baseline ./init.sh: lint/typecheck clean, 56 files/783 tests passed.",
+      "Implementation: Propuestas page md:max-w-[1280px] (comparator components untouched, fixed 176/168px columns per user decision); Condiciones actuales lg:max-w-[984px] with summary (320px, sticky) left of the form; Obtener consumo lg:max-w-[960px] with CUPS form left and other methods right (DOM order unchanged); top bar inner box md:max-w-none; copy-prices and iOS install bottom sheets md:mx-auto md:max-w-[640px]. DESIGN.md layout table/comparator rule updated. responsive-shell.spec page-width check updated from 640px to 1280px on lg (pages now widen by design).",
+      "New e2e/responsive-views.spec.ts (4 tests): fetch-consumption columns, current-conditions grid + centered copy sheet, fixed comparator widths with 2 proposals (no scroll from md, actions at right edge), 8 proposals scroll with Tarifa actual pinned; no page horizontal scroll everywhere.",
+      "Final: lint/typecheck clean; vitest 56 files/783 passed; git diff --check clean. npm run test:e2e:desktop: 16 passed (tablet + desktop, both responsive specs). Full npm run test:e2e (android-chromium): 108 passed, 2 skipped (desktop-only shell tests), 0 failed; proposals.spec sticky/scroll assertions unchanged and passing. Screenshots test-results/responsive-views-*-{android,tablet,desktop}-chromium.png reviewed. iOS not run (user check).",
+      "2026-11-25 feature-validator (inline, same session): accept. Scenarios covered; phones unchanged (proposals.spec untouched and passing); comparator components untouched; DOM/focus order kept on Obtener consumo; breakpoint utilities only; DESIGN.md consistent; no security surface. Minor: tablet portrait (768-1023px) Propuestas width not measured separately (same md: rule as landscape). User approved validation, commit and PR."
+    ],
+    "notes": "Spec docs/specs/responsive-views.md (2026-11-25), branch feature/responsive-views from origin/qa 99a0ebd. Rule: one component per view; layout changes only through md:/lg: utilities, never device-specific component copies. No calculation, data or BmApp-parity behavior changes."
   }
 ]
